@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="..\..\common.props"></Import>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <AssemblyName>Cz.Jarvis.Web.Core</AssemblyName>
+    <PackageId>Cz.Jarvis.Web.Core</PackageId>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
+    <RootNamespace>Cz.Jarvis.Web</RootNamespace>
+    <OutputType>Library</OutputType>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Cz.AspNetJarvisCore.Web\Cz.AspNetJarvisCore.Web.csproj" />
+    <ProjectReference Include="..\Cz.Jarvis.GraphQL\Cz.Jarvis.GraphQL.csproj" />
+    <ProjectReference Include="..\Cz.Jarvis.Application\Cz.Jarvis.Application.csproj" />
+    <ProjectReference Include="..\Cz.Jarvis.EntityFrameworkCore\Cz.Jarvis.EntityFrameworkCore.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Abp.AspNetCore.SignalR\Abp.AspNetCore.SignalR.csproj" />
+    <!-- <PackageReference Include="Abp.czjarvisCore.Web" Version="5.0.0" /> -->
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.15" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageReference Include="Owl.reCAPTCHA" Version="9.0.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Abp.AspNetCore\Abp.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\lib\Abp.HangFire.AspNetCore\Abp.HangFire.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\lib\Abp.RedisCache\Abp.RedisCache.csproj" />
+    <ProjectReference Include="..\..\lib\Abp.HtmlSanitizer\Abp.HtmlSanitizer.csproj" />
+    <ProjectReference Include="..\..\lib\Abp.AspNetCore.OpenIddict\Abp.AspNetCore.OpenIddict.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="8.0.1" />
+    <PackageReference Include="OpenIddict.AspNetCore" Version="6.0.0-preview1.24504.78" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.3.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.3.0" />
+  </ItemGroup>
+</Project>

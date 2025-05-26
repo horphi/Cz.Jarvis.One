@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+      
+  Cz.Jarvis.web.host:
+    image: Cz.Jarvis.web.host
+    container_name: Cz.Jarvis.web.host_container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ConnectionStrings__Default=Server=localhost; Port=33060; Database=Dev_Cz_Jarvis_13_4_1; uid=root; pwd=Jarvis_Friday.88; Connection Timeout=0;
+    ports:
+      - "44301:443"

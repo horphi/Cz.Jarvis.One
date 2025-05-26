@@ -1,0 +1,40 @@
+{
+  "greeting": "Hello!",
+  "welcome": "Welcome to Next.js",
+  "currentLanguage": "Current language",
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "rememberMe": "Remember Me",
+    "errors": {
+      "usernameRequired": "Please enter your username",
+      "usernameInvalid": "Invalid username",
+      "passwordRequired": "Please enter your password",
+      "passwordLength": "Password must be at least 7 characters long"
+    }
+  },
+  "administration": {
+    "role": {
+      "title": "Role Management",
+      "roles": "Roles",
+      "default": "Default",
+      "addRole": "Add Role",
+      "editRole": "Edit Role",
+      "deleteRole": "Delete Role",
+      "roleName": "Role Name",
+      "roleDescription": "Role Description",
+      "defaultRoleDescription": "This role will be assigned to new users by default",
+      "permissions": "Permissions",
+      "addPermission": "Add Permission",
+      "editPermission": "Edit Permission",
+      "deletePermission": "Delete Permission",
+      "permissionName": "Permission Name"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+
+  mysqlDb:
+    container_name: mysqlDb_container
+    image: mysql:8.4.5
+    ports:
+      - "33060:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Jarvis_Friday.88
+      MYSQL_USER: horphi
+      MYSQL_PASSWORD: Jarvis_Friday.88
+    volumes:
+      - mysqlDb-data:/var/lib/mysql
+    networks:
+      - Cz.Jarvis
+
+  redis:
+    image: redis:alpine
+    container_name: redis_container
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - Cz.Jarvis
+
+volumes:
+  myqlDb-data:
+   name: "myqlDb-data"
+
+networks:
+  Cz.Jarvis:
+    external:
+      name: Cz.Jarvis

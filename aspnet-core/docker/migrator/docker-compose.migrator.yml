@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+
+  Cz.Jarvis.migrator:
+    image: ${DOCKER_REGISTRY-}czjarvismigrator
+    container_name: czjarvismigrator_container
+    build:
+      context: ../../
+      dockerfile: src/Jarvis.Migrator/Dockerfile
+    environment:
+      - ASPNETCORE_Docker_Enabled=true
+      - ConnectionStrings__Default=Server=mysqlDb; Port=33060; Database=Dev_Cz_Jarvis_13_4_1; uid=root; pwd=Jarvis_Friday.88; Connection Timeout=0;
+    networks:
+      - Cz.Jarvis
+      
+networks:
+  Cz.Jarvis:
+    external:
+      name: Cz.Jarvis

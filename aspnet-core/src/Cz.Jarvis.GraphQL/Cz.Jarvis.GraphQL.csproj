@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props"></Import>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <RootNamespace>Cz.Jarvis</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="GraphQL" Version="7.8.0" />
+    <PackageReference Include="GraphQL.SystemTextJson" Version="7.8.0" />
+    <PackageReference Include="GraphQL.DataLoader" Version="7.8.0" />
+    <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="7.7.1" />
+    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="7.7.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cz.Jarvis.Application.Shared\Cz.Jarvis.Application.Shared.csproj" />
+    <ProjectReference Include="..\Cz.Jarvis.Core\Cz.Jarvis.Core.csproj" />
+  </ItemGroup>
+</Project>

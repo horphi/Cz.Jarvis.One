@@ -1,0 +1,40 @@
+{
+  "greeting": "你好！",
+  "welcome": "歡迎使用 Next.js",
+  "currentLanguage": "當前語言",
+  "auth": {
+    "login": "登錄",
+    "logout": "登出",
+    "register": "註冊",
+    "username": "使用者帳號",
+    "password": "密碼",
+    "confirmPassword": "確認密碼",
+    "forgotPassword": "忘記密碼？",
+    "resetPassword": "重置密碼",
+    "rememberMe": "記住我",
+    "errors": {
+      "usernameRequired": "請輸入您的使用者帳號",
+      "usernameInvalid": "使用者帳號無效",
+      "passwordRequired": "請輸入您的密碼",
+      "passwordLength": "密碼長度必須至少為7個字符"
+    }
+  },
+  "administration": {
+    "role": {
+      "title": "角色管理",
+      "roles": "角色",
+      "default": "預設",
+      "addRole": "新增角色",
+      "editRole": "編輯角色",
+      "deleteRole": "刪除角色",
+      "roleName": "角色名稱",
+      "roleDescription": "角色描述",
+      "defaultRoleDescription": "新使用者預設會被分配此角色",
+      "permissions": "權限",
+      "addPermission": "新增權限",
+      "editPermission": "編輯權限",
+      "deletePermission": "刪除權限",
+      "permissionName": "權限名稱"
+    }
+  }
+}

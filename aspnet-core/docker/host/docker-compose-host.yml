@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:      
+
+  Cz.Jarvis.web.host:
+    image: ${DOCKER_REGISTRY-}czjarviswebhost
+    container_name: czjarviswebhost_container
+    build:
+      context: ../../
+      dockerfile: src/Jarvis.Web.Host/Dockerfile
+    environment:
+      - ConnectionStrings__Default=Server=localhost; Port=33060; Database=Dev_Cz_Jarvis_13_4_1; uid=root; pwd=Jarvis_Friday.88; Connection Timeout=0;
+      - Abp__RedisCache__ConnectionString=localhost:6379
+    ports:
+      - "44301:443"
+    networks:
+      - Cz.Jarvis
+
+networks:
+  Cz.Jarvis:
+    external:
+      name: Cz.Jarvis

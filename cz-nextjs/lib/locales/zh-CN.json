@@ -1,0 +1,40 @@
+{
+  "greeting": "你好！",
+  "welcome": "欢迎使用 Next.js",
+  "currentLanguage": "当前语言",
+  "auth": {
+    "login": "登录",
+    "logout": "登出",
+    "register": "注册",
+    "username": "用户账号",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码？",
+    "resetPassword": "重置密码",
+    "rememberMe": "记住我",
+    "errors": {
+      "usernameRequired": "请输入您的用户账号",
+      "usernameInvalid": "用户账号无效",
+      "passwordRequired": "请输入您的密码",
+      "passwordLength": "密码长度必须至少为7个字符"
+    }
+  },
+  "administration": {
+    "role": {
+      "title": "角色管理",
+      "roles": "角色列表",
+      "default": "默认",
+      "addRole": "添加角色",
+      "editRole": "编辑角色",
+      "deleteRole": "删除角色",
+      "roleName": "角色名称",
+      "roleDescription": "角色描述",
+      "defaultRoleDescription": "此角色将默认分配给新用户",
+      "permissions": "权限",
+      "addPermission": "添加权限",
+      "editPermission": "编辑权限",
+      "deletePermission": "删除权限",
+      "permissionName": "权限名称"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props"></Import>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Cz.Jarvis</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Abp.Web.Common\Abp.Web.Common.csproj" />
+    <ProjectReference Include="..\Cz.Jarvis.Core.Shared\Cz.Jarvis.Core.Shared.csproj" />
+  </ItemGroup>
+</Project>
