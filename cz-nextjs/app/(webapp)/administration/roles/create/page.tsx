@@ -46,14 +46,6 @@ export default async function CraateRolesPage() {
 
     return (
         <CreateRoleProvider>
-            <Header fixed>
-                <TopNav links={topNav} />
-                <div className='ml-auto flex items-center space-x-4'>
-                    <ThemeSwitch />
-                    <LanguageSwitcher currentLocale={locale} />
-                </div>
-            </Header>
-
             <Main fixed >
                 <HeaderContainer>
                     <>

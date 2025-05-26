@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState, useCallback, use } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User } from '@/types/users/user-type';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 
 
 export default function UsersDataTable() {
@@ -36,12 +37,21 @@ export default function UsersDataTable() {
     const [roles, setRoles] = useState<string[]>([]);
     const [roleOptions, setRoleOptions] = useState<{ id: number; name: string }[]>([]);
 
+    // DataTable Pagination
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(25);
+    const [totalCount, setTotalCount] = useState(0);
+    const [maxResultCount, setMaxResultCount] = useState(25);
+    const [skipCount, setSkipCount] = useState(0);
+    const [sort, setSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({ field: 'id', direction: 'asc' });
+
+    // Fetch users with filters and pagination
     const fetchUsers = useCallback(async () => {
         setIsFetchingUsers(true);
 
         const requestBody = {
-            maxResultCount: 25,
-            skipCount: 0,
+            maxResultCount: pageSize,
+            skipCount: (page - 1) * pageSize,
             sorting: "id asc",
             filter: filter,
             permissions: permissions,
@@ -69,6 +79,7 @@ export default function UsersDataTable() {
 
             const data = await response.json();
             setUsers(data.data || { items: [] });
+            setTotalCount(data.data?.totalCount || 0);
         } catch (error) {
             console.error(error);
             setUsers({ items: [] });
@@ -76,7 +87,7 @@ export default function UsersDataTable() {
         } finally {
             setIsFetchingUsers(false);
         }
-    }, [filter, onlyLockedUsers, permissions, roleName, router]);
+    }, [filter, onlyLockedUsers, permissions, roleName, router, page, pageSize]);
 
 
     // Fetch roles for dropdown
@@ -123,6 +134,9 @@ export default function UsersDataTable() {
             </div>
         </div>
     }
+
+    // Pagination logic
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
         <>
@@ -256,7 +270,75 @@ export default function UsersDataTable() {
                     </TableBody>
                 </Table>
             </div>
-
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between mt-4 px-4">
+                <div>
+                    <label className="mr-2">Rows per page:</label>
+                    <select
+                        className="border rounded px-2 py-1"
+                        value={pageSize}
+                        onChange={e => {
+                            setPageSize(Number(e.target.value));
+                            setPage(1);
+                        }}
+                    >
+                        {[10, 25, 50, 100].map(size => (
+                            <option key={size} value={size}>{size}</option>
+                        ))}
+                    </select>
+                </div>
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                                aria-disabled={page === 1}
+                                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                        {page > 2 && (
+                            <PaginationItem>
+                                <PaginationLink onClick={() => setPage(1)}>1</PaginationLink>
+                            </PaginationItem>
+                        )}
+                        {page > 3 && (
+                            <PaginationItem>
+                                <PaginationEllipsis />
+                            </PaginationItem>
+                        )}
+                        {page > 1 && (
+                            <PaginationItem>
+                                <PaginationLink onClick={() => setPage(page - 1)}>{page - 1}</PaginationLink>
+                            </PaginationItem>
+                        )}
+                        <PaginationItem>
+                            <PaginationLink isActive>{page}</PaginationLink>
+                        </PaginationItem>
+                        {page < totalPages && (
+                            <PaginationItem>
+                                <PaginationLink onClick={() => setPage(page + 1)}>{page + 1}</PaginationLink>
+                            </PaginationItem>
+                        )}
+                        {page < totalPages - 1 && (
+                            <PaginationItem>
+                                <PaginationEllipsis />
+                            </PaginationItem>
+                        )}
+                        {page < totalPages && totalPages > 1 && (
+                            <PaginationItem>
+                                <PaginationLink onClick={() => setPage(totalPages)}>{totalPages}</PaginationLink>
+                            </PaginationItem>
+                        )}
+                        <PaginationItem>
+                            <PaginationNext
+                                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                                aria-disabled={page === totalPages || totalPages === 0}
+                                className={page === totalPages || totalPages === 0 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
         </>
     );
 

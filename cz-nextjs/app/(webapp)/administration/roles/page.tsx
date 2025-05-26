@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "@/lib/i18n";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { HeaderContainer } from "@/components/header-container";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ export default async function RolesPage() {
                             <Card className="col-span-1 lg:col-span-4">
                                 <CardHeader>
                                     <CardTitle>Roles</CardTitle>
+                                    <CardDescription></CardDescription>
                                 </CardHeader>
                                 <CardContent className="pl-2">
                                     <RolesDataTable />
