@@ -32,7 +32,7 @@ namespace Cz.Jarvis.Configure
             services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
 
             // IIS
-            services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
+            //services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
         }
     }
 }

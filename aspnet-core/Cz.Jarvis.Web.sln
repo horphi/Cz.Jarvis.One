@@ -80,6 +80,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cz.Jarvis.GraphQL", "src\Cz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cz.Jarvis.GraphQL.Tests", "test\Cz.Jarvis.GraphQL.Tests\Cz.Jarvis.GraphQL.Tests.csproj", "{A447F67B-D69A-4C8C-B881-1CB6AA8F6759}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cz.Jarvis.Test.Base", "test\Cz.Jarvis.Test.Base\Cz.Jarvis.Test.Base.csproj", "{D2CC1846-90D3-44BB-8995-8506676D6D6C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -218,6 +220,10 @@ Global
 		{A447F67B-D69A-4C8C-B881-1CB6AA8F6759}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A447F67B-D69A-4C8C-B881-1CB6AA8F6759}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A447F67B-D69A-4C8C-B881-1CB6AA8F6759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2CC1846-90D3-44BB-8995-8506676D6D6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2CC1846-90D3-44BB-8995-8506676D6D6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2CC1846-90D3-44BB-8995-8506676D6D6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2CC1846-90D3-44BB-8995-8506676D6D6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -256,6 +262,7 @@ Global
 		{2074E7BF-1AF4-EB18-C43C-43FEA1ECA9F6} = {2F73D02D-5F61-4352-93BB-F7342AA7E048}
 		{65D3703A-290B-4ABF-B31B-95A685E02278} = {AFAA0841-BD93-466F-B8F4-FB4EEC86F1FC}
 		{A447F67B-D69A-4C8C-B881-1CB6AA8F6759} = {F10AA149-2626-486E-85BB-9CD5365F3016}
+		{D2CC1846-90D3-44BB-8995-8506676D6D6C} = {F10AA149-2626-486E-85BB-9CD5365F3016}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {23CD4D4B-B131-473D-9ECB-5DD96E739671}

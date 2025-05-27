@@ -17,10 +17,8 @@ using Cz.Jarvis.EntityFrameworkCore;
 using Cz.Jarvis.MultiTenancy;
 using Cz.Jarvis.Security.Recaptcha;
 using Cz.Jarvis.Test.Base.DependencyInjection;
-using Cz.Jarvis.Test.Base.UiCustomization;
 using Cz.Jarvis.Test.Base.Url;
 using Cz.Jarvis.Test.Base.Web;
-using Cz.Jarvis.UiCustomization;
 using Cz.Jarvis.Url;
 using NSubstitute;
 
@@ -60,7 +58,6 @@ namespace Cz.Jarvis.Test.Base
 
             Configuration.ReplaceService<IAppConfigurationAccessor, TestAppConfigurationAccessor>();
             Configuration.ReplaceService<IEmailSender, NullEmailSender>(DependencyLifeStyle.Transient);
-            Configuration.ReplaceService<IUiThemeCustomizerFactory, NullUiThemeCustomizerFactory>();
             
             //Uncomment below line to write change logs for the entities below:
             Configuration.EntityHistory.IsEnabled = true;
