@@ -16,7 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User } from '@/types/users/user-type';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 
+type SortDirection = 'asc' | 'desc' | null;
+type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' | 'isActive' | 'creationTime';
 
 export default function UsersDataTable() {
     const router = useRouter();
@@ -41,6 +43,10 @@ export default function UsersDataTable() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
     const [totalCount, setTotalCount] = useState(0);
+
+    // Sorting state
+    const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
+    const [sortDirection, setSortDirection] = useState<SortDirection>(null);
 
     // Pagination logic
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -61,10 +67,16 @@ export default function UsersDataTable() {
     const fetchUsers = useCallback(async () => {
         setIsFetchingUsers(true);
 
+        // Build sorting string
+        let sorting = "id asc"; // default sorting
+        if (sortColumn && sortDirection) {
+            sorting = `${sortColumn} ${sortDirection}`;
+        }
+
         const requestBody = {
             maxResultCount: pageSize,
             skipCount: (page - 1) * pageSize,
-            sorting: "id asc",
+            sorting: sorting,
             filter: filter,
             permissions: permissions,
             role: roleId ? roleId : null,
@@ -99,7 +111,7 @@ export default function UsersDataTable() {
         } finally {
             setIsFetchingUsers(false);
         }
-    }, [filter, onlyLockedUsers, permissions, roleId, router, page, pageSize]);
+    }, [filter, onlyLockedUsers, permissions, roleId, router, page, pageSize, sortColumn, sortDirection]);
 
 
     // Fetch roles for dropdown
@@ -137,7 +149,7 @@ export default function UsersDataTable() {
         // but won't trigger this effect directly.
 
         //eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, pageSize, onlyLockedUsers, roleId, permissions, router]);
+    }, [page, pageSize, onlyLockedUsers, roleId, permissions, router, sortColumn, sortDirection]);
 
     const handleEditUser = (userId: number) => {
         console.log("Edit user with ID:", userId);
@@ -184,6 +196,21 @@ export default function UsersDataTable() {
         }
     };
 
+    const handleSort = (column: SortableColumn) => {
+        if (sortColumn === column) {
+            // If already sorted by this column, toggle direction
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            // Otherwise, set new column and default to ascending
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+
+    const renderSortIcon = (column: SortableColumn) => {
+        if (sortColumn !== column) return null;
+        return sortDirection === 'asc' ? <ChevronUp className="inline ml-1" /> : <ChevronDown className="inline ml-1" />;
+    };
 
     const handleAlertDialogOpenChange = (open: boolean) => {
         setIsAlertOpen(open);
@@ -200,19 +227,9 @@ export default function UsersDataTable() {
         setFilter("");
         setRoleId("");
         setOnlyLockedUsers(false);
+        setSortColumn(null);
+        setSortDirection(null);
     };
-
-    if (isFetchingUsers) {
-        return ( // Added return here
-            <div className="flex justify-center items-center min-h-[300px]">
-                <div className="text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                    <p>Loading...</p>
-                </div>
-            </div>
-        );
-    }
-
 
     return (
         <>
@@ -301,82 +318,116 @@ export default function UsersDataTable() {
                 <Button className='w-40' onClick={handleResetFilters}>Reset</Button>
                 <Button className='w-40' onClick={fetchUsers}>Search</Button>
             </div>
+
             <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-1/4">User Name</TableHead>
-                            <TableHead className="w-1/4">Full Name</TableHead>
-                            <TableHead className="w-1/4">Email</TableHead>
-                            <TableHead className="w-1/4">Role</TableHead>
-                            <TableHead className="w-1/4">Email Confirmed</TableHead>
-                            <TableHead className="w-1/4">Active</TableHead>
-                            <TableHead className="w-1/4">Creation Time</TableHead>
-                            <TableHead className="w-1/4">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {
-                            users.items.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={8} className="text-center"> {/* Changed colSpan to 8 */}
-                                        No users found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                users.items.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>{user.userName}</TableCell>
-                                        <TableCell>{user.name} {user.surname}</TableCell>
-                                        <TableCell>{user.emailAddress}</TableCell>
-                                        <TableCell>{user.roles.map(r => r.roleName).join(", ")}</TableCell>
-                                        <TableCell>
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isEmailConfirmed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {user.isEmailConfirmed ? 'Yes' : 'No'}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {user.isActive ? 'Yes' : 'No'}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>{new Date(user.creationTime).toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            <DropdownMenu
-                                                open={openDropdownId === user.id}
-                                                onOpenChange={(open) => setOpenDropdownId(open ? user.id : null)}
-                                            >
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
-                                                        onSelect={() => handleEditUser(user.id)}
-                                                    >
-                                                        Edit User
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onSelect={() => promptDeleteConfirmation(user.id)}
-                                                    // Add disabled condition if necessary, e.g., user.isStatic or similar
-                                                    // className={user.isStatic ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer"}
-                                                    >
-                                                        Delete User
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                {isFetchingUsers ? (
+                    <div className="flex items-center justify-center p-4">
+                        <span className="text-muted-foreground">Loading users...</span>
+                    </div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead
+                                    className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
+                                    onClick={() => handleSort('userName')}
+                                >
+                                    User Name{renderSortIcon('userName')}
+                                </TableHead>
+                                <TableHead
+                                    className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
+                                    onClick={() => handleSort('name')}
+                                >
+                                    Full Name{renderSortIcon('name')}
+                                </TableHead>
+                                <TableHead
+                                    className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
+                                    onClick={() => handleSort('emailAddress')}
+                                >
+                                    Email{renderSortIcon('emailAddress')}
+                                </TableHead>
+                                <TableHead className="w-1/4">Role</TableHead>
+                                <TableHead
+                                    className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
+                                    onClick={() => handleSort('isEmailConfirmed')}
+                                >
+                                    Email Confirmed{renderSortIcon('isEmailConfirmed')}
+                                </TableHead>
+                                <TableHead
+                                    className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
+                                    onClick={() => handleSort('isActive')}
+                                >
+                                    Active{renderSortIcon('isActive')}
+                                </TableHead>
+                                <TableHead
+                                    className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
+                                    onClick={() => handleSort('creationTime')}
+                                >
+                                    Creation Time{renderSortIcon('creationTime')}
+                                </TableHead>
+                                <TableHead className="w-1/4">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {
+                                users.items.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="text-center">
+                                            No users found.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )
-                        }
-                        {/* Map through users data here */}
-                        {/* Example row */}
-                    </TableBody>
-                </Table>
+                                ) : (
+                                    users.items.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell>{user.userName}</TableCell>
+                                            <TableCell>{user.name} {user.surname}</TableCell>
+                                            <TableCell>{user.emailAddress}</TableCell>
+                                            <TableCell>{user.roles.map(r => r.roleName).join(", ")}</TableCell>
+                                            <TableCell>
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isEmailConfirmed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                    {user.isEmailConfirmed ? 'Yes' : 'No'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                    {user.isActive ? 'Yes' : 'No'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>{new Date(user.creationTime).toLocaleDateString()}</TableCell>
+                                            <TableCell>
+                                                <DropdownMenu
+                                                    open={openDropdownId === user.id}
+                                                    onOpenChange={(open) => setOpenDropdownId(open ? user.id : null)}
+                                                >
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem
+                                                            onSelect={() => handleEditUser(user.id)}
+                                                        >
+                                                            Edit User
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onSelect={() => promptDeleteConfirmation(user.id)}
+                                                        >
+                                                            Delete User
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )
+                            }
+                        </TableBody>
+                    </Table>
+                )}
             </div>
+
             {/* Pagination Controls */}
             <div className="flex items-center justify-between mt-4 px-4">
                 <div className="flex items-center space-x-4">
@@ -462,64 +513,3 @@ export default function UsersDataTable() {
 
 
 }
-
-
-//  <div className="flex flex-col sm:flex-row sm:space-x-8 px-2 ">
-//                 {/* RoleContent */}
-//                 <div className="flex-1 flex flex-col justify-start">
-//                     <div className="mb-4  space-x-2">
-//                         <Label htmlFor="role-name" className="block mb-2 font-medium">
-//                             {/* {t.administration.role.roleName}: */}
-//                             Filter:
-//                         </Label>
-//                         <Input
-//                             id="role-name"
-//                             value={filter}
-//                             onChange={(e) => setFilter(e.target.value)}
-//                             // placeholder={t.administration.role.roleName}
-//                             className="w-full mb-4 p-2 border border-gray-300 rounded-md max-w-xl"
-//                         />
-//                     </div>
-//                     {/* Make checkbox and label inline */}
-//                     <div className="mb-4 flex items-center space-x-2">
-//                         <Checkbox
-//                             id="only-locked-users"
-//                             checked={!!onlyLockedUsers}
-//                             onCheckedChange={(checked) => setOnlyLockedUsers(checked === true)}
-//                         />
-//                         <Label htmlFor="only-locked-users" className="font-medium">
-//                             Only Locked Users
-//                             {/* {t.administration.role.default} */}
-//                         </Label>
-//                     </div>
-//                     <div className="text-sm text-gray-500 ml-6">
-//                         <p>
-//                             {/* {t.administration.role.defaultRoleDescription} */}
-//                         </p>
-//                     </div>
-//                 </div>
-//                 {/*Permission */}
-//                 {/* <div className="flex-1 flex flex-col justify-start">
-//                     <Label className="block mb-2 font-medium">
-//                         Filter by Role:
-//                     </Label>
-//                     <div className="border border-gray-300 rounded-md p-4 h-fit overflow-y-auto">
-{/* <Select
-    value={roleName}
-    onValueChange={setRoleName}
->
-    <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select a role" />
-    </SelectTrigger>
-    <SelectContent>
-        {roleOptions.map((role) => (
-            <SelectItem key={role.id} value={role.name}>
-                {role.name}
-            </SelectItem>
-        ))}
-    </SelectContent>
-</Select> */}
-//                     </div>
-//                 </div> */}
-
-//             </div>
