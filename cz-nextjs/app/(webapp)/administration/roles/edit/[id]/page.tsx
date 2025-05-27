@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { HeaderContainer } from "@/components/header-container";
 import { Main } from "@/components/ui/main";
-import { CreateRoleProvider } from "@/context/administration/role-context";
+import { CreateOrEditRoleProvider } from "@/context/administration/role-context";
 import SaveRoleButton from "../../components/save-role-button";
 import RoleForm from "../../components/role-form";
 
@@ -17,7 +17,7 @@ export default async function EditRolesPage({ params }: EditRolesPageProps) {
     const t = await getTranslations(locale);
 
     return (
-        <CreateRoleProvider>
+        <CreateOrEditRoleProvider>
             <Main fixed >
                 <HeaderContainer>
                     <>
@@ -55,6 +55,6 @@ export default async function EditRolesPage({ params }: EditRolesPageProps) {
                     </TabsContent>
                 </Tabs>
             </Main>
-        </CreateRoleProvider>
+        </CreateOrEditRoleProvider>
     );
 }

@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     // Parse the incoming request body
     const requestBody = await req.json();
     const url = `${DELETE_ROLE}?Id=${requestBody.roleId}`;
+    // Make the API request to delete the role
     const response = await fetch(`${url}`, {
       method: "DELETE",
       headers: {
@@ -26,16 +27,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("Response from CREATE_OR_UPDATE_ROLE:", response);
-    const data = await response.json();
+    const responseData = await response.json();
 
     // Handle error responses from API
-    if (!response.ok || (data && data.success === false)) {
+    if (!response.ok || (responseData && responseData.success === false)) {
       // 401 Unauthorized or 403 Forbidden
-      if (data?.unAuthorizedRequest) {
+      if (responseData?.unAuthorizedRequest) {
         return createApiErrorResponse({
-          message: data?.error?.message || "Unauthorized or forbidden.",
-          error: data?.error?.message,
+          message: responseData?.error?.message || "Unauthorized or forbidden.",
+          error: responseData?.error?.message,
           status:
             response.status === 401 || response.status === 403
               ? response.status
@@ -43,23 +43,23 @@ export async function POST(req: NextRequest) {
         });
       }
       // 500 or other errors (e.g., duplicate role name)
-      if (data?.error?.message) {
+      if (responseData?.error?.message) {
         return createApiErrorResponse({
-          message: data.error.message,
-          error: data.error.message,
+          message: responseData.error.message,
+          error: responseData.error.message,
           status: response.status,
         });
       }
       // Fallback for unknown errors
       return createApiErrorResponse({
         message: "An unknown error occurred.",
-        error: data?.error?.message,
+        error: responseData?.error?.message,
         status: response.status,
       });
     }
     // Handle success response
     return createApiResponse({
-      data: data.result,
+      data: responseData.result,
     });
   } catch (error) {
     console.error("Get Roles error:", error);
@@ -67,15 +67,5 @@ export async function POST(req: NextRequest) {
       message: "An unexpected error occurred. Please try again.",
       status: 500,
     });
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An unexpected error occurred. Please try again.",
-      },
-      {
-        status: 500,
-      }
-    );
   }
 }

@@ -3,18 +3,23 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getTranslations } from "@/lib/i18n";
-import { useCreateUserContext } from "@/context/administration/user-context";
-import { useEffect, useState, useRef } from "react"; // Import useRef
-import { IRole } from "@/types/roles/i-role";
-
+import { useCreateOrEditUserContext } from "@/context/administration/user-context";
+import React, { useEffect, useState, useCallback } from "react"; // Import useRef
+import { UserRoleDto } from "@/types/roles/i-role";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface UserFormProps {
     t: Awaited<ReturnType<typeof getTranslations>>;
+    param: number | null;
 }
 
 
-export default function UserForm({ t }: UserFormProps) {
+export default function EditUserForm({ t, param }: UserFormProps) {
+    const router = useRouter();
+
     const {
+        setId,
         firstName, setFirstName,
         surName, setSurName,
         userName, setUserName,
@@ -27,64 +32,67 @@ export default function UserForm({ t }: UserFormProps) {
         setRandomPassword, setSetRandomPassword,
         isActive, setIsActive,
         isLockoutEnabled, setIsLockoutEnabled
-    } = useCreateUserContext();
+    } = useCreateOrEditUserContext();
 
-    const [roleOptions, setRoleOptions] = useState<{ id: number; name: string; displayName: string; isDefault: boolean }[]>([]);
-    const initialDefaultRolesProcessed = useRef(false); // Ref to track if initial defaults have been processed
+    const [roleOptions, setRoleOptions] = useState<{ roleId: number; roleName: string; roleDisplayName: string; isAssigned: boolean }[]>([]);
+    const [confirmPassword, setConfirmPassword] = useState(""); // Added for confirm password
 
-    useEffect(() => {
-        // Fetch roles for checkbox list
-        const fetchRolesAndSetOptions = async () => {
+    const fetchUser = useCallback(async () => {
+        if (param && param > 0) {
             try {
-                const response = await fetch("/api/administration/role/get-roles", {
+                const response = await fetch("/api/administration/user/get-user", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ Permissions: [] }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ id: param }),
                 });
-                if (!response.ok) throw new Error("Failed to fetch roles");
-                const data = await response.json();
-                const newRoleOptions = (data.data?.items ?? []).map((role: IRole) => ({
-                    id: role.id,
-                    name: role.name,
-                    displayName: role.displayName || role.name,
-                    isDefault: role.isDefault,
-                }));
-                setRoleOptions(newRoleOptions);
-                initialDefaultRolesProcessed.current = false; // Reset flag when new roles are fetched
-            } catch (error) {
-                console.error(error);
-                setRoleOptions([]);
-            }
-        };
-        fetchRolesAndSetOptions();
-    }, []); // Runs once on mount to fetch roles
+                const responseData = await response.json();
+                console.log(responseData);
 
-    // Effect to set default assigned roles once roleOptions are available
-    useEffect(() => {
-        // Only process if roleOptions are loaded and initial defaults for this set haven't been processed
-        if (roleOptions.length > 0 && !initialDefaultRolesProcessed.current) {
-            const defaultRoleNames = roleOptions
-                .filter(role => role.isDefault)
-                .map(role => role.name);
-
-            if (defaultRoleNames.length > 0) {
-                setAssignedRoleNames((prevAssignedRoleNames: string[]) => {
-                    const currentAssigned = new Set(prevAssignedRoleNames);
-                    let changed = false;
-                    for (const name of defaultRoleNames) {
-                        if (!currentAssigned.has(name)) {
-                            currentAssigned.add(name);
-                            changed = true;
-                        }
+                if (responseData.success) {
+                    const editData = responseData.data;
+                    if (editData) {
+                        setId(param);
+                        setFirstName(editData.user.name);
+                        setSurName(editData.user.surname);
+                        setUserName(editData.user.userName);
+                        setEmailAddress(editData.user.emailAddress);
+                        setPassword(editData.user.password || "");
+                        setShouldChangePasswordOnNextLogin(editData.user.shouldChangePasswordOnNextLogin);
+                        setIsTwoFactorEnabled(editData.user.isTwoFactorEnabled);
+                        setRoleOptions(editData.roles || []);
+                        // Set assigned role names based on isAssigned property
+                        const assignedRoles = (editData.roles || [])
+                            .filter((role: UserRoleDto) => role.isAssigned)
+                            .map((role: UserRoleDto) => role.roleName);
+                        setAssignedRoleNames(assignedRoles);
+                        setSendActivationEmail(editData.user.sendActivationEmail);
+                        setSetRandomPassword(editData.user.setRandomPassword);
+                        setIsActive(editData.user.isActive);
+                        setIsLockoutEnabled(editData.user.isLockoutEnabled);
                     }
-                    // Only return a new array if something actually changed to prevent unnecessary re-renders.
-                    return changed ? Array.from(currentAssigned) : prevAssignedRoleNames;
-                });
+                } else {
+                    toast.error(responseData.message || "Failed to retrieve user.");
+                    setTimeout(() => {
+                        router.push("/administration/users");
+                    }, 1200);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user", error);
+                toast.error("An error occurred while fetching the user.");
+                setTimeout(() => {
+                    router.push("/administration/users");
+                }, 1200);
+            } finally {
+                //setLoading(false);
             }
-            initialDefaultRolesProcessed.current = true; // Mark that defaults for this roleOptions set have been processed
         }
-    }, [roleOptions, setAssignedRoleNames]); // Runs when roleOptions or setAssignedRoleNames changes
+    }, [param, router, setId, setFirstName, setSurName, setUserName, setEmailAddress, setPassword, setShouldChangePasswordOnNextLogin, setIsTwoFactorEnabled, setAssignedRoleNames, setSendActivationEmail, setSetRandomPassword, setIsActive, setIsLockoutEnabled]);
 
+    useEffect(() => {
+        fetchUser();
+    }, [fetchUser]);
 
     return (<>
 
@@ -157,10 +165,25 @@ export default function UserForm({ t }: UserFormProps) {
                     </Label>
                     <Input
                         id="password"
+                        type="password" // Added type="password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         className="p-2 border border-gray-300 rounded-md max-w-md"
                     />
+                </div>
+                {/* Confirm Password Field */}
+                <div className=" mb-4 space-y-2">
+                    <Label htmlFor="confirm-password" className="block font-medium">
+                        Confirm Password:<span className="text-red-500"> *</span>
+                    </Label>
+                    <Input
+                        id="confirm-password"
+                        type="password" // Added type="password"
+                        value={confirmPassword || ""}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        className="p-2 border border-gray-300 rounded-md max-w-md"
+                    />
+                    {/* Reminder: Password matching check should be done on form submission */}
                 </div>
 
 
@@ -236,24 +259,21 @@ export default function UserForm({ t }: UserFormProps) {
                     {t.administration.role?.roleName || "Roles"}
                 </Label>
                 {roleOptions.map(role => (
-                    <div key={role.id} className="flex items-center space-x-2 mb-4 px-4">
+                    <div key={role.roleId} className="flex items-center space-x-2 mb-4 px-4">
                         <Checkbox
                             className=""
-                            id={`role-checkbox-${role.id}`}
-                            checked={assignedRoleNames.includes(role.name)}
+                            id={`role-checkbox-${role.roleId}`}
+                            checked={assignedRoleNames.includes(role.roleName)}
                             onCheckedChange={checked => {
                                 if (checked) {
-                                    setAssignedRoleNames((prev: string[]) => [...prev, role.name]);
+                                    setAssignedRoleNames((prev: string[]) => [...prev, role.roleName]);
                                 } else {
-                                    setAssignedRoleNames((prev: string[]) => prev.filter(r => r !== role.name));
+                                    setAssignedRoleNames((prev: string[]) => prev.filter(r => r !== role.roleName));
                                 }
                             }}
                         />
-                        <Label htmlFor={`role-checkbox-${role.id}`} className="font-medium">
-                            {role.displayName}
-                            {role.isDefault && (
-                                <span className="ml-2 text-xs text-green-600">(Default)</span>
-                            )}
+                        <Label htmlFor={`role-checkbox-${role.roleId}`} className="font-medium">
+                            {role.roleDisplayName}
                         </Label>
                     </div>
                 ))}

@@ -1,4 +1,4 @@
-import { CREATE_OR_UPDATE_ROLE } from "@/config/endpoint";
+import { DELETE_USER } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
 import {
   createApiErrorResponse,
@@ -9,33 +9,21 @@ import { NextResponse, NextRequest } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const session = await getAuthSession();
+    // Check if the session and access token are available
     if (!session || !session.accessToken) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
-
+    // Parse the incoming request body
     const requestBody = await req.json();
-
-    const role = {
-      id: requestBody.id || null, // Use null if id is not provided (New role)
-      displayName: requestBody.roleName,
-      isDefault: requestBody.isDefault,
-    };
-
-    const requestPayload = {
-      role: role,
-      grantedPermissionNames: requestBody.permissions,
-    };
-
-    const response = await fetch(`${CREATE_OR_UPDATE_ROLE}`, {
-      method: "POST",
+    const url = `${DELETE_USER}?Id=${requestBody.userId}`;
+    const response = await fetch(`${url}`, {
+      method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
       },
-      body: JSON.stringify(requestPayload),
     });
 
     const responseData = await response.json();

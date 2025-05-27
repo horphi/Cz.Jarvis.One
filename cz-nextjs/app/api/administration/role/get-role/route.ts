@@ -1,5 +1,6 @@
 import { GET_ROLE_FOR_EDIT } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
+import { createApiErrorResponse } from "@/lib/utils/api-response";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -20,7 +21,9 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+    // Construct the URL with the role ID for editing
     const url = `${GET_ROLE_FOR_EDIT}?Id=${requestBody.id}`;
+    // Make the API request to get the role for editing
     const response = await fetch(`${url}`, {
       method: "GET",
       headers: {
@@ -30,32 +33,35 @@ export async function POST(req: NextRequest) {
 
     const responseData = await response.json();
 
-    if (!response.ok) {
-      //const errorData = await response.json();
-      console.error("Error response body:", responseData);
-
-      let errorMessage = "Failed to fetch roles. Please try again.";
-
-      if (responseData && responseData.unAuthorizedReqeuest) {
-        errorMessage = responseData.unAuthorizedReqeuest;
-      } else {
-        if (responseData.error?.message) {
-          errorMessage = responseData.error.message;
-        } else if (response.status === 400) {
-          errorMessage = "Invalid request. Please check your input.";
-        } else if (response.status === 401) {
-          errorMessage = "Unauthorized access.";
-        } else if (response.status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        }
+    // Handle error responses from API
+    if (!response.ok || (responseData && responseData.success === false)) {
+      // 401 Unauthorized or 403 Forbidden
+      if (responseData?.unAuthorizedRequest) {
+        return createApiErrorResponse({
+          message: responseData?.error?.message || "Unauthorized or forbidden.",
+          error: responseData?.error?.message,
+          status:
+            response.status === 401 || response.status === 403
+              ? response.status
+              : 403,
+        });
       }
-
-      return NextResponse.json(
-        { success: false, message: errorMessage },
-        { status: response.status }
-      );
+      // 500 or other errors (e.g., duplicate role name)
+      if (responseData?.error?.message) {
+        return createApiErrorResponse({
+          message: responseData.error.message,
+          error: responseData.error.message,
+          status: response.status,
+        });
+      }
+      // Fallback for unknown errors
+      return createApiErrorResponse({
+        message: "An unknown error occurred.",
+        error: responseData?.error?.message,
+        status: response.status,
+      });
     }
-
+    // Handle success response
     return NextResponse.json({
       success: true,
       data: responseData.result,

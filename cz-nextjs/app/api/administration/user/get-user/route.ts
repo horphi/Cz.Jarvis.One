@@ -1,13 +1,19 @@
-import { CREATE_OR_UPDATE_ROLE } from "@/config/endpoint";
+import { GET_USER_FOR_EDIT } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
-import {
-  createApiErrorResponse,
-  createApiResponse,
-} from "@/lib/utils/api-response";
+import { createApiErrorResponse } from "@/lib/utils/api-response";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const requestBody = await req.json();
+
+    // // Ensure Permissions field is included
+    // const permissions = {
+    //   Permissions: requestBody.Permissions || [],
+    // };
+
+    // console.log("Final request body for GET_ROLES:", permissions);
+
     const session = await getAuthSession();
     if (!session || !session.accessToken) {
       return NextResponse.json(
@@ -15,27 +21,14 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
-
-    const requestBody = await req.json();
-
-    const role = {
-      id: requestBody.id || null, // Use null if id is not provided (New role)
-      displayName: requestBody.roleName,
-      isDefault: requestBody.isDefault,
-    };
-
-    const requestPayload = {
-      role: role,
-      grantedPermissionNames: requestBody.permissions,
-    };
-
-    const response = await fetch(`${CREATE_OR_UPDATE_ROLE}`, {
-      method: "POST",
+    // Construct the URL with the role ID for editing
+    const url = `${GET_USER_FOR_EDIT}?Id=${requestBody.id}`;
+    // Make the API request to get the role for editing
+    const response = await fetch(`${url}`, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
       },
-      body: JSON.stringify(requestPayload),
     });
 
     const responseData = await response.json();
@@ -69,14 +62,20 @@ export async function POST(req: NextRequest) {
       });
     }
     // Handle success response
-    return createApiResponse({
+    return NextResponse.json({
+      success: true,
       data: responseData.result,
     });
   } catch (error) {
     console.error("Get Roles error:", error);
-    return createApiErrorResponse({
-      message: "An unexpected error occurred. Please try again.",
-      status: 500,
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "An unexpected error occurred. Please try again.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

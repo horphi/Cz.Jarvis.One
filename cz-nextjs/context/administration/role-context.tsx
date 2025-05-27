@@ -15,7 +15,7 @@ type RoleContextType = {
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
-export function CreateRoleProvider({ children }: { children: React.ReactNode }) {
+export function CreateOrEditRoleProvider({ children }: { children: React.ReactNode }) {
     const [roleName, setRoleName] = useState("");
     const [selectedPermissions, setPermissions] = useState<string[]>([]);
     const [isDefault, setIsDefault] = useState(false);
@@ -28,7 +28,7 @@ export function CreateRoleProvider({ children }: { children: React.ReactNode }) 
     );
 }
 
-export function useCreateRoleContext() {
+export function useCreateOrEditRoleContext() {
     const context = useContext(RoleContext);
     if (!context) {
         throw new Error("useRoleContext must be used within a RoleProvider");

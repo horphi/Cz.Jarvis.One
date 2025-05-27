@@ -32,18 +32,30 @@ export default function UsersDataTable() {
     // Filter properties
     const [filter, setFilter] = useState("");
     const [onlyLockedUsers, setOnlyLockedUsers] = useState(false);
-    const [roleName, setRoleName] = useState("");
-    const [permissions, setPermissions] = useState<string[]>([]);
-    const [roles, setRoles] = useState<string[]>([]);
+    const [roleId, setRoleId] = useState("");
+    const [permissions] = useState<string[]>([]);
+    //cconst [roles, setRoles] = useState<string[]>([]);
     const [roleOptions, setRoleOptions] = useState<{ id: number; name: string }[]>([]);
 
     // DataTable Pagination
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
     const [totalCount, setTotalCount] = useState(0);
-    const [maxResultCount, setMaxResultCount] = useState(25);
-    const [skipCount, setSkipCount] = useState(0);
-    const [sort, setSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({ field: 'id', direction: 'asc' });
+
+    // Pagination logic
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const firstItemNum = totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+    const lastItemNum = Math.min(page * pageSize, totalCount);
+
+
+
+
+    // Delete User State
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
+    const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+
 
     // Fetch users with filters and pagination
     const fetchUsers = useCallback(async () => {
@@ -55,10 +67,10 @@ export default function UsersDataTable() {
             sorting: "id asc",
             filter: filter,
             permissions: permissions,
-            role: roleName ? roleName : null,
+            role: roleId ? roleId : null,
             onlyLockedUsers: onlyLockedUsers,
         };
-        console.log("Request Body:", requestBody.filter);
+        console.log("Request Body:", requestBody);
         // Reset users to empty before fetching
 
         try {
@@ -74,7 +86,7 @@ export default function UsersDataTable() {
                 if (response.status === 401) {
                     router.push('/login');
                 }
-                throw new Error("Failed to fetch roles");
+                throw new Error("Failed to fetch users");
             }
 
             const data = await response.json();
@@ -87,7 +99,7 @@ export default function UsersDataTable() {
         } finally {
             setIsFetchingUsers(false);
         }
-    }, [filter, onlyLockedUsers, permissions, roleName, router, page, pageSize]);
+    }, [filter, onlyLockedUsers, permissions, roleId, router, page, pageSize]);
 
 
     // Fetch roles for dropdown
@@ -116,41 +128,122 @@ export default function UsersDataTable() {
         fetchRoles();
     }, []);
 
+    // useEffect for initial load and when specific filters/pagination change (excluding text filter for auto-trigger)
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]);
+        // This effect runs on initial mount and when page, pageSize, onlyLockedUsers, roleId, permissions, or router change.
+        // It calls the latest `fetchUsers` function, which is memoized with the current `filter` value.
+        // Keystrokes in the filter input will update `filter` and re-memoize `fetchUsers`,
+        // but won't trigger this effect directly.
+
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, pageSize, onlyLockedUsers, roleId, permissions, router]);
+
+    const handleEditUser = (userId: number) => {
+        console.log("Edit user with ID:", userId);
+        router.push(`/administration/users/edit/${userId}`);
+    };
+
+    const promptDeleteConfirmation = (userId: number) => {
+        setUserToDeleteId(userId);
+        setOpenDropdownId(null); // Close any open dropdown
+        setIsAlertOpen(true);
+    };
+
+    const executeDeleteUser = async () => {
+        if (userToDeleteId === null) return;
+
+        console.log("Delete user with ID:", userToDeleteId);
+        setIsDeletingUser(true);
+
+        try {
+            // Assuming an API endpoint similar to roles for deleting a user
+            const response = await fetch("/api/administration/user/delete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId: userToDeleteId }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success(data.message || "User deleted successfully.");
+                setIsAlertOpen(false); // Close dialog on success
+                fetchUsers(); // Re-fetch users data
+            } else {
+                toast.error(data.message || "Failed to delete user.");
+            }
+
+        } catch (error) {
+            console.error("Failed to delete User", error);
+            toast.error("An error occurred while deleting the user.");
+        } finally {
+            setIsDeletingUser(false);
+            setUserToDeleteId(null); // Reset user to delete
+        }
+    };
+
+
+    const handleAlertDialogOpenChange = (open: boolean) => {
+        setIsAlertOpen(open);
+        if (!open) {
+            setUserToDeleteId(null);
+            if (isDeletingUser) { // Ensure isDeletingUser is reset if dialog is closed prematurely
+                setIsDeletingUser(false);
+            }
+        }
+    };
+
 
     const handleResetFilters = () => {
         setFilter("");
-        setRoleName("");
+        setRoleId("");
         setOnlyLockedUsers(false);
     };
 
     if (isFetchingUsers) {
-        <div className="flex justify-center items-center min-h-[300px]">
-            <div className="text-center">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                <p>Loading...</p>
+        return ( // Added return here
+            <div className="flex justify-center items-center min-h-[300px]">
+                <div className="text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <p>Loading...</p>
+                </div>
             </div>
-        </div>
+        );
     }
 
-    // Pagination logic
-    const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
         <>
+            <AlertDialog open={isAlertOpen} onOpenChange={handleAlertDialogOpenChange}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the user.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingUser}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeDeleteUser} disabled={isDeletingUser}>
+                            {isDeletingUser ? "Deleting..." : "Continue"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <div className='flex flex-row'>
                 <div className='flex-1'>
 
                     <div className="m-4 space-x-2">
                         <div className="row  items-center space-x-2">
-                            <Label htmlFor="role-name" className="block mb-2 font-medium">
+                            <Label htmlFor="filter" className="block mb-2 font-medium">
                                 {/* {t.administration.role.roleName}: */}
                                 Filter:
                             </Label>
                             <Input
-                                id="role-name"
+                                id="filter"
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
                                 // placeholder={t.administration.role.roleName}
@@ -184,15 +277,15 @@ export default function UsersDataTable() {
                                 Filter by Role:
                             </Label>
                             <Select
-                                value={roleName}
-                                onValueChange={setRoleName}
+                                value={roleId}
+                                onValueChange={setRoleId}
                             >
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {roleOptions.map((role) => (
-                                        <SelectItem key={role.id} value={role.name}>
+                                        <SelectItem key={role.id} value={role.id.toString()}>
                                             {role.name}
                                         </SelectItem>
                                     ))}
@@ -226,7 +319,7 @@ export default function UsersDataTable() {
                         {
                             users.items.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center">
+                                    <TableCell colSpan={8} className="text-center"> {/* Changed colSpan to 8 */}
                                         No users found.
                                     </TableCell>
                                 </TableRow>
@@ -249,7 +342,10 @@ export default function UsersDataTable() {
                                         </TableCell>
                                         <TableCell>{new Date(user.creationTime).toLocaleDateString()}</TableCell>
                                         <TableCell>
-                                            <DropdownMenu>
+                                            <DropdownMenu
+                                                open={openDropdownId === user.id}
+                                                onOpenChange={(open) => setOpenDropdownId(open ? user.id : null)}
+                                            >
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" className="h-8 w-8 p-0">
                                                         <span className="sr-only">Open menu</span>
@@ -257,7 +353,18 @@ export default function UsersDataTable() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    {/* Add actions here */}
+                                                    <DropdownMenuItem
+                                                        onSelect={() => handleEditUser(user.id)}
+                                                    >
+                                                        Edit User
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onSelect={() => promptDeleteConfirmation(user.id)}
+                                                    // Add disabled condition if necessary, e.g., user.isStatic or similar
+                                                    // className={user.isStatic ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer"}
+                                                    >
+                                                        Delete User
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -272,20 +379,23 @@ export default function UsersDataTable() {
             </div>
             {/* Pagination Controls */}
             <div className="flex items-center justify-between mt-4 px-4">
-                <div>
-                    <label className="mr-2">Rows per page:</label>
-                    <select
-                        className="border rounded px-2 py-1"
-                        value={pageSize}
-                        onChange={e => {
-                            setPageSize(Number(e.target.value));
-                            setPage(1);
-                        }}
-                    >
-                        {[10, 25, 50, 100].map(size => (
-                            <option key={size} value={size}>{size}</option>
-                        ))}
-                    </select>
+                <div className="flex items-center space-x-4">
+
+                    <div>
+                        <label className="mr-2 text-sm">Rows per page:</label>
+                        <select
+                            className="border rounded px-2 py-1 text-sm"
+                            value={pageSize}
+                            onChange={e => {
+                                setPageSize(Number(e.target.value));
+                                setPage(1);
+                            }}
+                        >
+                            {[5, 10, 25, 50, 100].map(size => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
                 <Pagination>
                     <PaginationContent>
@@ -319,12 +429,12 @@ export default function UsersDataTable() {
                                 <PaginationLink onClick={() => setPage(page + 1)}>{page + 1}</PaginationLink>
                             </PaginationItem>
                         )}
-                        {page < totalPages - 1 && (
+                        {page < totalPages - 2 && ( // Corrected condition for ellipsis
                             <PaginationItem>
                                 <PaginationEllipsis />
                             </PaginationItem>
                         )}
-                        {page < totalPages && totalPages > 1 && (
+                        {page < totalPages - 1 && totalPages > 1 && ( // Corrected condition for totalPages link
                             <PaginationItem>
                                 <PaginationLink onClick={() => setPage(totalPages)}>{totalPages}</PaginationLink>
                             </PaginationItem>
@@ -338,7 +448,15 @@ export default function UsersDataTable() {
                         </PaginationItem>
                     </PaginationContent>
                 </Pagination>
+                <div className="text-sm text-muted-foreground">
+                    {totalCount > 0 ? (
+                        `Showing ${firstItemNum} to ${lastItemNum} of ${totalCount} entries`
+                    ) : (
+                        "No entries found"
+                    )}
+                </div>
             </div>
+
         </>
     );
 

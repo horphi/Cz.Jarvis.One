@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import PermissionList from "./permission-tree-list";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCreateRoleContext } from "@/context/administration/role-context";
+import { useCreateOrEditRoleContext } from "@/context/administration/role-context";
 import { getTranslations } from "@/lib/i18n";
 import React, { useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ interface RoleFormProps {
 }
 
 export default function RoleForm({ t, param }: RoleFormProps) {
-    const { setId, roleName, setRoleName, isDefault, setIsDefault, selectedPermissions, setPermissions } = useCreateRoleContext();
+    const { setId, roleName, setRoleName, isDefault, setIsDefault, selectedPermissions, setPermissions } = useCreateOrEditRoleContext();
     const router = useRouter();
 
     const fetchRole = useCallback(async () => {

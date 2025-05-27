@@ -1,10 +1,10 @@
-import { CREATE_OR_UPDATE_ROLE } from "@/config/endpoint";
+import { CREATE_OR_UPDATE_USER } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
 import {
   createApiErrorResponse,
   createApiResponse,
 } from "@/lib/utils/api-response";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,18 +18,29 @@ export async function POST(req: NextRequest) {
 
     const requestBody = await req.json();
 
-    const role = {
-      id: requestBody.id || null, // Use null if id is not provided (New role)
-      displayName: requestBody.roleName,
-      isDefault: requestBody.isDefault,
-    };
-
+    // Construct the request payload
     const requestPayload = {
-      role: role,
-      grantedPermissionNames: requestBody.permissions,
+      user: {
+        id: requestBody.id || null,
+        name: requestBody.firstName,
+        surname: requestBody.surName,
+        userName: requestBody.userName,
+        emailAddress: requestBody.emailAddress,
+        phoneNumber: requestBody.phoneNumber,
+        password: requestBody.password,
+        isActive: requestBody.isActive,
+        shouldChangePasswordOnNextLogin:
+          requestBody.shouldChangePasswordOnNextLogin,
+        isTwoFactorEnabled: requestBody.isTwoFactorEnabled,
+        isLockoutEnabled: requestBody.isLockoutEnabled,
+      },
+      assignedRoleNames: requestBody.assignedRoleNames || [],
+      sendActivationEmail: requestBody.sendActivationEmail,
+      setRandomPassword: requestBody.setRandomPassword,
     };
 
-    const response = await fetch(`${CREATE_OR_UPDATE_ROLE}`, {
+    // Make the API request to create or update the user
+    const response = await fetch(`${CREATE_OR_UPDATE_USER}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

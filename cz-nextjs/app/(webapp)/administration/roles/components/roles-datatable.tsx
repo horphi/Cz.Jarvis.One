@@ -80,7 +80,7 @@ const RolesDataTable = () => {
         setIsDeletingRole(true);
 
         try {
-            const response = await fetch("/api/administration/role/delete-role", {
+            const response = await fetch("/api/administration/role/delete", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

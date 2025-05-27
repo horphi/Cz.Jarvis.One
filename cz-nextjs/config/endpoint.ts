@@ -13,3 +13,7 @@ export const GET_ROLE_FOR_EDIT = `${Host}/api/services/app/Role/GetRoleForEdit`;
 
 // User
 export const GET_USERS = `${Host}/api/services/app/User/GetUsers`;
+export const CREATE_OR_UPDATE_USER = `${Host}/api/services/app/User/CreateOrUpdateUser`;
+export const DELETE_USER = `${Host}/api/services/app/User/DeleteUser`;
+export const GET_USER_FOR_EDIT = `${Host}/api/services/app/User/GetUserForEdit`;
+export const UNLOCK_USER = `${Host}/api/services/app/User/UnlockUser`;

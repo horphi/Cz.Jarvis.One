@@ -1,12 +1,12 @@
 'use client';
 import { Button } from "@/components/ui/button";
-import { useCreateRoleContext } from "@/context/administration/role-context";
+import { useCreateOrEditRoleContext } from "@/context/administration/role-context";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SaveRoleButton() {
-    const { id, roleName, isDefault, selectedPermissions } = useCreateRoleContext();
+    const { id, roleName, isDefault, selectedPermissions } = useCreateOrEditRoleContext();
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
 
@@ -25,7 +25,7 @@ export default function SaveRoleButton() {
             return;
         }
 
-        const payload = {
+        const requestBody = {
             id: id || null,
             roleName: roleName,
             isDefault: isDefault,
@@ -39,7 +39,7 @@ export default function SaveRoleButton() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(requestBody),
             });
 
             const data = await response.json();

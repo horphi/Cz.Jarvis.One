@@ -17,7 +17,7 @@ export default async function UsersPage() {
                     <>
                         <h1 className="text-2xl font-bold tracking-tight">
                             {/* {t.administration.user.title} */}
-                            Users
+                            {t.administration.user?.title} Users
                         </h1>
                         <div className="flex items-center space-x-2">
                             <Button variant="outline" asChild>

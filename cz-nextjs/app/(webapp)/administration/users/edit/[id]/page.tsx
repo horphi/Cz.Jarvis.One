@@ -1,27 +1,22 @@
 //import Image from "next/image";
 import { getLocale, getTranslations } from "@/lib/i18n";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { HeaderContainer } from "@/components/header-container";
 import { Main } from "@/components/ui/main";
-
-import CreateUserForm from "../components/create-user-form";
 import { CreateOrEditUserProvider } from "@/context/administration/user-context";
-import SaveUserButton from "../components/save-user-button";
+import EditUserForm from "../../components/edit-user-form";
+import SaveUserButton from "../../components/save-user-button";
 
+interface EditUserPageProps {
+    // params: { id: number | null };
+    params: Promise<{ id: number | null }>;
+}
 
-
-export default async function CreateUserPage() {
+export default async function EditUserPage({ params }: EditUserPageProps) {
     const locale = await getLocale();
     const t = await getTranslations(locale);
-
-    // Get language name for display
-    // const languageNames = {
-    //   'en': 'English',
-    //   'zh-CN': '中文 (简体)',
-    //   'zh-TW': '中文 (繁體)'
-    // };
-    // const displayLanguage = languageNames[locale as keyof typeof languageNames] || locale;
+    const userId = (await params).id || null;
 
     return (
         <CreateOrEditUserProvider>
@@ -52,7 +47,7 @@ export default async function CreateUserPage() {
                                     <CardDescription>You made 265 sales this month.</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <CreateUserForm t={t} param={null} />
+                                    <EditUserForm t={t} param={userId} />
                                 </CardContent>
                             </Card>
                         </div>

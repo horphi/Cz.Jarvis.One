@@ -51,7 +51,7 @@ type UserContextType = {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function CreateUserProvider({ children }: { children: React.ReactNode }) {
+export function CreateOrEditUserProvider({ children }: { children: React.ReactNode }) {
     const [id, setId] = useState<number | null>(null);
     const [firstName, setFirstName] = useState("");
     const [surName, setSurName] = useState("");
@@ -87,7 +87,7 @@ export function CreateUserProvider({ children }: { children: React.ReactNode }) 
         </UserContext.Provider>
     );
 }
-export function useCreateUserContext() {
+export function useCreateOrEditUserContext() {
     const context = useContext(UserContext);
     if (!context) {
         throw new Error("useCreateUserContext must be used within a CreateUserProvider");
