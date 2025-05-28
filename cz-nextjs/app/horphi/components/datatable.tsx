@@ -1,48 +1,48 @@
 "use client";
+import React, { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState, useCallback } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { IRole } from "@/types/roles/i-role";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User } from '@/types/users/user-type';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@radix-ui/react-alert-dialog';
+import { AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
+// My Object type definition
+type MyObject = {
+    id: number;
+    userName: string;
+    name: string;
+    surname: string;
+    emailAddress: string;
+    isActive: boolean;
+    creationTime: string; // ISO date string
+    lockoutEndDateUtc: Date | null;
+}
+
+// Types for DataTable
 type SortDirection = 'asc' | 'desc' | null;
-type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' | 'isActive' | 'creationTime';
+type SortableColumn =
+    'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' | 'isActive' | 'creationTime';
 
-export default function UsersDataTable() {
+
+export default function DataTable() {
     const router = useRouter();
-    const [users, setUsers] = useState<{ items: User[] }>({ items: [] });
-    const [isFetchingUsers, setIsFetchingUsers] = useState(false);
-    // Filter properties
-    const [filter, setFilter] = useState("");
-    const [onlyLockedUsers, setOnlyLockedUsers] = useState(false);
-    const [roleId, setRoleId] = useState("");
-    const [permissions] = useState<string[]>([]);
-    //cconst [roles, setRoles] = useState<string[]>([]);
-    const [roleOptions, setRoleOptions] = useState<{ id: number; name: string }[]>([]);
+    // Filter 
+    const [filter] = useState("");
+
+    // State to hold fetched data
+    const [myObjects, setMyObjects] = useState<{ items: MyObject[] }>({ items: [] });
+    const [isFetchingData, setIsFetchingData] = useState(false);
 
     // DataTable Pagination
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
     const [totalCount, setTotalCount] = useState(0);
+
     // Sorting state
     const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -52,17 +52,15 @@ export default function UsersDataTable() {
     const firstItemNum = totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
     const lastItemNum = Math.min(page * pageSize, totalCount);
 
-
-    // Delete User State
-    const [isDeletingUser, setIsDeletingUser] = useState(false);
+    // Delete Entity State
+    const [isDeletingEntity, setIsDeletingEntity] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
-    const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
+    const [entityToDeleteId, setEntityToDeleteId] = useState<number | null>(null);
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
-
     // Fetch users with filters and pagination
-    const fetchUsers = useCallback(async () => {
-        setIsFetchingUsers(true);
+    const fetchDatas = useCallback(async () => {
+        setIsFetchingData(true);
 
         // Build sorting string
         let sorting = "id asc"; // default sorting
@@ -75,15 +73,13 @@ export default function UsersDataTable() {
             skipCount: (page - 1) * pageSize,
             sorting: sorting,
             filter: filter,
-            permissions: permissions,
-            role: roleId ? roleId : null,
-            onlyLockedUsers: onlyLockedUsers,
+            // Additional filters and parameters can be added here
         };
         console.log("Request Body:", requestBody);
-        // Reset users to empty before fetching
+        // Reset data to empty before fetching
 
         try {
-            const response = await fetch("/api/administration/user/get-users", {
+            const response = await fetch("/api/administration/xxx/get-myObjects", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -95,104 +91,41 @@ export default function UsersDataTable() {
                 if (response.status === 401) {
                     router.push('/login');
                 }
-                throw new Error("Failed to fetch users");
+                throw new Error("Failed to fetch myObjects");
             }
 
             const data = await response.json();
-            setUsers(data.data || { items: [] });
+            setMyObjects(data.data || { items: [] });
             setTotalCount(data.data?.totalCount || 0);
         } catch (error) {
             console.error(error);
-            setUsers({ items: [] });
+            setMyObjects({ items: [] });
             toast.error("Failed to fetch users.");
         } finally {
-            setIsFetchingUsers(false);
+            setIsFetchingData(false);
         }
-    }, [filter, onlyLockedUsers, permissions, roleId, router, page, pageSize, sortColumn, sortDirection]);
-
-
-    // Fetch roles for dropdown
-    useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                const response = await fetch("/api/administration/role/get-roles", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ Permissions: [] }),
-                });
-                if (!response.ok) throw new Error("Failed to fetch roles");
-                const data = await response.json();
-                // Assuming data.data.items is an array of roles
-                setRoleOptions((data.data?.items ?? []).map((role: IRole) => ({
-                    id: role.id,
-                    name: role.displayName || role.name,
-                })));
-            } catch (error) {
-                console.error(error);
-                // setRoles({ items: [] });
-                toast.error("Failed to fetch roles.");
-                setRoleOptions([]);
-            }
-        };
-        fetchRoles();
-    }, []);
+    }, [filter, router, page, pageSize, sortColumn, sortDirection]);
 
     // useEffect for initial load and when specific filters/pagination change (excluding text filter for auto-trigger)
     useEffect(() => {
-        fetchUsers();
+        fetchDatas();
         // This effect runs on initial mount and when page, pageSize, onlyLockedUsers, roleId, permissions, or router change.
         // It calls the latest `fetchUsers` function, which is memoized with the current `filter` value.
         // Keystrokes in the filter input will update `filter` and re-memoize `fetchUsers`,
         // but won't trigger this effect directly.
 
         //eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, pageSize, onlyLockedUsers, roleId, permissions, router, sortColumn, sortDirection]);
+    }, [page, pageSize, router, sortColumn, sortDirection]); // insert other filter parameters here if needed
 
-    const handleEditUser = (userId: number) => {
-        console.log("Edit user with ID:", userId);
-        router.push(`/administration/users/edit/${userId}`);
+
+
+    // Function to handle edit  action
+    const handleEdit = (id: number) => {
+        console.log("Edit with ID:", id);
+        router.push(`/administration/xxx/edit/${id}`);
     };
 
-    const promptDeleteConfirmation = (userId: number) => {
-        setUserToDeleteId(userId);
-        setOpenDropdownId(null); // Close any open dropdown
-        setIsAlertOpen(true);
-    };
-
-    const executeDeleteUser = async () => {
-        if (userToDeleteId === null) return;
-
-        console.log("Delete user with ID:", userToDeleteId);
-        setIsDeletingUser(true);
-
-        try {
-            // Assuming an API endpoint similar to roles for deleting a user
-            const response = await fetch("/api/administration/user/delete", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ userId: userToDeleteId }),
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message || "User deleted successfully.");
-                setIsAlertOpen(false); // Close dialog on success
-                fetchUsers(); // Re-fetch users data
-            } else {
-                toast.error(data.message || "Failed to delete user.");
-            }
-
-        } catch (error) {
-            console.error("Failed to delete User", error);
-            toast.error("An error occurred while deleting the user.");
-        } finally {
-            setIsDeletingUser(false);
-            setUserToDeleteId(null); // Reset user to delete
-        }
-    };
-
+    // Function to handle pagination and sorting
     const handleSort = (column: SortableColumn) => {
         if (sortColumn === column) {
             // If already sorted by this column, toggle direction
@@ -209,117 +142,65 @@ export default function UsersDataTable() {
         return sortDirection === 'asc' ? <ChevronUp className="inline ml-1" /> : <ChevronDown className="inline ml-1" />;
     };
 
+
+    // Function to execute delete action
+    const promptDeleteConfirmation = (id: number) => {
+        setEntityToDeleteId(id);
+        setOpenDropdownId(null); // Close any open dropdown
+        setIsAlertOpen(true);
+    };
+
     const handleAlertDialogOpenChange = (open: boolean) => {
         setIsAlertOpen(open);
         if (!open) {
-            setUserToDeleteId(null);
-            if (isDeletingUser) { // Ensure isDeletingUser is reset if dialog is closed prematurely
-                setIsDeletingUser(false);
+            setEntityToDeleteId(null);
+            if (isDeletingEntity) { // Ensure isDeletingUser is reset if dialog is closed prematurely
+                setIsDeletingEntity(false);
             }
         }
     };
 
+    const executeDeleteEntity = async () => {
+        if (entityToDeleteId === null) return;
 
-    const handleResetFilters = () => {
-        setFilter("");
-        setRoleId("");
-        setOnlyLockedUsers(false);
-        setSortColumn(null);
-        setSortDirection(null);
+        console.log("Delete entity with ID:", entityToDeleteId);
+        setIsDeletingEntity(true);
+
+        try {
+            // Call API to delete the entity
+            const response = await fetch("/api/administration/xxx/delete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: entityToDeleteId }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success(data.message || "MyObject deleted successfully.");
+                setIsAlertOpen(false); // Close dialog on success
+                fetchDatas(); // Re-fetch  data
+            } else {
+                toast.error(data.message || "Failed to delete MyObject.");
+            }
+
+        } catch (error) {
+            console.error("Failed to delete User", error);
+            toast.error("An error occurred while deleting myObject");
+        } finally {
+            setIsDeletingEntity(false);
+            setEntityToDeleteId(null); // Reset to delete
+        }
     };
+
 
     return (
         <>
-            <AlertDialog open={isAlertOpen} onOpenChange={handleAlertDialogOpenChange}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the user.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeletingUser}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={executeDeleteUser} disabled={isDeletingUser}>
-                            {isDeletingUser ? "Deleting..." : "Continue"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            <div className='flex flex-row'>
-                <div className='flex-1'>
-
-                    <div className="m-4 space-x-2">
-                        <div className="row  items-center space-x-2">
-                            <Label htmlFor="filter" className="block mb-2 font-medium">
-                                {/* {t.administration.role.roleName}: */}
-                                Filter:
-                            </Label>
-                            <Input
-                                id="filter"
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                                // placeholder={t.administration.role.roleName}
-                                className="w-full mb-4 p-2 border border-gray-300 rounded-md max-w-md"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="m-4 space-x-2">
-                        <div className='flex items-start space-x-2'>
-                            <Checkbox
-                                id="only-locked-users"
-                                checked={!!onlyLockedUsers}
-                                onCheckedChange={(checked) => setOnlyLockedUsers(checked === true)}
-                            />
-                            <Label htmlFor="only-locked-users" className="font-medium">
-                                Only Locked Users
-                                {/* {t.administration.role.default} */}
-                            </Label>
-                        </div>
-                        <p>
-                            {/* {t.administration.role.defaultRoleDescription} */}
-                        </p>
-                    </div>
-
-                </div>
-                <div className='flex-1'>
-                    <div className="m-4 space-x-2">
-                        <div className="row  items-center space-x-2">
-                            <Label className="block mb-2 font-medium">
-                                Filter by Role:
-                            </Label>
-                            <Select
-                                value={roleId}
-                                onValueChange={setRoleId}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {roleOptions.map((role) => (
-                                        <SelectItem key={role.id} value={role.id.toString()}>
-                                            {role.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-4 m-4">
-                <Button className='w-40' onClick={handleResetFilters}>Reset</Button>
-                <Button className='w-40' onClick={fetchUsers}>Search</Button>
-            </div>
-
             <div className="overflow-x-auto">
-                {isFetchingUsers ? (
+                {isFetchingData ? (
                     <div className="flex items-center justify-center p-4">
-                        <span className="text-muted-foreground">Loading users...</span>
+                        <span className="text-muted-foreground">Loading Data...</span>
                     </div>
                 ) : (
                     <Table>
@@ -367,34 +248,28 @@ export default function UsersDataTable() {
                         </TableHeader>
                         <TableBody>
                             {
-                                users.items.length === 0 ? (
+                                myObjects.items.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={8} className="text-center">
-                                            No users found.
+                                            No data found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    users.items.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell>{user.userName}</TableCell>
-                                            <TableCell>{user.name} {user.surname}</TableCell>
-                                            <TableCell>{user.emailAddress}</TableCell>
-                                            <TableCell>{user.roles.map(r => r.roleName).join(", ")}</TableCell>
+                                    myObjects.items.map((myObject) => (
+                                        <TableRow key={myObject.id}>
+                                            <TableCell>{myObject.userName}</TableCell>
+                                            <TableCell>{myObject.name} {myObject.surname}</TableCell>
+                                            <TableCell>{myObject.emailAddress}</TableCell>
                                             <TableCell>
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isEmailConfirmed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                    {user.isEmailConfirmed ? 'Yes' : 'No'}
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${myObject.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                    {myObject.isActive ? 'Yes' : 'No'}
                                                 </span>
                                             </TableCell>
-                                            <TableCell>
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                    {user.isActive ? 'Yes' : 'No'}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>{new Date(user.creationTime).toLocaleDateString()}</TableCell>
+                                            <TableCell>{new Date(myObject.creationTime).toLocaleDateString()}</TableCell>
                                             <TableCell>
                                                 <DropdownMenu
-                                                    open={openDropdownId === user.id}
-                                                    onOpenChange={(open) => setOpenDropdownId(open ? user.id : null)}
+                                                    open={openDropdownId === myObject.id}
+                                                    onOpenChange={(open) => setOpenDropdownId(open ? myObject.id : null)}
                                                 >
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -404,14 +279,14 @@ export default function UsersDataTable() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuItem
-                                                            onSelect={() => handleEditUser(user.id)}
+                                                            onSelect={() => handleEdit(myObject.id)}
                                                         >
-                                                            Edit User
+                                                            Edit MyObject
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onSelect={() => promptDeleteConfirmation(user.id)}
+                                                            onSelect={() => promptDeleteConfirmation(myObject.id)}
                                                         >
-                                                            Delete User
+                                                            Delete MyObject
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
@@ -424,7 +299,6 @@ export default function UsersDataTable() {
                     </Table>
                 )}
             </div>
-
             {/* Pagination Controls */}
             <div className="flex items-center justify-between mt-4 px-4">
                 <div className="flex items-center space-x-4">
@@ -504,7 +378,23 @@ export default function UsersDataTable() {
                     )}
                 </div>
             </div>
-
+            {/* Alert Dialog */}
+            <AlertDialog open={isAlertOpen} onOpenChange={handleAlertDialogOpenChange}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the myObject.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingEntity}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeDeleteEntity} disabled={isDeletingEntity}>
+                            {isDeletingEntity ? "Deleting..." : "Continue"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 
