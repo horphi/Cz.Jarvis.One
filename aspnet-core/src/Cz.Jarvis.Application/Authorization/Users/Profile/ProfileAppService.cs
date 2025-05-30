@@ -243,16 +243,16 @@ namespace Cz.Jarvis.Authorization.Users.Profile
                 input.IsPhoneNumberConfirmed = true;
             }
             
-            if (user.EmailAddress != input.EmailAddress)
-            {
-                await _userEmailer.SendEmailChangeRequestLinkAsync(
-                    user,
-                    input.EmailAddress,
-                    AppUrlService.CreateEmailChangeRequestUrlFormat(AbpSession.TenantId)
-                );
-                
-                input.EmailAddress = user.EmailAddress;
-            }
+            // if (user.EmailAddress != input.EmailAddress)
+            // {
+            //     await _userEmailer.SendEmailChangeRequestLinkAsync(
+            //         user,
+            //         input.EmailAddress,
+            //         AppUrlService.CreateEmailChangeRequestUrlFormat(AbpSession.TenantId)
+            //     );
+            //     
+            //     input.EmailAddress = user.EmailAddress;
+            // }
 
             ObjectMapper.Map(input, user);
             CheckErrors(await UserManager.UpdateAsync(user));

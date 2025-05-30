@@ -8,6 +8,8 @@ import { getTranslations } from "@/lib/i18n";
 import React, { useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ApiResult } from "@/types/http/api-result";
+import { TCreateOrEditRole } from "@/types/roles/i-role";
 
 interface RoleFormProps {
     t: Awaited<ReturnType<typeof getTranslations>>;
@@ -19,6 +21,7 @@ export default function RoleForm({ t, param }: RoleFormProps) {
     const router = useRouter();
 
     const fetchRole = useCallback(async () => {
+        // if we have a valid param, fetch the role data
         if (param && param > 0) {
             try {
                 const response = await fetch("/api/administration/role/get-role", {
@@ -28,29 +31,31 @@ export default function RoleForm({ t, param }: RoleFormProps) {
                     },
                     body: JSON.stringify({ id: param }),
                 });
-                const responseData = await response.json();
-                if (responseData.success) {
-                    const editData = responseData.data;
+
+                const responseResult: ApiResult<TCreateOrEditRole> = await response.json();
+
+                if (!responseResult.success) {
+                    toast.error(responseResult.message || "Failed to process your request", {
+                        description: responseResult.error || "Please try again."
+                    });
+                    setTimeout(() => {
+                        router.push("/administration/roles");
+                    }, 1200);
+                    return;
+                } else {
+                    const editData = responseResult.data;
                     if (editData) {
                         setId(param);
                         setRoleName(editData.role.displayName);
                         setIsDefault(editData.role.isDefault);
-                        // Set permissions if available in editData
-                        if (editData.permissions) {
+                        if (editData.grantedPermissionNames) {
                             setPermissions(editData.grantedPermissionNames);
                         }
                     }
-                } else {
-
-                    toast.error(responseData.message || "Failed to retrieve role.");
-                    setTimeout(() => {
-                        router.push("/administration/roles");
-                    }, 1200);
                 }
-
             } catch (error) {
-                console.error("Failed to delete Role", error);
-                toast.error("An error occurred while deleting the role.");
+                console.error("RoleForm:", error);
+                toast.error("An error occurred while processing your request. Please try again.");
             } finally {
                 //setLoading(false);
             }

@@ -47,7 +47,6 @@ export default function PermissionTreeList({
                 }
 
                 const result = await response.json();
-                console.log("Permissions data:", result);
 
                 const items: IPermission[] = result.data;
 

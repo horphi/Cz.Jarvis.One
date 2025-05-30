@@ -1,26 +1,27 @@
 import { GET_ROLE_FOR_EDIT } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
-import { createApiErrorResponse } from "@/lib/utils/api-response";
+import { ApiResult } from "@/types/http/api-result";
+import { TRole } from "@/types/roles/i-role";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
+  const apiResult: ApiResult<TRole> = {
+    success: false,
+  };
+
+  console.log("Get Role for Edit API called");
+
   try {
+    const session = await getAuthSession();
+    // Check if session and accessToken are available
+    if (!session || !session.accessToken) {
+      apiResult.message = "Authentication required";
+      return NextResponse.json(apiResult, { status: 401 });
+    }
+
+    // Parse the request body
     const requestBody = await req.json();
 
-    // // Ensure Permissions field is included
-    // const permissions = {
-    //   Permissions: requestBody.Permissions || [],
-    // };
-
-    // console.log("Final request body for GET_ROLES:", permissions);
-
-    const session = await getAuthSession();
-    if (!session || !session.accessToken) {
-      return NextResponse.json(
-        { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
-    }
     // Construct the URL with the role ID for editing
     const url = `${GET_ROLE_FOR_EDIT}?Id=${requestBody.id}`;
     // Make the API request to get the role for editing
@@ -34,48 +35,31 @@ export async function POST(req: NextRequest) {
     const responseData = await response.json();
 
     // Handle error responses from API
-    if (!response.ok || (responseData && responseData.success === false)) {
-      // 401 Unauthorized or 403 Forbidden
-      if (responseData?.unAuthorizedRequest) {
-        return createApiErrorResponse({
-          message: responseData?.error?.message || "Unauthorized or forbidden.",
-          error: responseData?.error?.message,
-          status:
-            response.status === 401 || response.status === 403
-              ? response.status
-              : 403,
-        });
+    if (!response.ok) {
+      let errorMessage = "Failed to fetch roles. Please try again.";
+      if (responseData && responseData.unAuthorizedReqeuest) {
+        errorMessage = responseData.unAuthorizedReqeuest;
+      } else {
+        if (responseData.error?.message) {
+          errorMessage = responseData.error.message;
+        } else if (response.status === 400) {
+          errorMessage = "Invalid request. Please check your input.";
+        } else if (response.status === 401) {
+          errorMessage = "Unauthorized access.";
+        } else if (response.status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        }
+        apiResult.message = "Failed to fetch roles";
+        apiResult.error = errorMessage;
       }
-      // 500 or other errors (e.g., duplicate role name)
-      if (responseData?.error?.message) {
-        return createApiErrorResponse({
-          message: responseData.error.message,
-          error: responseData.error.message,
-          status: response.status,
-        });
-      }
-      // Fallback for unknown errors
-      return createApiErrorResponse({
-        message: "An unknown error occurred.",
-        error: responseData?.error?.message,
-        status: response.status,
-      });
     }
-    // Handle success response
-    return NextResponse.json({
-      success: true,
-      data: responseData.result,
-    });
+
+    // Return the API result
+    apiResult.success = response.status === 200;
+    apiResult.data = responseData.result;
+    return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
     console.error("Get Roles error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An unexpected error occurred. Please try again.",
-      },
-      {
-        status: 500,
-      }
-    );
+    throw new Error("An unexpected error occurred. Please try again.");
   }
 }

@@ -1,6 +1,8 @@
 const Host = process.env.CZ_API_HOST || "https://localhost:44301";
 
 export const TOKEN_AUTH = `${Host}/api/TokenAuth/Authenticate`;
+export const LOG_OUT = `${Host}/api/TokenAuth/Logout`;
+
 export const GET_CURRENT_LOGIN_INFORMATIONS = `${Host}/api/services/app/Session/GetCurrentLoginInformations`;
 
 export const GET_ALL_PERMISSIONS = `${Host}/api/services/app/Permission/GetAllPermissions`;
@@ -17,3 +19,6 @@ export const CREATE_OR_UPDATE_USER = `${Host}/api/services/app/User/CreateOrUpda
 export const DELETE_USER = `${Host}/api/services/app/User/DeleteUser`;
 export const GET_USER_FOR_EDIT = `${Host}/api/services/app/User/GetUserForEdit`;
 export const UNLOCK_USER = `${Host}/api/services/app/User/UnlockUser`;
+
+// profile
+export const UPDATE_CURRENT_USER_PROFILE = `${Host}/api/services/app/Profile/UpdateCurrentUserProfile`;

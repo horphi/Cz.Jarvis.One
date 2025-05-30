@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { IRole } from "@/types/roles/i-role";
+import { TRole } from "@/types/roles/i-role";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 const RolesDataTable = () => {
     const router = useRouter();
-    const [roles, setRoles] = useState<{ items: IRole[] }>({ items: [] });
+    const [roles, setRoles] = useState<{ items: TRole[] }>({ items: [] });
     const [isFetchingRoles, setIsFetchingRoles] = useState(false);
     const [isDeletingRole, setIsDeletingRole] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -155,7 +155,7 @@ const RolesDataTable = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {roles.items.map((role: IRole) => (
+                            {roles.items.map((role: TRole) => (
                                 <TableRow key={role.id}>
                                     <TableCell>{role.name}</TableCell>
                                     <TableCell>{role.displayName}</TableCell>

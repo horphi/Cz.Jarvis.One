@@ -1,4 +1,4 @@
-export type User = {
+export type TUser = {
   name: string;
   surname: string;
   userName: string;
@@ -16,22 +16,17 @@ export type User = {
   id: number;
 };
 
-// {
-//         "name": "admin",
-//         "surname": "admin",
-//         "userName": "admin",
-//         "emailAddress": "admin@defaulttenant.com",
-//         "lockoutEndDateUtc": null,
-//         "phoneNumber": null,
-//         "profilePictureId": null,
-//         "isEmailConfirmed": true,
-//         "roles": [
-//           {
-//             "roleId": 2,
-//             "roleName": "Admin"
-//           }
-//         ],
-//         "isActive": true,
-//         "creationTime": "2025-05-20T12:52:42.258612",
-//         "id": 2
-//       }
+export type TUserSession = {
+  user: TUserLoginInfo | null;
+  impersonatorUser: TUserLoginInfo | null;
+  //application
+};
+
+export type TUserLoginInfo = {
+  userName: string;
+  name: string;
+  surname: string;
+  emailAddress: string;
+  profilePictureId: string | null;
+  loginType: string;
+};

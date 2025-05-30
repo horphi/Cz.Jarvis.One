@@ -1,11 +1,20 @@
-export interface IRole {
+export type TRole = {
   name: string;
   displayName: string;
   isStatic: boolean;
   isDefault: boolean;
   creationTime: Date;
   id: number;
-}
+};
+
+// export interface IRole {
+//   name: string;
+//   displayName: string;
+//   isStatic: boolean;
+//   isDefault: boolean;
+//   creationTime: Date;
+//   id: number;
+// }
 
 export interface IPermission {
   name: string;
@@ -15,9 +24,10 @@ export interface IPermission {
   isGrantedbyDefault: boolean;
 }
 
-export type CreateOrEditRoleType = {
-  role: IRole;
-  permissions: string[];
+export type TCreateOrEditRole = {
+  role: TRole;
+  //permissions: string[];
+  grantedPermissionNames: string[];
 };
 
 export type UserRoleDto = {

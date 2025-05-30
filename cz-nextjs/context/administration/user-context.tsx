@@ -64,8 +64,8 @@ export function CreateOrEditUserProvider({ children }: { children: React.ReactNo
     const [assignedRoleNames, setAssignedRoleNames] = useState<string[]>([]);
     const [sendActivationEmail, setSendActivationEmail] = useState(false);
     const [setRandomPassword, setSetRandomPassword] = useState(false);
-    const [isActive, setIsActive] = useState(true);
-    const [isLockoutEnabled, setIsLockoutEnabled] = useState(true);
+    const [isActive, setIsActive] = useState(false);
+    const [isLockoutEnabled, setIsLockoutEnabled] = useState(false);
     return (
         <UserContext.Provider value={{
             id, setId,

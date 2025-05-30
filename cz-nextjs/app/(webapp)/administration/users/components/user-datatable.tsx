@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { IRole } from "@/types/roles/i-role";
+import { TRole } from "@/types/roles/i-role";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User } from '@/types/users/user-type';
+import { TUser } from '@/types/users/user-type';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -29,7 +29,7 @@ type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' 
 
 export default function UsersDataTable() {
     const router = useRouter();
-    const [users, setUsers] = useState<{ items: User[] }>({ items: [] });
+    const [users, setUsers] = useState<{ items: TUser[] }>({ items: [] });
     const [isFetchingUsers, setIsFetchingUsers] = useState(false);
     // Filter properties
     const [filter, setFilter] = useState("");
@@ -123,7 +123,7 @@ export default function UsersDataTable() {
                 if (!response.ok) throw new Error("Failed to fetch roles");
                 const data = await response.json();
                 // Assuming data.data.items is an array of roles
-                setRoleOptions((data.data?.items ?? []).map((role: IRole) => ({
+                setRoleOptions((data.data?.items ?? []).map((role: TRole) => ({
                     id: role.id,
                     name: role.displayName || role.name,
                 })));

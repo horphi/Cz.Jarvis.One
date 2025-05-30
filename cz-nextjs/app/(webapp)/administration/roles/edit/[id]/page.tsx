@@ -9,12 +9,13 @@ import SaveRoleButton from "../../components/save-role-button";
 import RoleForm from "../../components/role-form";
 
 interface EditRolesPageProps {
-    params: { id: number };
+    params: Promise<{ id: number }>;
 }
 
 export default async function EditRolesPage({ params }: EditRolesPageProps) {
     const locale = await getLocale();
     const t = await getTranslations(locale);
+    const roleId = (await params).id || null;
 
     return (
         <CreateOrEditRoleProvider>
@@ -48,7 +49,7 @@ export default async function EditRolesPage({ params }: EditRolesPageProps) {
                                     <CardTitle>Roles</CardTitle>
                                 </CardHeader>
                                 <CardContent className="pl-2 flex-1 flex flex-col">
-                                    <RoleForm t={t} param={params.id} />
+                                    <RoleForm t={t} param={roleId} />
                                 </CardContent>
                             </Card>
                         </div>

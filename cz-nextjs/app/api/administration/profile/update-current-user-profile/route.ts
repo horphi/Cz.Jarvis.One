@@ -1,15 +1,14 @@
-import { GET_USERS } from "@/config/endpoint";
+import { NextResponse, NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth/session";
 import { ApiResult } from "@/types/http/api-result";
-import { TUser } from "@/types/users/user-type";
-import { NextResponse, NextRequest } from "next/server";
+import { UPDATE_CURRENT_USER_PROFILE } from "@/config/endpoint";
 
 export async function POST(req: NextRequest) {
-  const apiResult: ApiResult<TUser> = {
+  const logIdentifier = "UpdateCurrentUserProfile";
+  const apiResult: ApiResult<void> = {
     success: false,
   };
-
-  console.log("Get Users API called");
+  console.log(`${logIdentifier} API called`);
 
   try {
     const session = await getAuthSession();
@@ -21,22 +20,19 @@ export async function POST(req: NextRequest) {
 
     // Parse the request body
     const requestBody = await req.json();
-    // Expecting { requestBody } from the client
-    const payload = requestBody.requestBody || {};
-    // Construct the request payload according to the API requirements
-    const requestPayload = {
-      maxResultCount: payload.maxResultCount || 1000,
-      skipCount: payload.skipCount || 0,
-      sorting: payload.sorting || "id asc",
-      filter: payload.filter || "",
-      permissions: payload.permissions || [],
-      role: payload.role || null,
-      onlyLockedUsers: payload.onlyLockedUsers || false,
-    };
 
-    // Make the Remote API call to fetch users
-    const response = await fetch(`${GET_USERS}`, {
-      method: "POST",
+    // Construct the request payload
+    const requestPayload = {
+      userName: requestBody.userName,
+      name: requestBody.firstName,
+      surname: requestBody.lastName,
+      emailAddress: requestBody.emailAddress,
+    };
+    console.log("Request Payload:", requestPayload);
+
+    // Make the Remote API request
+    const response = await fetch(`${UPDATE_CURRENT_USER_PROFILE}`, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
@@ -48,7 +44,8 @@ export async function POST(req: NextRequest) {
 
     // Handle error responses from API
     if (!response.ok) {
-      let errorMessage = "Failed to fetch roles. Please try again.";
+      let errorMessage =
+        "Your Request could not be processed. Please try again.";
       if (responseData && responseData.unAuthorizedReqeuest) {
         errorMessage = responseData.unAuthorizedReqeuest;
       } else {
@@ -61,17 +58,26 @@ export async function POST(req: NextRequest) {
         } else if (response.status === 500) {
           errorMessage = "Server error. Please try again later.";
         }
-        apiResult.message = "Failed to fetch roles";
-        apiResult.error = errorMessage;
+        apiResult.message = errorMessage;
+        apiResult.error = responseData.error?.details || "";
       }
     }
 
     // Return the API result
     apiResult.success = response.status === 200;
-    apiResult.data = responseData.result;
+    // Return the Result Data
+    //apiResult.data = responseData.result;
     return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
-    console.error("Get Roles error:", error);
+    console.error(`${logIdentifier}: `, error);
     throw new Error("An unexpected error occurred. Please try again.");
   }
 }
+
+// {
+//   "name": "admin",
+//   "surname": "super",
+//   "emailAddress": "admin@horphi.com",
+//   "userName":"admin"
+
+// }

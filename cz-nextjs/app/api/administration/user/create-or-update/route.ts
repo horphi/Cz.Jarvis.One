@@ -1,21 +1,24 @@
 import { CREATE_OR_UPDATE_USER } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
-import {
-  createApiErrorResponse,
-  createApiResponse,
-} from "@/lib/utils/api-response";
+import { ApiResult } from "@/types/http/api-result";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+  const apiResult: ApiResult<void> = {
+    success: false,
+  };
+
+  console.log("Create or Update User API called");
+
   try {
     const session = await getAuthSession();
+    // Check if session and accessToken are available
     if (!session || !session.accessToken) {
-      return NextResponse.json(
-        { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
+      apiResult.message = "Authentication required";
+      return NextResponse.json(apiResult, { status: 401 });
     }
 
+    // Parse the request body
     const requestBody = await req.json();
 
     // Construct the request payload
@@ -52,42 +55,30 @@ export async function POST(req: NextRequest) {
     const responseData = await response.json();
 
     // Handle error responses from API
-    if (!response.ok || (responseData && responseData.success === false)) {
-      // 401 Unauthorized or 403 Forbidden
-      if (responseData?.unAuthorizedRequest) {
-        return createApiErrorResponse({
-          message: responseData?.error?.message || "Unauthorized or forbidden.",
-          error: responseData?.error?.message,
-          status:
-            response.status === 401 || response.status === 403
-              ? response.status
-              : 403,
-        });
+    if (!response.ok) {
+      let errorMessage = "Failed to fetch roles. Please try again.";
+      if (responseData && responseData.unAuthorizedReqeuest) {
+        errorMessage = responseData.unAuthorizedReqeuest;
+      } else {
+        if (responseData.error?.message) {
+          errorMessage = responseData.error.message;
+        } else if (response.status === 400) {
+          errorMessage = "Invalid request. Please check your input.";
+        } else if (response.status === 401) {
+          errorMessage = "Unauthorized access.";
+        } else if (response.status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        }
+        apiResult.message = "Failed to fetch roles";
+        apiResult.error = errorMessage;
       }
-      // 500 or other errors (e.g., duplicate role name)
-      if (responseData?.error?.message) {
-        return createApiErrorResponse({
-          message: responseData.error.message,
-          error: responseData.error.message,
-          status: response.status,
-        });
-      }
-      // Fallback for unknown errors
-      return createApiErrorResponse({
-        message: "An unknown error occurred.",
-        error: responseData?.error?.message,
-        status: response.status,
-      });
     }
-    // Handle success response
-    return createApiResponse({
-      data: responseData.result,
-    });
+    console.log("Create or Update User Response:", responseData);
+    // Return the API result
+    apiResult.success = response.status === 200;
+    return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
     console.error("Get Roles error:", error);
-    return createApiErrorResponse({
-      message: "An unexpected error occurred. Please try again.",
-      status: 500,
-    });
+    throw new Error("An unexpected error occurred. Please try again.");
   }
 }

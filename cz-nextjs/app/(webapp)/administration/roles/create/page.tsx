@@ -4,48 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { HeaderContainer } from "@/components/header-container";
 import { Main } from "@/components/ui/main";
-import { Header } from "@/components/layout/header";
-import { TopNav } from "@/components/layout/top-nav";
-import { ThemeSwitch } from "@/components/theme-switch";
-import LanguageSwitcher from "@/components/language-switch";
-import { CreateRoleProvider } from "@/context/administration/role-context";
+import { CreateOrEditRoleProvider } from "@/context/administration/role-context";
 
 import SaveRoleButton from "../components/save-role-button";
 import RoleForm from "../components/role-form";
 
-const topNav = [
-    {
-        title: 'Overview',
-        href: 'dashboard/overview',
-        isActive: true,
-        disabled: false,
-    },
-    {
-        title: 'Customers',
-        href: 'dashboard/customers',
-        isActive: false,
-        disabled: true,
-    },
-    {
-        title: 'Products',
-        href: 'dashboard/products',
-        isActive: false,
-        disabled: true,
-    },
-    {
-        title: 'Settings',
-        href: 'dashboard/settings',
-        isActive: false,
-        disabled: true,
-    },
-]
 
 export default async function CraateRolesPage() {
     const locale = await getLocale();
     const t = await getTranslations(locale);
 
     return (
-        <CreateRoleProvider>
+        <CreateOrEditRoleProvider>
             <Main fixed >
                 <HeaderContainer>
                     <>
@@ -83,6 +53,6 @@ export default async function CraateRolesPage() {
                     </TabsContent>
                 </Tabs>
             </Main>
-        </CreateRoleProvider>
+        </CreateOrEditRoleProvider>
     );
 }

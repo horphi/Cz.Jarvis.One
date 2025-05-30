@@ -1,24 +1,32 @@
 import { GET_ROLES } from "@/config/endpoint";
 import { getAuthSession } from "@/lib/auth/session";
+import { ApiResult } from "@/types/http/api-result";
+import { TRole } from "@/types/roles/i-role";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  try {
-    const requestBody = await req.json();
+  const apiResult: ApiResult<TRole> = {
+    success: false,
+  };
 
+  console.log("Get Roles API called");
+
+  try {
+    const session = await getAuthSession();
+    // Check if session and accessToken are available
+    if (!session || !session.accessToken) {
+      apiResult.message = "Authentication required";
+      return NextResponse.json(apiResult, { status: 401 });
+    }
+
+    // Parse the request body
+    const requestBody = await req.json();
     // Ensure Permissions field is included
     const permissions = {
       Permissions: requestBody.Permissions || [],
     };
 
-    const session = await getAuthSession();
-    if (!session || !session.accessToken) {
-      return NextResponse.json(
-        { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
+    // Make the Remote API call to fetch roles
     const response = await fetch(`${GET_ROLES}`, {
       method: "POST",
       headers: {
@@ -30,12 +38,9 @@ export async function POST(req: NextRequest) {
 
     const responseData = await response.json();
 
+    // Handle error responses from API
     if (!response.ok) {
-      //const errorData = await response.json();
-      console.error("Error response body:", responseData);
-
       let errorMessage = "Failed to fetch roles. Please try again.";
-
       if (responseData && responseData.unAuthorizedReqeuest) {
         errorMessage = responseData.unAuthorizedReqeuest;
       } else {
@@ -48,28 +53,17 @@ export async function POST(req: NextRequest) {
         } else if (response.status === 500) {
           errorMessage = "Server error. Please try again later.";
         }
+        apiResult.message = "Failed to fetch roles";
+        apiResult.error = errorMessage;
       }
-
-      return NextResponse.json(
-        { success: false, message: errorMessage },
-        { status: response.status }
-      );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: responseData.result,
-    });
+    // Return the API result
+    apiResult.success = response.status === 200;
+    apiResult.data = responseData.result;
+    return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
     console.error("Get Roles error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An unexpected error occurred. Please try again.",
-      },
-      {
-        status: 500,
-      }
-    );
+    throw new Error("An unexpected error occurred. Please try again.");
   }
 }

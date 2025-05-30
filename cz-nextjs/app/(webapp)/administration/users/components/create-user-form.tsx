@@ -5,9 +5,9 @@ import { Label } from "@/components/ui/label";
 import { getTranslations } from "@/lib/i18n";
 import { useCreateOrEditUserContext } from "@/context/administration/user-context";
 import React, { useEffect, useState, useRef, useCallback } from "react"; // Import useRef
-import { IRole } from "@/types/roles/i-role";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { TRole } from "@/types/roles/i-role";
 
 interface UserFormProps {
     t: Awaited<ReturnType<typeof getTranslations>>;
@@ -100,7 +100,7 @@ export default function CreateUserForm({ t, param }: UserFormProps) {
                 });
                 if (!response.ok) throw new Error("Failed to fetch roles");
                 const data = await response.json();
-                const newRoleOptions = (data.data?.items ?? []).map((role: IRole) => ({
+                const newRoleOptions = (data.data?.items ?? []).map((role: TRole) => ({
                     id: role.id,
                     name: role.name,
                     displayName: role.displayName || role.name,
