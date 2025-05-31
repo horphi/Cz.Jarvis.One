@@ -34,6 +34,11 @@ export default function RoleForm({ t, param }: RoleFormProps) {
 
                 const responseResult: ApiResult<TCreateOrEditRole> = await response.json();
 
+                if (response.status === 401) {
+                    // Unauthorized, redirect to login
+                    router.push('/login');
+                }
+
                 if (!responseResult.success) {
                     toast.error(responseResult.message || "Failed to process your request", {
                         description: responseResult.error || "Please try again."
@@ -43,6 +48,7 @@ export default function RoleForm({ t, param }: RoleFormProps) {
                     }, 1200);
                     return;
                 } else {
+                    // Response is Successful 
                     const editData = responseResult.data;
                     if (editData) {
                         setId(param);

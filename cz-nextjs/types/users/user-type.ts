@@ -1,4 +1,6 @@
-export type TUser = {
+import { TRole } from "../roles/i-role";
+
+export type TUserForListDto = {
   name: string;
   surname: string;
   userName: string;
@@ -29,4 +31,29 @@ export type TUserLoginInfo = {
   emailAddress: string;
   profilePictureId: string | null;
   loginType: string;
+};
+
+export type UserListDto = {
+  totalCount: number;
+  items: TUserForListDto[];
+};
+
+export type GetUserForEditDto = {
+  user: TUser;
+  roles: TRole[];
+  profilePictureId: string | null;
+};
+
+export type TUser = {
+  id: number;
+  name: string;
+  surname: string;
+  userName: string;
+  emailAddress: string;
+  phoneNumber: string | null;
+  password?: string; // Optional for edit operations
+  isActive: boolean;
+  shouldChangePasswordOnNextLogin: boolean;
+  isTwoFactorEnabled: boolean;
+  isLockoutEnabled: boolean;
 };

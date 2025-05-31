@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TRole } from "@/types/roles/i-role";
+import { RoleListDto, TRole } from "@/types/roles/i-role";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -17,10 +17,11 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ApiResult } from '@/types/http/api-result';
 
 const RolesDataTable = () => {
     const router = useRouter();
-    const [roles, setRoles] = useState<{ items: TRole[] }>({ items: [] });
+    const [roles, setRoles] = useState<TRole[]>([]);
     const [isFetchingRoles, setIsFetchingRoles] = useState(false);
     const [isDeletingRole, setIsDeletingRole] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -30,28 +31,36 @@ const RolesDataTable = () => {
     const fetchRoles = useCallback(async () => {
         setIsFetchingRoles(true);
         try {
+
+            const requestBody = { Permissions: [] };
+
             const response = await fetch("/api/administration/role/get-roles", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ Permissions: [] }),
+                body: JSON.stringify(requestBody),
             });
 
-            console.log("Response from get-roles:", response);
+            const responseResult: ApiResult<RoleListDto> = await response.json();
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    router.push('/login');
-                }
-                throw new Error("Failed to fetch roles");
+            if (response.status === 401) {
+                // Unauthorized, redirect to login
+                router.push('/login');
             }
 
-            const data = await response.json();
-            setRoles(data.data || { items: [] });
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful 
+                setRoles(responseResult.data?.items || []); // Ensure we handle the case where items might be undefined
+            }
         } catch (error) {
-            console.error(error);
-            setRoles({ items: [] });
+            console.error("RoleDataTable:", error);
+            setRoles([]);
             toast.error("Failed to fetch roles.");
         } finally {
             setIsFetchingRoles(false);
@@ -87,19 +96,27 @@ const RolesDataTable = () => {
                 },
                 body: JSON.stringify({ roleId: roleToDeleteId }),
             });
-            const data = await response.json();
+            const responseResult: ApiResult<void> = await response.json();
 
-            if (data.success) {
-                toast.success(data.message || "Role deleted successfully.");
+            if (response.status === 401) {
+                // Unauthorized, redirect to login
+                router.push('/login');
+            }
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful 
+                toast.success(responseResult.message || "Your request has been successfully processed.");
                 setIsAlertOpen(false); // Close dialog on success
                 fetchRoles(); // Re-fetch roles data
-            } else {
-                toast.error(data.message || "Failed to delete role.");
             }
 
         } catch (error) {
-            console.error("Failed to delete Role", error);
-            toast.error("An error occurred while deleting the role.");
+            console.error("DeleteRole:", error);
+            toast.error("An error occurred while processing your request. Please try again.");
         } finally {
             setIsDeletingRole(false);
         }
@@ -155,7 +172,7 @@ const RolesDataTable = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {roles.items.map((role: TRole) => (
+                            {roles.map((role: TRole) => (
                                 <TableRow key={role.id}>
                                     <TableCell>{role.name}</TableCell>
                                     <TableCell>{role.displayName}</TableCell>

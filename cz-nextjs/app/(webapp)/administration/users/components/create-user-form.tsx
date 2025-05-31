@@ -8,6 +8,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react"; // Impo
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { TRole } from "@/types/roles/i-role";
+import { ApiResult } from "@/types/http/api-result";
+import { GetUserForEditDto } from "@/types/users/user-type";
 
 interface UserFormProps {
     t: Awaited<ReturnType<typeof getTranslations>>;
@@ -47,43 +49,43 @@ export default function CreateUserForm({ t, param }: UserFormProps) {
                     },
                     body: JSON.stringify({ id: param }),
                 });
-                const responseData = await response.json();
-                console.log(responseData);
+                const responseResult: ApiResult<GetUserForEditDto> = await response.json();
 
-                if (responseData.success) {
-                    const editData = responseData.data;
+                // Unauthorized, redirect to login
+                if (response.status === 401) { router.push('/login'); }
+
+                if (responseResult.success) {
+                    toast.error(responseResult.message || "Failed to process your request", {
+                        description: responseResult.error || "Please try again."
+                    });
+                    setTimeout(() => {
+                        router.push("/administration/users");
+                    }, 1200);
+                } else {
+                    // Response is Successful
+                    const editData = responseResult.data;
                     if (editData) {
                         setId(param);
                         setFirstName(editData.user.name);
                         setSurName(editData.user.surname);
                         setUserName(editData.user.userName);
                         setEmailAddress(editData.user.emailAddress);
-                        setPassword(editData.user.password);
+                        setPassword(editData.user.password || '');
                         setShouldChangePasswordOnNextLogin(editData.user.shouldChangePasswordOnNextLogin);
                         setIsTwoFactorEnabled(editData.user.isTwoFactorEnabled);
-                        setAssignedRoleNames(editData.assignedRoleNames || []);
-                        setSendActivationEmail(editData.user.sendActivationEmail);
-                        setSetRandomPassword(editData.user.setRandomPassword);
+                        setAssignedRoleNames(editData.roles.map(role => role.name) || []);
                         setIsActive(editData.user.isActive);
                         setIsLockoutEnabled(editData.user.isLockoutEnabled);
                     }
-                } else {
-                    toast.error(responseData.message || "Failed to retrieve user.");
-                    setTimeout(() => {
-                        router.push("/administration/users");
-                    }, 1200);
                 }
             } catch (error) {
-                console.error("Failed to fetch user", error);
-                toast.error("An error occurred while fetching the user.");
-                setTimeout(() => {
-                    router.push("/administration/users");
-                }, 1200);
+                console.error("CreateUserForm", error);
+                toast.error("An error occurred while processing your request. Please try again.");
             } finally {
                 //setLoading(false);
             }
         }
-    }, [param, router, setId, setFirstName, setSurName, setUserName, setEmailAddress, setPassword, setShouldChangePasswordOnNextLogin, setIsTwoFactorEnabled, setAssignedRoleNames, setSendActivationEmail, setSetRandomPassword, setIsActive, setIsLockoutEnabled]);
+    }, [param, router, setId, setFirstName, setSurName, setUserName, setEmailAddress, setPassword, setShouldChangePasswordOnNextLogin, setIsTwoFactorEnabled, setAssignedRoleNames, setIsActive, setIsLockoutEnabled]);
 
     useEffect(() => {
         fetchUser();

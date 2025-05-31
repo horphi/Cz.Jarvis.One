@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useAppContext } from "@/context/app-context"
 import { ApiResult } from "@/types/http/api-result"
 import { toast } from "sonner"
-
+import { useRouter } from "next/navigation"
 interface MyProfileDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -23,7 +23,7 @@ interface MyProfileDialogProps {
 export function MyProfileDialog({ open, onOpenChange }: MyProfileDialogProps) {
     const { userSession } = useAppContext();
     const user: TUserLoginInfo | null = userSession;
-
+    const router = useRouter();
     const [firstName, setFirstName] = useState(user?.name || '');
     const [lastName, setLastName] = useState(user?.surname || '');
     const [email, setEmail] = useState(user?.emailAddress || '');
@@ -58,14 +58,20 @@ export function MyProfileDialog({ open, onOpenChange }: MyProfileDialogProps) {
 
             const responseResult: ApiResult<void> = await response.json();
 
+            if (response.status === 401) {
+                // Unauthorized, redirect to login
+                router.push('/login');
+            }
+
             if (!responseResult.success) {
                 toast.error(responseResult.message || "Failed to process your request", {
                     description: responseResult.error || "Please try again."
                 });
                 return;
             } else {
+                // Response is Successful 
                 onOpenChange(false); // Close dialog on sucßcess
-                toast.success("Profile updated successfully.");
+                toast.success(responseResult.message || "your request has been successfully processed.");
             }
 
         } catch (error) {

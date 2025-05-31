@@ -4,11 +4,12 @@ import { ApiResult } from "@/types/http/api-result";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+  const logIdentifier = "CreateOrUpdateUser";
   const apiResult: ApiResult<void> = {
     success: false,
   };
 
-  console.log("Create or Update User API called");
+  console.log(`${logIdentifier} API called`);
 
   try {
     const session = await getAuthSession();
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       setRandomPassword: requestBody.setRandomPassword,
     };
 
-    // Make the API request to create or update the user
+    // Make the Remote API request
     const response = await fetch(`${CREATE_OR_UPDATE_USER}`, {
       method: "POST",
       headers: {
@@ -54,9 +55,9 @@ export async function POST(req: NextRequest) {
 
     const responseData = await response.json();
 
-    // Handle error responses from API
     if (!response.ok) {
-      let errorMessage = "Failed to fetch roles. Please try again.";
+      let errorMessage =
+        "Your Request could not be processed. Please try again.";
       if (responseData && responseData.unAuthorizedReqeuest) {
         errorMessage = responseData.unAuthorizedReqeuest;
       } else {
@@ -69,16 +70,18 @@ export async function POST(req: NextRequest) {
         } else if (response.status === 500) {
           errorMessage = "Server error. Please try again later.";
         }
-        apiResult.message = "Failed to fetch roles";
-        apiResult.error = errorMessage;
+        apiResult.message = errorMessage;
+        apiResult.error = responseData.error?.details || "";
       }
     }
-    console.log("Create or Update User Response:", responseData);
+
     // Return the API result
     apiResult.success = response.status === 200;
+    // Return the Result Data
+    //apiResult.data = responseData.result;
     return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
-    console.error("Get Roles error:", error);
+    console.error(`${logIdentifier}: `, error);
     throw new Error("An unexpected error occurred. Please try again.");
   }
 }

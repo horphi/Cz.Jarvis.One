@@ -6,9 +6,11 @@ import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   const logIdentifier = "CreateOrUpdateRole";
+
   const apiResult: ApiResult<void> = {
     success: false,
   };
+
   console.log(`${logIdentifier} API called`);
 
   try {

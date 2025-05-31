@@ -4,11 +4,14 @@ import { useCreateOrEditRoleContext } from "@/context/administration/role-contex
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ApiResult } from "@/types/http/api-result";
 
 export default function SaveRoleButton() {
     const { id, roleName, isDefault, selectedPermissions } = useCreateOrEditRoleContext();
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
+
+
 
     const handleSubmit = async () => {
         setSubmitting(true);
@@ -42,18 +45,22 @@ export default function SaveRoleButton() {
                 body: JSON.stringify(requestBody),
             });
 
-            const data = await response.json();
-            if (data.success) {
-                toast.success(data.message || "Role saved successfully.");
+            const responseResult: ApiResult<void> = await response.json();
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful 
+                toast.success(responseResult.message || "your request has been successfully processed");
                 setTimeout(() => {
                     router.push("/administration/roles");
                 }, 1200);
-            } else {
-                toast.error(data.message || "Failed to save role.");
             }
         } catch (error) {
-            console.error("Error saving role:", error);
-            toast.error("An unexpected error occurred while saving the role.");
+            console.error("SaveRole:", error);
+            toast.error("An error occurred while processing your request. Please try again.");
         } finally {
             setSubmitting(false);
         }

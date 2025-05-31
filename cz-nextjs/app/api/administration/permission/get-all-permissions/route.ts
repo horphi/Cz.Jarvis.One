@@ -1,7 +1,16 @@
 import { GET_ALL_PERMISSIONS } from "@/config/endpoint";
+import { ApiResult } from "@/types/http/api-result";
+import { IPermission } from "@/types/roles/i-permission";
 import { NextResponse } from "next/server";
 
 export async function POST() {
+  const logIdentifier = "GetAllPermissions";
+
+  const apiResult: ApiResult<IPermission> = {
+    success: false,
+  };
+  console.log(`${logIdentifier} API called`);
+
   try {
     const response = await fetch(`${GET_ALL_PERMISSIONS}`, {
       method: "GET",
@@ -10,19 +19,16 @@ export async function POST() {
       },
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error response body:", errorData);
-
-      let errorMessage = "Failed to fetch permissions. Please try again.";
-
-      if (errorData && errorData.unAuthorizedReqeuest) {
-        errorMessage = errorData.unAuthorizedReqeuest;
+      let errorMessage =
+        "Your Request could not be processed. Please try again.";
+      if (responseData && responseData.unAuthorizedReqeuest) {
+        errorMessage = responseData.unAuthorizedReqeuest;
       } else {
-        if (errorData.error?.message) {
-          errorMessage = errorData.error.message;
+        if (responseData.error?.message) {
+          errorMessage = responseData.error.message;
         } else if (response.status === 400) {
           errorMessage = "Invalid request. Please check your input.";
         } else if (response.status === 401) {
@@ -30,30 +36,35 @@ export async function POST() {
         } else if (response.status === 500) {
           errorMessage = "Server error. Please try again later.";
         }
+        apiResult.message = errorMessage;
+        apiResult.error = responseData.error?.details || "";
       }
-
-      return NextResponse.json(
-        { success: false, message: errorMessage },
-        { status: response.status }
-      );
     }
 
-    console.log("Response:", data.result.items);
-
-    return NextResponse.json({
-      success: true,
-      data: data.result.items,
-    });
+    // Return the API result
+    apiResult.success = response.status === 200;
+    // Return the Result Data
+    apiResult.data = responseData.result.items;
+    return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
-    console.error("Get Roles error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An unexpected error occurred. Please try again.",
-      },
-      {
-        status: 500,
-      }
-    );
+    console.error(`${logIdentifier}: `, error);
+    throw new Error("An unexpected error occurred. Please try again.");
   }
 }
+
+// return NextResponse.json({
+//       success: true,
+//       data: data.result.items,
+//     });
+
+//   "items": [
+//     {
+//       "level": 0,
+//       "parentName": "string",
+//       "name": "string",
+//       "displayName": "string",
+//       "description": "string",
+//       "isGrantedByDefault": true
+//     }
+//   ]
+// }

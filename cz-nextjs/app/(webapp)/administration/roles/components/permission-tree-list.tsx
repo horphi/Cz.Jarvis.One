@@ -2,13 +2,6 @@
 import { IPermission } from '@/types/roles/i-permission';
 import { useEffect, useState } from 'react';
 
-// type PermissionItem = {
-//     name: string;
-//     displayName: string;
-//     parentName: string | null;
-//     level: number;
-// };
-
 type PermissionNode = {
     name: string;
     displayName: string;

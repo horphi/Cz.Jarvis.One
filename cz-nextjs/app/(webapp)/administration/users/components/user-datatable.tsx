@@ -21,15 +21,16 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TUser } from '@/types/users/user-type';
+import { TUserForListDto, UserListDto } from '@/types/users/user-type';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import { ApiResult } from '@/types/http/api-result';
 
 type SortDirection = 'asc' | 'desc' | null;
 type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' | 'isActive' | 'creationTime';
 
 export default function UsersDataTable() {
     const router = useRouter();
-    const [users, setUsers] = useState<{ items: TUser[] }>({ items: [] });
+    const [users, setUsers] = useState<TUserForListDto[]>([]);
     const [isFetchingUsers, setIsFetchingUsers] = useState(false);
     // Filter properties
     const [filter, setFilter] = useState("");
@@ -91,19 +92,28 @@ export default function UsersDataTable() {
                 body: JSON.stringify({ requestBody }),
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    router.push('/login');
-                }
-                throw new Error("Failed to fetch users");
+            const responseResult: ApiResult<UserListDto> = await response.json();
+
+            if (response.status === 401) {
+                // Unauthorized, redirect to login
+                router.push('/login');
             }
 
-            const data = await response.json();
-            setUsers(data.data || { items: [] });
-            setTotalCount(data.data?.totalCount || 0);
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful 
+                setUsers(responseResult.data?.items || []);
+                setTotalCount(responseResult.data?.totalCount || 0);
+            }
+
+
         } catch (error) {
             console.error(error);
-            setUsers({ items: [] });
+            setUsers([]);
             toast.error("Failed to fetch users.");
         } finally {
             setIsFetchingUsers(false);
@@ -367,14 +377,14 @@ export default function UsersDataTable() {
                         </TableHeader>
                         <TableBody>
                             {
-                                users.items.length === 0 ? (
+                                users.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={8} className="text-center">
                                             No users found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    users.items.map((user) => (
+                                    users.map((user) => (
                                         <TableRow key={user.id}>
                                             <TableCell>{user.userName}</TableCell>
                                             <TableCell>{user.name} {user.surname}</TableCell>

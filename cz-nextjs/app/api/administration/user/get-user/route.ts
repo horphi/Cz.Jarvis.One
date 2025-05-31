@@ -5,11 +5,12 @@ import { TUser } from "@/types/users/user-type";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
+  const logIdentifier = "GetUser";
   const apiResult: ApiResult<TUser> = {
     success: false,
   };
 
-  console.log("Get User for Edit API called");
+  console.log(`${logIdentifier} API called`);
 
   try {
     const session = await getAuthSession();
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     // Construct the URL with the role ID for editing
     const url = `${GET_USER_FOR_EDIT}?Id=${requestBody.id}`;
-    // Make the Remote API call to get the user
+    // Make the Remote API request
     const response = await fetch(`${url}`, {
       method: "GET",
       headers: {
@@ -34,9 +35,9 @@ export async function POST(req: NextRequest) {
 
     const responseData = await response.json();
 
-    // Handle error responses from API
     if (!response.ok) {
-      let errorMessage = "Failed to fetch roles. Please try again.";
+      let errorMessage =
+        "Your Request could not be processed. Please try again.";
       if (responseData && responseData.unAuthorizedReqeuest) {
         errorMessage = responseData.unAuthorizedReqeuest;
       } else {
@@ -49,17 +50,18 @@ export async function POST(req: NextRequest) {
         } else if (response.status === 500) {
           errorMessage = "Server error. Please try again later.";
         }
-        apiResult.message = "Failed to fetch roles";
-        apiResult.error = errorMessage;
+        apiResult.message = errorMessage;
+        apiResult.error = responseData.error?.details || "";
       }
     }
 
     // Return the API result
     apiResult.success = response.status === 200;
+    // Return the Result Data
     apiResult.data = responseData.result;
     return NextResponse.json(apiResult, { status: response.status });
   } catch (error) {
-    console.error("Get Roles error:", error);
+    console.error(`${logIdentifier}: `, error);
     throw new Error("An unexpected error occurred. Please try again.");
   }
 }
