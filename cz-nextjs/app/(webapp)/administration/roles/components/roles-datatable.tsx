@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { ApiResult } from '@/types/http/api-result';
 
 const RolesDataTable = () => {
+    const logIdentifier = "RoleDataTables";
     const router = useRouter();
     const [roles, setRoles] = useState<TRole[]>([]);
     const [isFetchingRoles, setIsFetchingRoles] = useState(false);
@@ -44,10 +45,8 @@ const RolesDataTable = () => {
 
             const responseResult: ApiResult<RoleListDto> = await response.json();
 
-            if (response.status === 401) {
-                // Unauthorized, redirect to login
-                router.push('/login');
-            }
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
 
             if (!responseResult.success) {
                 toast.error(responseResult.message || "Failed to process your request", {
@@ -59,7 +58,7 @@ const RolesDataTable = () => {
                 setRoles(responseResult.data?.items || []); // Ensure we handle the case where items might be undefined
             }
         } catch (error) {
-            console.error("RoleDataTable:", error);
+            console.error(`${logIdentifier}:`, error);
             setRoles([]);
             toast.error("Failed to fetch roles.");
         } finally {
@@ -85,7 +84,6 @@ const RolesDataTable = () => {
     const executeDeleteRole = async () => {
         if (roleToDeleteId === null) return;
 
-        console.log("Delete role with ID:", roleToDeleteId);
         setIsDeletingRole(true);
 
         try {
@@ -98,10 +96,9 @@ const RolesDataTable = () => {
             });
             const responseResult: ApiResult<void> = await response.json();
 
-            if (response.status === 401) {
-                // Unauthorized, redirect to login
-                router.push('/login');
-            }
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
+
             if (!responseResult.success) {
                 toast.error(responseResult.message || "Failed to process your request", {
                     description: responseResult.error || "Please try again."
@@ -115,7 +112,7 @@ const RolesDataTable = () => {
             }
 
         } catch (error) {
-            console.error("DeleteRole:", error);
+            console.error(`${logIdentifier}:`, error);
             toast.error("An error occurred while processing your request. Please try again.");
         } finally {
             setIsDeletingRole(false);

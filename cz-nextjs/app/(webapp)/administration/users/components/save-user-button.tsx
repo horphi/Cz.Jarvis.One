@@ -4,8 +4,10 @@ import { useCreateOrEditUserContext } from "@/context/administration/user-contex
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ApiResult } from "@/types/http/api-result";
 
 export default function SaveUserButton() {
+    const logIdentifier = "SaveUserButton";
     const {
         id,
         firstName,
@@ -13,6 +15,7 @@ export default function SaveUserButton() {
         userName,
         emailAddress,
         password,
+        confirmPassword,
         shouldChangePasswordOnNextLogin,
         isTwoFactorEnabled,
         assignedRoleNames,
@@ -58,51 +61,60 @@ export default function SaveUserButton() {
                 },
                 body: JSON.stringify(requestBody),
             });
-            const data = await response.json();
 
-            if (data.success) {
-                toast.success(data.message || "User saved successfully.");
+            const responseResult: ApiResult<void> = await response.json();
+
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
+
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful 
+                toast.success(responseResult.message || "your request has been successfully processed.");
                 setTimeout(() => {
                     router.push("/administration/users");
                 }, 1200);
-            } else {
-                toast.error(data.message || "Failed to save user.");
             }
         } catch (error) {
-            console.error("Error during user form submission:", error);
-            toast.error("An unexpected error occurred while saving the user.");
+            console.error(`${logIdentifier}:`, error);
+            toast.error("An error occurred while processing your request. Please try again.");
         }
         finally {
             setSubmitting(false);
         }
-
-
     }
 
 
     function isFormValid() {
-        const validatoinErrors: string[] = [];
+        const validationError: string[] = [];
         if (!firstName) {
-            validatoinErrors.push("First name is required.");
+            validationError.push("First name is required.");
         }
         if (!surName) {
-            validatoinErrors.push("Surname is required.");
+            validationError.push("Surname is required.");
         }
         if (!userName) {
-            validatoinErrors.push("Username is required.");
+            validationError.push("Username is required.");
         }
         if (!emailAddress) {
-            validatoinErrors.push("Email address is required.");
+            validationError.push("Email address is required.");
         }
         if (!password && id === null && setRandomPassword) {
             // Only validate password if it's a new user or random password is set
-            validatoinErrors.push("Password is required.");
+            validationError.push("Password is required.");
+        }
+        if ((password && password !== confirmPassword) && id !== null) {
+            validationError.push("Passwords do not match.");
         }
         if (assignedRoleNames.length === 0) {
-            validatoinErrors.push("At least one role must be assigned.");
+            validationError.push("At least one role must be assigned.");
         }
-        if (validatoinErrors.length > 0) {
-            toast.error(validatoinErrors.join(" "));
+        if (validationError.length > 0) {
+            toast.error(validationError.join(" "));
             return false;
         }
         return true;

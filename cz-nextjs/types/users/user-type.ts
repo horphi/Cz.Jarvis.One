@@ -1,4 +1,4 @@
-import { TRole } from "../roles/i-role";
+import { UserRoleDto } from "../roles/i-role";
 
 export type TUserForListDto = {
   name: string;
@@ -40,7 +40,7 @@ export type UserListDto = {
 
 export type GetUserForEditDto = {
   user: TUser;
-  roles: TRole[];
+  roles: UserRoleDto[];
   profilePictureId: string | null;
 };
 

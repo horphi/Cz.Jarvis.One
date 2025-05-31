@@ -4,12 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getTranslations } from "@/lib/i18n";
 import { useCreateOrEditUserContext } from "@/context/administration/user-context";
-import React, { useEffect, useState, useRef, useCallback } from "react"; // Import useRef
-import { toast } from "sonner";
+import React, { useEffect, useState } from "react"; // Import useRef
+import { RoleListDto, TRole } from "@/types/roles/i-role";
 import { useRouter } from "next/navigation";
-import { TRole } from "@/types/roles/i-role";
+import { toast } from "sonner";
 import { ApiResult } from "@/types/http/api-result";
-import { GetUserForEditDto } from "@/types/users/user-type";
 
 interface UserFormProps {
     t: Awaited<ReturnType<typeof getTranslations>>;
@@ -18,10 +17,11 @@ interface UserFormProps {
 
 
 export default function CreateUserForm({ t, param }: UserFormProps) {
+    const logIdentifier = "CreateUserForm";
     const router = useRouter();
 
+    console.log(param);
     const {
-        setId,
         firstName, setFirstName,
         surName, setSurName,
         userName, setUserName,
@@ -36,60 +36,9 @@ export default function CreateUserForm({ t, param }: UserFormProps) {
         isLockoutEnabled, setIsLockoutEnabled
     } = useCreateOrEditUserContext();
 
-    const [roleOptions, setRoleOptions] = useState<{ id: number; name: string; displayName: string; isDefault: boolean }[]>([]);
-    const initialDefaultRolesProcessed = useRef(false); // Ref to track if initial defaults have been processed
+    const [roleOptions, setRoleOptions] = useState<TRole[]>([]); // List of roles for checkboxes
+    // const initialDefaultRolesProcessed = useRef(false); // Ref to track if initial defaults have been processed
 
-    const fetchUser = useCallback(async () => {
-        if (param && param > 0) {
-            try {
-                const response = await fetch("/api/administration/user/get-user", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ id: param }),
-                });
-                const responseResult: ApiResult<GetUserForEditDto> = await response.json();
-
-                // Unauthorized, redirect to login
-                if (response.status === 401) { router.push('/login'); }
-
-                if (responseResult.success) {
-                    toast.error(responseResult.message || "Failed to process your request", {
-                        description: responseResult.error || "Please try again."
-                    });
-                    setTimeout(() => {
-                        router.push("/administration/users");
-                    }, 1200);
-                } else {
-                    // Response is Successful
-                    const editData = responseResult.data;
-                    if (editData) {
-                        setId(param);
-                        setFirstName(editData.user.name);
-                        setSurName(editData.user.surname);
-                        setUserName(editData.user.userName);
-                        setEmailAddress(editData.user.emailAddress);
-                        setPassword(editData.user.password || '');
-                        setShouldChangePasswordOnNextLogin(editData.user.shouldChangePasswordOnNextLogin);
-                        setIsTwoFactorEnabled(editData.user.isTwoFactorEnabled);
-                        setAssignedRoleNames(editData.roles.map(role => role.name) || []);
-                        setIsActive(editData.user.isActive);
-                        setIsLockoutEnabled(editData.user.isLockoutEnabled);
-                    }
-                }
-            } catch (error) {
-                console.error("CreateUserForm", error);
-                toast.error("An error occurred while processing your request. Please try again.");
-            } finally {
-                //setLoading(false);
-            }
-        }
-    }, [param, router, setId, setFirstName, setSurName, setUserName, setEmailAddress, setPassword, setShouldChangePasswordOnNextLogin, setIsTwoFactorEnabled, setAssignedRoleNames, setIsActive, setIsLockoutEnabled]);
-
-    useEffect(() => {
-        fetchUser();
-    }, [fetchUser]);
 
     useEffect(() => {
         // Fetch roles for checkbox list
@@ -100,50 +49,30 @@ export default function CreateUserForm({ t, param }: UserFormProps) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ Permissions: [] }),
                 });
-                if (!response.ok) throw new Error("Failed to fetch roles");
-                const data = await response.json();
-                const newRoleOptions = (data.data?.items ?? []).map((role: TRole) => ({
-                    id: role.id,
-                    name: role.name,
-                    displayName: role.displayName || role.name,
-                    isDefault: role.isDefault,
-                }));
-                setRoleOptions(newRoleOptions);
-                initialDefaultRolesProcessed.current = false; // Reset flag when new roles are fetched
+
+                const responseResult: ApiResult<RoleListDto> = await response.json();
+                // Unauthorized, redirect to login
+                if (response.status === 401) { router.push('/login'); }
+
+                if (!responseResult.success) {
+                    toast.error(responseResult.message || "Failed to process your request", {
+                        description: responseResult.error || "Please try again."
+                    });
+                    setTimeout(() => {
+                        router.push("/administration/users");
+                    }, 1200);
+                } else {
+                    // Response is Successful
+                    const newRoleOptions: TRole[] = responseResult.data?.items || [];
+                    setRoleOptions(newRoleOptions);
+                }
             } catch (error) {
-                console.error(error);
+                console.error(`${logIdentifier}:`, error);
                 setRoleOptions([]);
             }
         };
         fetchRolesAndSetOptions();
-    }, []); // Runs once on mount to fetch roles
-
-    // Effect to set default assigned roles once roleOptions are available
-    useEffect(() => {
-        // Only process if roleOptions are loaded and initial defaults for this set haven't been processed
-        if (roleOptions.length > 0 && !initialDefaultRolesProcessed.current) {
-            const defaultRoleNames = roleOptions
-                .filter(role => role.isDefault)
-                .map(role => role.name);
-
-            if (defaultRoleNames.length > 0) {
-                setAssignedRoleNames((prevAssignedRoleNames: string[]) => {
-                    const currentAssigned = new Set(prevAssignedRoleNames);
-                    let changed = false;
-                    for (const name of defaultRoleNames) {
-                        if (!currentAssigned.has(name)) {
-                            currentAssigned.add(name);
-                            changed = true;
-                        }
-                    }
-                    // Only return a new array if something actually changed to prevent unnecessary re-renders.
-                    return changed ? Array.from(currentAssigned) : prevAssignedRoleNames;
-                });
-            }
-            initialDefaultRolesProcessed.current = true; // Mark that defaults for this roleOptions set have been processed
-        }
-    }, [roleOptions, setAssignedRoleNames]); // Runs when roleOptions or setAssignedRoleNames changes
-
+    }, [router]); // Runs once on mount to fetch roles
 
     return (<>
 

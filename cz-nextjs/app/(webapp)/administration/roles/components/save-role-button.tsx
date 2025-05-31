@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ApiResult } from "@/types/http/api-result";
 
 export default function SaveRoleButton() {
+    const logIdentifier = "SaveRoleButton";
     const { id, roleName, isDefault, selectedPermissions } = useCreateOrEditRoleContext();
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
@@ -46,6 +47,9 @@ export default function SaveRoleButton() {
             });
 
             const responseResult: ApiResult<void> = await response.json();
+
+            if (response.status === 401) { router.push('/login'); }
+
             if (!responseResult.success) {
                 toast.error(responseResult.message || "Failed to process your request", {
                     description: responseResult.error || "Please try again."
@@ -59,7 +63,7 @@ export default function SaveRoleButton() {
                 }, 1200);
             }
         } catch (error) {
-            console.error("SaveRole:", error);
+            console.error(`${logIdentifier}:`, error);
             toast.error("An error occurred while processing your request. Please try again.");
         } finally {
             setSubmitting(false);

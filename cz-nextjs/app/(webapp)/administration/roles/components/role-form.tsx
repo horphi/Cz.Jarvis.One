@@ -17,6 +17,7 @@ interface RoleFormProps {
 }
 
 export default function RoleForm({ t, param }: RoleFormProps) {
+    const logIdentifier = "RoleForm";
     const { setId, roleName, setRoleName, isDefault, setIsDefault, selectedPermissions, setPermissions } = useCreateOrEditRoleContext();
     const router = useRouter();
 
@@ -34,10 +35,8 @@ export default function RoleForm({ t, param }: RoleFormProps) {
 
                 const responseResult: ApiResult<TCreateOrEditRole> = await response.json();
 
-                if (response.status === 401) {
-                    // Unauthorized, redirect to login
-                    router.push('/login');
-                }
+                // Unauthorized, redirect to login
+                if (response.status === 401) { router.push('/login'); }
 
                 if (!responseResult.success) {
                     toast.error(responseResult.message || "Failed to process your request", {
@@ -60,7 +59,7 @@ export default function RoleForm({ t, param }: RoleFormProps) {
                     }
                 }
             } catch (error) {
-                console.error("RoleForm:", error);
+                console.error(`${logIdentifier}:`, error);
                 toast.error("An error occurred while processing your request. Please try again.");
             } finally {
                 //setLoading(false);

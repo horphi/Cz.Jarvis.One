@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TRole } from "@/types/roles/i-role";
+import { RoleListDto, TRole } from "@/types/roles/i-role";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -29,6 +29,7 @@ type SortDirection = 'asc' | 'desc' | null;
 type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' | 'isActive' | 'creationTime';
 
 export default function UsersDataTable() {
+    const logIdentifier = "UsersDataTable";
     const router = useRouter();
     const [users, setUsers] = useState<TUserForListDto[]>([]);
     const [isFetchingUsers, setIsFetchingUsers] = useState(false);
@@ -38,7 +39,7 @@ export default function UsersDataTable() {
     const [roleId, setRoleId] = useState("");
     const [permissions] = useState<string[]>([]);
     //cconst [roles, setRoles] = useState<string[]>([]);
-    const [roleOptions, setRoleOptions] = useState<{ id: number; name: string }[]>([]);
+    const [roleOptions, setRoleOptions] = useState<TRole[]>([]);
 
     // DataTable Pagination
     const [page, setPage] = useState(1);
@@ -80,7 +81,6 @@ export default function UsersDataTable() {
             role: roleId ? roleId : null,
             onlyLockedUsers: onlyLockedUsers,
         };
-        console.log("Request Body:", requestBody);
         // Reset users to empty before fetching
 
         try {
@@ -94,10 +94,8 @@ export default function UsersDataTable() {
 
             const responseResult: ApiResult<UserListDto> = await response.json();
 
-            if (response.status === 401) {
-                // Unauthorized, redirect to login
-                router.push('/login');
-            }
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
 
             if (!responseResult.success) {
                 toast.error(responseResult.message || "Failed to process your request", {
@@ -110,9 +108,8 @@ export default function UsersDataTable() {
                 setTotalCount(responseResult.data?.totalCount || 0);
             }
 
-
         } catch (error) {
-            console.error(error);
+            console.error(`${logIdentifier}:`, error);
             setUsers([]);
             toast.error("Failed to fetch users.");
         } finally {
@@ -130,30 +127,39 @@ export default function UsersDataTable() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ Permissions: [] }),
                 });
-                if (!response.ok) throw new Error("Failed to fetch roles");
-                const data = await response.json();
-                // Assuming data.data.items is an array of roles
-                setRoleOptions((data.data?.items ?? []).map((role: TRole) => ({
-                    id: role.id,
-                    name: role.displayName || role.name,
-                })));
+                const responseResult: ApiResult<RoleListDto> = await response.json();
+
+                // Unauthorized, redirect to login
+                if (response.status === 401) { router.push('/login'); }
+
+                if (!responseResult.success) {
+                    toast.error(responseResult.message || "Failed to process your request", {
+                        description: responseResult.error || "Please try again."
+                    });
+                    setTimeout(() => {
+                        router.push("/administration/users");
+                    }, 1200);
+                } else {
+                    // Response is Successful
+                    const roleSelectItems: TRole[] = responseResult.data?.items || [];
+                    setRoleOptions(roleSelectItems);
+                }
             } catch (error) {
-                console.error(error);
-                // setRoles({ items: [] });
-                toast.error("Failed to fetch roles.");
+                console.error(`${logIdentifier}:`, error);
                 setRoleOptions([]);
+                toast.error("An error occurred while processing your request. Please try again.");
             }
         };
         fetchRoles();
-    }, []);
+    }, [router]);
 
     // useEffect for initial load and when specific filters/pagination change (excluding text filter for auto-trigger)
     useEffect(() => {
-        fetchUsers();
         // This effect runs on initial mount and when page, pageSize, onlyLockedUsers, roleId, permissions, or router change.
         // It calls the latest `fetchUsers` function, which is memoized with the current `filter` value.
         // Keystrokes in the filter input will update `filter` and re-memoize `fetchUsers`,
         // but won't trigger this effect directly.
+        fetchUsers();
 
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, pageSize, onlyLockedUsers, roleId, permissions, router, sortColumn, sortDirection]);
@@ -184,19 +190,25 @@ export default function UsersDataTable() {
                 },
                 body: JSON.stringify({ userId: userToDeleteId }),
             });
-            const data = await response.json();
+            const responseResult: ApiResult<void> = await response.json();
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
 
-            if (data.success) {
-                toast.success(data.message || "User deleted successfully.");
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                setTimeout(() => {
+                    router.push("/administration/users");
+                }, 1200);
+            } else {
+                toast.success(responseResult.message || "your request has been successfully processed.");
                 setIsAlertOpen(false); // Close dialog on success
                 fetchUsers(); // Re-fetch users data
-            } else {
-                toast.error(data.message || "Failed to delete user.");
             }
-
         } catch (error) {
-            console.error("Failed to delete User", error);
-            toast.error("An error occurred while deleting the user.");
+            console.error(`${logIdentifier}:`, error);
+            toast.error("An error occurred while processing your request. Please try again.");
         } finally {
             setIsDeletingUser(false);
             setUserToDeleteId(null); // Reset user to delete

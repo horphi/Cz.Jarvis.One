@@ -45,6 +45,8 @@ type UserContextType = {
     isLockoutEnabled: boolean;
     setIsLockoutEnabled: (isLockoutEnabled: boolean) => void;
 
+    confirmPassword: string;
+    setConfirmPassword: (confirmPassword: string) => void;
 
 
 }
@@ -58,6 +60,7 @@ export function CreateOrEditUserProvider({ children }: { children: React.ReactNo
     const [userName, setUserName] = useState("");
     const [emailAddress, setEmailAddress] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [shouldChangePasswordOnNextLogin, setShouldChangePasswordOnNextLogin] = useState(false);
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
@@ -74,6 +77,7 @@ export function CreateOrEditUserProvider({ children }: { children: React.ReactNo
             userName, setUserName,
             emailAddress, setEmailAddress,
             password, setPassword,
+            confirmPassword, setConfirmPassword,
             phoneNumber, setPhoneNumber,
             shouldChangePasswordOnNextLogin, setShouldChangePasswordOnNextLogin,
             isTwoFactorEnabled, setIsTwoFactorEnabled,

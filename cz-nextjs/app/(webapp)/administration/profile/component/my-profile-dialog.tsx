@@ -21,6 +21,8 @@ interface MyProfileDialogProps {
 }
 
 export function MyProfileDialog({ open, onOpenChange }: MyProfileDialogProps) {
+    const logIdentifier = "UsersDataTable";
+
     const { userSession } = useAppContext();
     const user: TUserLoginInfo | null = userSession;
     const router = useRouter();
@@ -58,10 +60,8 @@ export function MyProfileDialog({ open, onOpenChange }: MyProfileDialogProps) {
 
             const responseResult: ApiResult<void> = await response.json();
 
-            if (response.status === 401) {
-                // Unauthorized, redirect to login
-                router.push('/login');
-            }
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
 
             if (!responseResult.success) {
                 toast.error(responseResult.message || "Failed to process your request", {
@@ -75,7 +75,7 @@ export function MyProfileDialog({ open, onOpenChange }: MyProfileDialogProps) {
             }
 
         } catch (error) {
-            console.error("MyProfileDialog:", error);
+            console.error(`${logIdentifier}:`, error);
             toast.error("An error occurred while processing your request. Please try again.");
         }
     };

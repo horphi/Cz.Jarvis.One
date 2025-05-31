@@ -22,3 +22,4 @@ export const UNLOCK_USER = `${Host}/api/services/app/User/UnlockUser`;
 
 // profile
 export const UPDATE_CURRENT_USER_PROFILE = `${Host}/api/services/app/Profile/UpdateCurrentUserProfile`;
+export const CHANGE_PASSWORD = `${Host}/api/services/app/Profile/ChangePassword`;
