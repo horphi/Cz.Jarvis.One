@@ -1,0 +1,89 @@
+Project Objective
+Create an internal POS and inventory management system for poker tournament operations with merchandise sales (hoodies, t-shirts, caps) with the following technical stack and features:
+
+Core Requirements
+
+POS System Features
+Product catalog with categories (Clothing/Accessories) and variants (sizes/colors)
+Quick-search with poker-specific keywords (e.g., "tournament hoodie")
+Barcode scanning integration
+Cart management with:
+Tournament-specific discounts (e.g., "WSOP 2024 10% off")
+Member pricing for regular players
+Bulk purchase discounts
+Checkout system supporting:
+Multiple payment methods (cash, card, poker chips)
+Digital receipts with tournament branding
+Tournament entry package bundling
+Inventory Management
+Real-time stock tracking with color-coded thresholds
+Low stock alerts via email/dashboard
+Purchase order generation for suppliers
+Batch tracking with expiration dates (for promotional items)
+Supplier management with lead time tracking
+Poker Tournament Integration
+Player database linking purchases to tournament entries
+Membership system with loyalty points
+Tournament schedule synchronization
+Promotional item tracking for event-specific merchandise
+Reporting & Analytics
+Daily sales reports with profit margins
+Inventory turnover ratios
+Best-selling items by tournament type
+Employee performance tracking
+Seasonal demand forecasting
+Technical Specifications
+
+Frontend
+Next.js 14 (App Router)
+TypeScript 5.x
+Shadcn/ui components with custom poker-themed styling
+Tailwind CSS with dark/light modes
+React Table v8 for inventory reports
+WebSocket for real-time stock updates
+Backend
+Next.js API routes
+MySQL 8 with JSON support for variant storage
+ORM (Prisma or Drizzle)
+Redis for caching frequent inventory queries
+PDF/Excel report generation
+Authentication
+NextAuth.js with role-based access:
+Admin (full access)
+Tournament Manager (inventory/sales)
+Staff (basic POS)
+2FA for admin users
+DevOps
+Vercel hosting with CI/CD
+Automated MySQL backups
+Sentry error monitoring
+PWA capabilities for mobile use
+Special Features
+
+Tournament Mode Interface
+Full-screen POS view with poker timer integration
+Quick access to tournament-specific merchandise
+Chip conversion rate calculator
+Inventory Alerts
+Automated restocking suggestions based on tournament schedule
+Customizable reorder points per item
+Security
+End-to-end encryption for financial data
+Audit logs for all inventory changes
+IP whitelisting for internal access
+Deliverables
+
+Admin Dashboard
+POS Interface with Touch Optimization
+Inventory Management Portal
+Reporting Suite
+API Documentation
+System Operations Manual
+Potential Future Enhancements
+
+RFID inventory tracking integration
+Player credit system
+Mobile stock-taking app
+AI-powered demand prediction
+Poker tournament management module
+
