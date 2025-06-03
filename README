@@ -1,89 +1,159 @@
-Project Objective
-Create an internal POS and inventory management system for poker tournament operations with merchandise sales (hoodies, t-shirts, caps) with the following technical stack and features:
+API endpoint list for POS system:
 
-Core Requirements
+### 1. Product Catalog
+- **GET /categories**  
+  *List all product categories*
+- **POST /categories**  
+  *Create new category (e.g., Clothing, Accessories)*
+- **GET /products**  
+  *List all products with variants (size/color)*
+- **POST /products**  
+  *Create new product with variants*
+- **GET /products/{id}/variants**  
+  *Get variant details for a product*
 
-POS System Features
-Product catalog with categories (Clothing/Accessories) and variants (sizes/colors)
-Quick-search with poker-specific keywords (e.g., "tournament hoodie")
-Barcode scanning integration
-Cart management with:
-Tournament-specific discounts (e.g., "WSOP 2024 10% off")
-Member pricing for regular players
-Bulk purchase discounts
-Checkout system supporting:
-Multiple payment methods (cash, card, poker chips)
-Digital receipts with tournament branding
-Tournament entry package bundling
-Inventory Management
-Real-time stock tracking with color-coded thresholds
-Low stock alerts via email/dashboard
-Purchase order generation for suppliers
-Batch tracking with expiration dates (for promotional items)
-Supplier management with lead time tracking
-Poker Tournament Integration
-Player database linking purchases to tournament entries
-Membership system with loyalty points
-Tournament schedule synchronization
-Promotional item tracking for event-specific merchandise
-Reporting & Analytics
-Daily sales reports with profit margins
-Inventory turnover ratios
-Best-selling items by tournament type
-Employee performance tracking
-Seasonal demand forecasting
-Technical Specifications
+### 2. Barcode Integration
+- **GET /products/barcode/{barcode}**  
+  *Look up product by barcode (returns product + variant details)*
+- **POST /products/{id}/barcodes**  
+  *Assign new barcode to product variant*
 
-Frontend
-Next.js 14 (App Router)
-TypeScript 5.x
-Shadcn/ui components with custom poker-themed styling
-Tailwind CSS with dark/light modes
-React Table v8 for inventory reports
-WebSocket for real-time stock updates
-Backend
-Next.js API routes
-MySQL 8 with JSON support for variant storage
-ORM (Prisma or Drizzle)
-Redis for caching frequent inventory queries
-PDF/Excel report generation
-Authentication
-NextAuth.js with role-based access:
-Admin (full access)
-Tournament Manager (inventory/sales)
-Staff (basic POS)
-2FA for admin users
-DevOps
-Vercel hosting with CI/CD
-Automated MySQL backups
-Sentry error monitoring
-PWA capabilities for mobile use
-Special Features
+### 3. Checkout System
+- **POST /carts**  
+  *Create new shopping cart*
+- **POST /carts/{cartId}/items**  
+  *Add item to cart (with variant selection)*
+- **POST /carts/{cartId}/checkout**  
+  *Process payment + complete sale (creates order)*
+- **GET /orders/{orderId}**  
+  *Retrieve order details*
 
-Tournament Mode Interface
-Full-screen POS view with poker timer integration
-Quick access to tournament-specific merchandise
-Chip conversion rate calculator
-Inventory Alerts
-Automated restocking suggestions based on tournament schedule
-Customizable reorder points per item
-Security
-End-to-end encryption for financial data
-Audit logs for all inventory changes
-IP whitelisting for internal access
-Deliverables
+### 4. Inventory Management
+- **POST /locations**  
+  *Create new inventory location (e.g., Store A, Warehouse B)*
+- **POST /inventory/adjustments**  
+  *Adjust stock levels (with reason: restock, damage, etc.)*
+- **POST /inventory/transfers**  
+  *Transfer stock between locations*
+- **GET /products/{id}/inventory**  
+  *Check stock levels across locations*
+- **GET /locations/{id}/inventory**  
+  *View inventory for specific location*
 
-Admin Dashboard
-POS Interface with Touch Optimization
-Inventory Management Portal
-Reporting Suite
-API Documentation
-System Operations Manual
-Potential Future Enhancements
+### 5. Reporting & Analytics
+- **GET /reports/sales/daily?date=YYYY-MM-DD**  
+  *Generate daily sales report*
+- **GET /reports/sales?start=YYYY-MM-DD&end=YYYY-MM-DD**  
+  *Sales data within date range*
+- **GET /reports/products/top-selling**  
+  *List best-selling products*
+- **GET /reports/profit-margin?timeframe=weekly**  
+  *Profit margin analysis (daily/weekly/monthly)*
 
-RFID inventory tracking integration
-Player credit system
-Mobile stock-taking app
-AI-powered demand prediction
-Poker tournament management module
+### 6. Additional Core Endpoints
+- **GET /orders**  
+  *List all orders (with date/customer filters)*
+- **POST /orders/{orderId}/returns**  
+  *Process product returns*
+- **GET /variants/{id}/stock**  
+  *Check stock for specific variant*
 
+### 7. Supplier & Purchase Order Management
+- **POST /suppliers**  
+  *Create new supplier (name, contact info, payment terms)*
+- **GET /suppliers**  
+  *List all suppliers*
+- **POST /purchase-orders**  
+  *Create purchase order (PO) with supplier, products, quantities, and cost prices*
+- **POST /purchase-orders/{id}/receive**  
+  *Receive shipment against PO - updates inventory + calculates landed costs*
+- **GET /purchase-orders/{id}**  
+  *View PO details with receipt history*
+- **GET /locations/{id}/pending-orders**  
+  *List incoming shipments for a location*
+
+---
+
+### Key Implementation Notes:
+1. **Barcode Flow**  
+   - Frontend captures barcode → Calls `/products/barcode/{barcode}`  
+   - Returns matched product/variant → Added to cart via `/carts/{cartId}/items`
+
+2. **Inventory Tracking**  
+   - Automatic deduction on checkout completion (`/carts/{cartId}/checkout`)  
+   - Manual adjustments via `/inventory/adjustments`
+
+3. **Profit Calculation**  
+   - Reports use `(SalePrice - CostPrice)` per variant  
+   - Cost price stored in product variant data
+
+4. **Variant Management**  
+   - Each variant has unique SKU/barcode  
+   - Inventory tracked per variant/location
+
+5. **Daily Reports**  
+   - Includes: Total sales, profit margins, payment methods, top products  
+   - Auto-generated at EOD via cron job
+
+### Key Process Flow for Receiving Goods:
+1. **Create Supplier**  
+   `POST /suppliers`  
+   *{ "name": "Fashion Supplier Inc", "contact": "supply@example.com" }*
+
+2. **Create Purchase Order**  
+   `POST /purchase-orders`  
+   ```json
+   {
+     "supplier_id": "sup_123",
+     "location_id": "warehouse_1",
+     "items": [
+       {
+         "variant_id": "var_456",
+         "quantity": 50,
+         "cost_price": 15.99
+       }
+     ]
+   }
+   ```
+
+3. **Receive Shipment**  
+   `POST /purchase-orders/po_789/receive`  
+   ```json
+   {
+     "received_items": [
+       {
+         "variant_id": "var_456",
+         "quantity_accepted": 48,
+         "quantity_damaged": 2
+       }
+     ]
+   }
+   ```
+   *Automatically:*
+   - Adds 48 units to inventory at `warehouse_1`
+   - Updates average product cost
+   - Creates damaged stock record
+   - Updates PO status to "Partially Received" or "Completed"
+
+### Updated Inventory Management Endpoints:
+- **GET /inventory/receivings?location=warehouse_1&date=2025-05-31**  
+  *View daily received shipments*
+- **GET /products/{id}/cost-history**  
+  *View cost price evolution over time*
+
+### Profit Margin Calculation Enhancement:
+- **Daily sales reports** now include:
+  ```json
+  "profit_calculation": {
+    "sale_price": 29.99,
+    "current_cost": 16.50,
+    "sold_quantity": 12,
+    "gross_profit": 161.88
+  }
+  ```
+  Uses weighted average cost based on received shipments
+
+### Security Note:
+- Implement role-based access control (RBAC) for:
+  - Inventory managers: Full PO/receiving access
+  - Cashiers: Read-only inventory visibility
