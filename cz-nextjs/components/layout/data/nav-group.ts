@@ -46,18 +46,18 @@ export const navGroupData: NavGroup[] = [
       },
       {
         title: "Audit Logs",
-        url: "/audit-logs",
+        url: "/administration/audit-logs",
         icon: IconFolderExclamation,
       },
       {
         title: "Settings",
-        url: "/settings",
+        url: "/administration/settings",
         //   badge: "3",
         icon: IconSettings,
       },
       {
         title: "Maintainance",
-        url: "/maintainance",
+        url: "/administration/maintainance",
         icon: IconWorldCog,
       },
       {

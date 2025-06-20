@@ -28,3 +28,6 @@ export const CHANGE_PASSWORD = `${Host}/api/services/app/Profile/ChangePassword`
 export const IMPERSONATE_USER = `${Host}/api/services/app/Account/ImpersonateUser`;
 export const IMPERSONATED_AUTHENTICATION = `${Host}/api/TokenAuth/ImpersonatedAuthenticate?impersonationToken=`;
 export const BACK_TO_IMPERSONATOR = `${Host}/api/services/app/Account/BackToImpersonator`;
+
+// Audit Logs
+export const GET_ALL_AUDIT_LOGS = `${Host}/api/services/app/AuditLog/GetAuditLogs`;
