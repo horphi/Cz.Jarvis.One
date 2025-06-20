@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
 import { hasAnyRole, hasRole, isAdmin } from "@/lib/auth/role-utils";
 
 interface UserSession {
@@ -9,6 +11,9 @@ interface UserSession {
   firstName?: string;
   lastName?: string;
   email?: string;
+  isImpersonating?: boolean;
+  originalUserId?: string;
+  originalUserName?: string;
 }
 
 interface UseAuthReturn {
@@ -18,6 +23,7 @@ interface UseAuthReturn {
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
   isAdmin: () => boolean;
+  isImpersonating: boolean;
   refetch: () => Promise<void>;
 }
 
@@ -27,33 +33,36 @@ interface UseAuthReturn {
 export function useAuth(): UseAuthReturn {
   const [session, setSession] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/session");
       if (response.ok) {
         const sessionData = await response.json();
+        console.log("🔍 useAuth - Session data received:", sessionData);
+        console.log("🔍 useAuth - User roles:", sessionData?.userRole);
+        console.log(
+          "🔍 useAuth - Is impersonating:",
+          sessionData?.isImpersonating
+        );
         setSession(sessionData);
       } else {
+        console.log("❌ useAuth - Session fetch failed:", response.status);
         setSession({ isLoggedIn: false });
       }
     } catch (error) {
-      console.error("Error fetching session:", error);
+      console.error("❌ useAuth - Error fetching session:", error);
       setSession({ isLoggedIn: false });
     } finally {
       setIsLoading(false);
     }
-  };
-
+  }, []);
   useEffect(() => {
     fetchSession();
-  }, []);
-
-  const refetch = async () => {
+  }, [fetchSession]);
+  const refetch = useCallback(async () => {
     setIsLoading(true);
     await fetchSession();
-  };
-
+  }, [fetchSession]);
   return {
     session,
     isLoading,
@@ -61,6 +70,7 @@ export function useAuth(): UseAuthReturn {
     hasRole: (role: string) => hasRole(session?.userRole, role),
     hasAnyRole: (roles: string[]) => hasAnyRole(session?.userRole, roles),
     isAdmin: () => isAdmin(session?.userRole),
+    isImpersonating: session?.isImpersonating ?? false,
     refetch,
   };
 }

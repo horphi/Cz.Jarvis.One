@@ -4,17 +4,30 @@ import { GET_CURRENT_LOGIN_INFORMATIONS } from "@/config/endpoint";
 import { ApiResult } from "@/types/http/api-result";
 import { TUserSession } from "@/types/users/user-type";
 
+/**
+ * GET: Returns session data extracted from JWT token (includes role NAMES)
+ * This is used by useAuth hook and should be the primary source for role-based access control
+ */
 export async function GET() {
   try {
     const session = await getAuthSession();
+    console.log("🔍 GET /api/auth/session - Raw session:", {
+      isLoggedIn: session?.isLoggedIn,
+      userId: session?.userId,
+      userName: session?.userName,
+      userRole: session?.userRole,
+      isImpersonating: session?.isImpersonating,
+      originalUserId: session?.originalUserId,
+      originalUserName: session?.originalUserName,
+    });
 
     // Check if session exists and user is logged in
     if (!session || !session.isLoggedIn) {
+      console.log("❌ GET /api/auth/session - No session or not logged in");
       return NextResponse.json({ isLoggedIn: false }, { status: 401 });
     }
 
-    // Return basic session data for role checking
-    return NextResponse.json({
+    const responseData = {
       isLoggedIn: session.isLoggedIn,
       userId: session.userId,
       userName: session.userName,
@@ -22,13 +35,23 @@ export async function GET() {
       firstName: session.firstName,
       lastName: session.lastName,
       email: session.email,
-    });
+      isImpersonating: session.isImpersonating || false,
+      originalUserId: session.originalUserId,
+      originalUserName: session.originalUserName,
+    };
+
+    console.log("✅ GET /api/auth/session - Returning:", responseData);
+    return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Get session error:", error);
+    console.error("❌ Get session error:", error);
     return NextResponse.json({ isLoggedIn: false }, { status: 500 });
   }
 }
 
+/**
+ * POST: Calls remote API to get detailed user information (may return role IDs instead of names)
+ * This is used by NavUser component for display purposes, NOT for role-based access control
+ */
 export async function POST() {
   const apiResult: ApiResult<TUserSession> = {
     success: false,

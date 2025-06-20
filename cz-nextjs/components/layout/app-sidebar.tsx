@@ -16,47 +16,31 @@ import { TeamSwitcher } from './team-switcher'
 import { navTeamData } from './data/nav-team'
 import { NavGroup as NavGroupType } from './types'
 import { hasAnyRole } from '@/lib/auth/role-utils'
+import { useAuth } from '@/hooks/use-auth'
 
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const [filteredNavGroups, setFilteredNavGroups] = useState<NavGroupType[]>(navGroupData)
-    const [isLoading, setIsLoading] = useState(true)
+    const { session, isLoading } = useAuth()
 
     useEffect(() => {
-        const fetchUserSession = async () => {
-            try {
-                const response = await fetch('/api/auth/session')
-                if (response.ok) {
-                    const sessionData = await response.json()
-
-                    // Filter navigation groups based on user roles
-                    const filtered = navGroupData.filter(group => {
-                        // If group has role requirements, check if user has any of them
-                        if (group.requiredRoles && group.requiredRoles.length > 0) {
-                            return hasAnyRole(sessionData?.userRole, group.requiredRoles)
-                        }
-                        // If no role requirements, show the group
-                        return true
-                    })
-
-                    setFilteredNavGroups(filtered)
-                } else {
-                    // If session fetch fails, show only groups without role requirements (safer fallback)
-                    const filtered = navGroupData.filter(group => !group.requiredRoles || group.requiredRoles.length === 0)
-                    setFilteredNavGroups(filtered)
+        if (!isLoading && session) {
+            // Filter navigation groups based on user roles
+            const filtered = navGroupData.filter(group => {
+                // If group has role requirements, check if user has any of them
+                if (group.requiredRoles && group.requiredRoles.length > 0) {
+                    return hasAnyRole(session?.userRole, group.requiredRoles)
                 }
-            } catch (error) {
-                console.error('Error fetching user session:', error)
-                // On error, show only groups without role requirements (safer fallback)
-                const filtered = navGroupData.filter(group => !group.requiredRoles || group.requiredRoles.length === 0)
-                setFilteredNavGroups(filtered)
-            } finally {
-                setIsLoading(false)
-            }
+                // If no role requirements, show the group
+                return true
+            })
+            setFilteredNavGroups(filtered)
+        } else if (!isLoading && !session?.isLoggedIn) {
+            // If no session, show only groups without role requirements (safer fallback)
+            const filtered = navGroupData.filter(group => !group.requiredRoles || group.requiredRoles.length === 0)
+            setFilteredNavGroups(filtered)
         }
-
-        fetchUserSession()
-    }, [])
+    }, [session, isLoading])
 
     // Show skeleton or loading state while fetching session
     if (isLoading) {

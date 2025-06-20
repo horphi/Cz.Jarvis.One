@@ -10,6 +10,7 @@ import { getLocale } from '@/lib/i18n';
 import { TopNav } from '@/components/layout/top-nav';
 import { topNavData } from './top-nav-data';
 import { AppProvider } from '@/context/app-context';
+import { StickyImpersonationBanner } from '@/components/sticky-impersonation-banner';
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -48,15 +49,19 @@ export default async function DashboardLayout({
                                     'group-data-[scroll-locked=1]/body:h-full',
                                     'group-data-[scroll-locked=1]/body:has-[main.fixed-main]:h-svh'
                                 )}
-                            >
-                                <Header fixed>
+                            >                                <Header fixed>
                                     <TopNav links={topNavData} />
                                     <div className='ml-auto flex items-center space-x-4'>
                                         <ThemeSwitch />
                                         <LanguageSwitcher currentLocale={locale} />
                                     </div>
                                 </Header>
-                                {children}
+                                <div className="pt-16">
+                                    <StickyImpersonationBanner />
+                                    <div className="p-4">
+                                        {children}
+                                    </div>
+                                </div>
                             </div>
                             {/* </SearchProvider> */}
                         </SidebarProvider>

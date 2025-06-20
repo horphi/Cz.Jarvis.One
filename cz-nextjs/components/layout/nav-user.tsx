@@ -9,7 +9,7 @@ import {
     LogOut,
     Sparkles,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import {
     DropdownMenu,
@@ -43,9 +43,7 @@ export function NavUser() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const { userSession, setUserSession } = useAppContext();
 
-
-
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         try {
             await fetch('/api/auth/logout', {
                 method: 'POST',
@@ -54,12 +52,19 @@ export function NavUser() {
                 },
             });
 
+            // Clear user session and redirect to login
+            setUserSession(null);
+            router.push('/login');
+
         } catch (error) {
             console.error("Logout failed", error);
-            throw new Error("Logout failed. Please try again.");
+            toast.error("Logout failed. Please try again.");
+            // Even if logout fails, redirect to login for security
+            setUserSession(null);
+            router.push('/login');
         }
 
-    }
+    }, [setUserSession, router]);
 
     useEffect(() => {
         // Fetch session data when component mounts
@@ -82,8 +87,7 @@ export function NavUser() {
                         toast.error(responseResult.message || "Failed to fetch user session");
                         throw new Error(responseResult.message || "Failed to fetch user session");
                     }
-                }
-                // Set the user session in context
+                }                // Set the user session in context
                 setUserSession(responseResult.data?.user || null);
 
             } catch (error) {
@@ -94,7 +98,7 @@ export function NavUser() {
             }
         }
         fetchSessionData();
-    }, [setUserSession, router]); // Add dependency array - Note: Removed setLoginType as it was not defined in the snippet. If it's defined elsewhere and needed, please re-add.
+    }, [setUserSession, router, handleLogout]); // Add dependency array
 
     const handleChangePasswordItemSelect = () => {
         setIsChangePasswordDialogOpen(true); // Explicitly close the profile dialog

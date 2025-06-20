@@ -24,6 +24,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TUserForListDto, UserListDto } from '@/types/users/user-type';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { ApiResult } from '@/types/http/api-result';
+import { useAuth } from "@/hooks/use-auth";
+import { useImpersonation } from "@/hooks/use-impersonation";
+import { isAdmin } from "@/lib/auth/role-utils";
 
 type SortDirection = 'asc' | 'desc' | null;
 type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' | 'isActive' | 'creationTime';
@@ -31,6 +34,9 @@ type SortableColumn = 'userName' | 'name' | 'emailAddress' | 'isEmailConfirmed' 
 export default function UsersDataTable() {
     const logIdentifier = "UsersDataTable";
     const router = useRouter();
+    const { session } = useAuth();
+    const { startImpersonation, impersonationState } = useImpersonation();
+
     const [users, setUsers] = useState<TUserForListDto[]>([]);
     const [isFetchingUsers, setIsFetchingUsers] = useState(false);
     // Filter properties
@@ -162,11 +168,26 @@ export default function UsersDataTable() {
         fetchUsers();
 
         //eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, pageSize, onlyLockedUsers, roleId, permissions, router, sortColumn, sortDirection]);
-
-    const handleEditUser = (userId: number) => {
+    }, [page, pageSize, onlyLockedUsers, roleId, permissions, router, sortColumn, sortDirection]); const handleEditUser = (userId: number) => {
         console.log("Edit user with ID:", userId);
         router.push(`/administration/users/edit/${userId}`);
+    };
+
+    const handleImpersonateUser = async (userId: number) => {
+        console.log("Impersonate user with ID:", userId);
+        setOpenDropdownId(null); // Close dropdown
+
+        try {
+            const success = await startImpersonation(userId.toString());
+            if (success) {
+                toast.success("Successfully started impersonating user");
+            } else {
+                toast.error(impersonationState.error || "Failed to start impersonation");
+            }
+        } catch (error) {
+            console.error("Error starting impersonation:", error);
+            toast.error("An error occurred while starting impersonation");
+        }
     };
 
     const promptDeleteConfirmation = (userId: number) => {
@@ -423,13 +444,20 @@ export default function UsersDataTable() {
                                                             <span className="sr-only">Open menu</span>
                                                             <MoreHorizontal />
                                                         </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
+                                                    </DropdownMenuTrigger>                                                    <DropdownMenuContent align="end">
                                                         <DropdownMenuItem
                                                             onSelect={() => handleEditUser(user.id)}
                                                         >
                                                             Edit User
-                                                        </DropdownMenuItem>
+                                                        </DropdownMenuItem>                                                        {/* Show impersonate option only for admins and if not impersonating themselves */}
+                                                        {session && isAdmin(session.userRole) && session.userId !== user.id.toString() && (
+                                                            <DropdownMenuItem
+                                                                onSelect={() => handleImpersonateUser(user.id)}
+                                                                disabled={impersonationState.isLoading}
+                                                            >
+                                                                {impersonationState.isLoading ? "Impersonating..." : "Impersonate"}
+                                                            </DropdownMenuItem>
+                                                        )}
                                                         <DropdownMenuItem
                                                             onSelect={() => promptDeleteConfirmation(user.id)}
                                                         >

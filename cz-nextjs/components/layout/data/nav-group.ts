@@ -65,6 +65,11 @@ export const navGroupData: NavGroup[] = [
         url: "/horphi",
         icon: IconUsers,
       },
+      {
+        title: "Impersonation",
+        url: "/administration/impersonation",
+        icon: IconUserOff,
+      },
     ],
   },
   {

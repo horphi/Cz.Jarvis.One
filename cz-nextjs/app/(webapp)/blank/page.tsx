@@ -5,29 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HeaderContainer } from "@/components/header-container";
 import { Button } from "@/components/ui/button";
 import { Main } from "@/components/ui/main";
-import { Header } from "@/components/layout/header";
-import { TopNav } from "@/components/layout/top-nav";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { Overview } from "@/components/dashboard/overview";
 import { RecentSales } from "@/components/dashboard/recent-sales";
-import LanguageSwitcher from "@/components/language-switch";
-
-
-
-const topNav = [
-    {
-        title: 'TopNav-1',
-        href: 'dashboard/topnav1',
-        isActive: true,
-        disabled: false,
-    },
-    {
-        title: 'TopNav-2',
-        href: 'dashboard/topnav2',
-        isActive: false,
-        disabled: true,
-    }
-]
 
 
 export default async function Home() {
@@ -44,16 +23,7 @@ export default async function Home() {
 
     return (
         <>
-            <Header fixed>
-                <TopNav links={topNav} />
-                <div className='ml-auto flex items-center space-x-4'>
-                    {/* <Search /> */}
-                    <ThemeSwitch />
-                    <LanguageSwitcher currentLocale={locale} />
-                </div>
-            </Header>
-
-            <Main fixed>
+            <Main>
                 <HeaderContainer>
                     <>
                         <h1 className="text-2xl font-bold tracking-tight">Dashboard {t.greeting}</h1>
