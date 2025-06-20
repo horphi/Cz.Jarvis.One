@@ -27,7 +27,13 @@ import { NavGroup } from "../types";
 export const navGroupData: NavGroup[] = [
   {
     title: "Administration",
+    requiredRoles: ["admin", "administrator"], // Only admins can see this section
     items: [
+      {
+        title: "Dashboard",
+        url: "/administration/dashboard",
+        icon: IconLayoutDashboard,
+      },
       {
         title: "Roles",
         url: "/administration/roles",
@@ -66,7 +72,7 @@ export const navGroupData: NavGroup[] = [
     items: [
       {
         title: "Dashboard",
-        url: "/",
+        url: "/dashboard",
         icon: IconLayoutDashboard,
       },
       {

@@ -4,6 +4,31 @@ import { GET_CURRENT_LOGIN_INFORMATIONS } from "@/config/endpoint";
 import { ApiResult } from "@/types/http/api-result";
 import { TUserSession } from "@/types/users/user-type";
 
+export async function GET() {
+  try {
+    const session = await getAuthSession();
+
+    // Check if session exists and user is logged in
+    if (!session || !session.isLoggedIn) {
+      return NextResponse.json({ isLoggedIn: false }, { status: 401 });
+    }
+
+    // Return basic session data for role checking
+    return NextResponse.json({
+      isLoggedIn: session.isLoggedIn,
+      userId: session.userId,
+      userName: session.userName,
+      userRole: session.userRole,
+      firstName: session.firstName,
+      lastName: session.lastName,
+      email: session.email,
+    });
+  } catch (error) {
+    console.error("Get session error:", error);
+    return NextResponse.json({ isLoggedIn: false }, { status: 500 });
+  }
+}
+
 export async function POST() {
   const apiResult: ApiResult<TUserSession> = {
     success: false,

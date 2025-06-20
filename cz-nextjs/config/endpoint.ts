@@ -20,6 +20,11 @@ export const DELETE_USER = `${Host}/api/services/app/User/DeleteUser`;
 export const GET_USER_FOR_EDIT = `${Host}/api/services/app/User/GetUserForEdit`;
 export const UNLOCK_USER = `${Host}/api/services/app/User/UnlockUser`;
 
-// profile
+// Profile
 export const UPDATE_CURRENT_USER_PROFILE = `${Host}/api/services/app/Profile/UpdateCurrentUserProfile`;
 export const CHANGE_PASSWORD = `${Host}/api/services/app/Profile/ChangePassword`;
+
+// Impersonate
+export const IMPERSONATE_USER = `${Host}/api/services/app/Account/ImpersonateUser`;
+export const IMPERSONATED_AUTHENTICATION = `${Host}/api/TokenAuth/ImpersonatedAuthenticate?impersonationToken=`;
+export const BACK_TO_IMPERSONATOR = `${Host}/api/services/app/Account/BackToImpersonator`;
