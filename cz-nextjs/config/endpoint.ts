@@ -31,3 +31,9 @@ export const BACK_TO_IMPERSONATOR = `${Host}/api/services/app/Account/BackToImpe
 
 // Audit Logs
 export const GET_ALL_AUDIT_LOGS = `${Host}/api/services/app/AuditLog/GetAuditLogs`;
+export const GetEntityChanges = `${Host}/api/services/app/AuditLog/GetEntityChanges`;
+export const GetEntityProertyChanges = `${Host}/api/services/app/AuditLog/GetEntityPropertyChanges`;
+
+// Entity Changes
+export const GET_ENTITY_CHANGES = `${Host}/api/services/app/AuditLog/GetEntityChanges`;
+export const GET_ENTITY_PROPERTY_CHANGES = `${Host}/api/services/app/AuditLog/GetEntityTypeChanges`;

@@ -173,7 +173,8 @@ export default function AuditLogsDataTable() {
                                     onClick={() => handleSort('browserInfo')}
                                 >
                                     Browser{renderSortIcon('browserInfo')}
-                                </TableHead>                                <TableHead
+                                </TableHead>
+                                <TableHead
                                     className="w-1/4 cursor-pointer hover:bg-muted/50 select-none"
                                     onClick={() => handleSort('creationTime')}
                                 >
@@ -183,45 +184,44 @@ export default function AuditLogsDataTable() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {
-                                !myObjects?.items || myObjects.items.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={11} className="text-center">
-                                            No data found.
+                            {!myObjects?.items || myObjects.items.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={11} className="text-center">
+                                        No data found.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                myObjects.items.map((myObject) => (
+                                    <TableRow key={myObject.id}>
+                                        <TableCell>
+                                            {!myObject.exception ? (
+                                                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                            ) : (
+                                                <AlertCircle className="h-5 w-5 text-red-500" />
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{myObject.userName}</TableCell>
+                                        <TableCell>{myObject.serviceName}</TableCell>
+                                        <TableCell>{myObject.methodName}</TableCell>
+                                        <TableCell>{myObject.executionDuration}ms</TableCell>
+                                        <TableCell>{myObject.clientIpAddress}</TableCell>
+                                        <TableCell>{myObject.clientName}</TableCell>
+                                        <TableCell className="max-w-xs truncate">{myObject.browserInfo}</TableCell>
+                                        <TableCell>{new Date(myObject.executionTime).toLocaleString()}</TableCell>
+                                        <TableCell>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleView(myObject)}
+                                                className="h-8 w-8 p-0"
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                                <span className="sr-only">View details</span>
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    myObjects.items.map((myObject) => (
-                                        <TableRow key={myObject.id}>
-                                            <TableCell>
-                                                {!myObject.exception ? (
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                                ) : (
-                                                    <AlertCircle className="h-5 w-5 text-red-500" />
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{myObject.userName}</TableCell>
-                                            <TableCell>{myObject.serviceName}</TableCell>
-                                            <TableCell>{myObject.methodName}</TableCell>
-                                            <TableCell>{myObject.executionDuration}ms</TableCell>
-                                            <TableCell>{myObject.clientIpAddress}</TableCell>                                            <TableCell>{myObject.clientName}</TableCell>
-                                            <TableCell className="max-w-xs truncate">{myObject.browserInfo}</TableCell>
-                                            <TableCell>{new Date(myObject.executionTime).toLocaleString()}</TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleView(myObject)}
-                                                    className="h-8 w-8 p-0"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    <span className="sr-only">View details</span>
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )
-                            }
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 )}

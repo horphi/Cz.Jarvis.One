@@ -108,6 +108,8 @@ export async function POST(req: NextRequest) {
 
     const responseData = await response.json();
 
+    console.log(`${logIdentifier} API Response: `, responseData);
+
     if (!response.ok) {
       let errorMessage =
         "Your Request could not be processed. Please try again.";
@@ -126,6 +128,7 @@ export async function POST(req: NextRequest) {
         apiResult.message = errorMessage;
         apiResult.error = responseData.error?.details || "";
       }
+      return NextResponse.json(apiResult, { status: response.status });
     }
 
     // Return the API result

@@ -96,7 +96,6 @@ export async function POST() {
         apiResult.error = errorMessage;
       }
     }
-    console.log("Get Current Login Information Response:", responseData);
     // Return the API result
     apiResult.success = response.status === 200;
     apiResult.data = responseData.result;
