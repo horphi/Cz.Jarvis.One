@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +14,7 @@ import { TEntityChange, getEntityChangeTypeText, getEntityChangeTypeColor, Entit
 import { Input } from "@/components/ui/input";
 import { TEntityPropertyChange } from '@/types/audit-log/entity-property-changes-type';
 import { ApiResult } from '@/types/http/api-result';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Types for DataTable
 type SortDirection = 'asc' | 'desc' | null;
@@ -168,101 +169,140 @@ export default function EntityTypeChangesDataTable() {
 
     return (
         <>            {/* Filters */}
-            <div className="mb-4 p-4 bg-card rounded-lg border space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Entity Type</label>
+            <div className="mb-6 p-6 bg-card rounded-lg border shadow-sm space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Entity Type
+                        </label>
                         <Input
-                            placeholder="Entity type..."
+                            placeholder="Search entity type..."
                             value={entityTypeFilter}
                             onChange={(e) => setEntityTypeFilter(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            className="h-9"
                         />
                     </div>
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">User Name</label>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            User Name
+                        </label>
                         <Input
-                            placeholder="User name..."
+                            placeholder="Search user name..."
                             value={userNameFilter}
                             onChange={(e) => setUserNameFilter(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            className="h-9"
                         />
                     </div>
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Start Date</label>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Start Date
+                        </label>
                         <Input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
+                            className="h-9"
                         />
                     </div>
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">End Date</label>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            End Date
+                        </label>
                         <Input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
+                            className="h-9"
                         />
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button onClick={handleSearch} size="sm">Search</Button>
-                    <Button onClick={handleReset} variant="outline" size="sm">Reset</Button>
+                <div className="flex gap-3">
+                    <Button onClick={handleSearch} size="sm" className="px-4">
+                        Search
+                    </Button>
+                    <Button onClick={handleReset} variant="outline" size="sm" className="px-4">
+                        Reset
+                    </Button>
                 </div>
-            </div>
-
-            <div className="overflow-x-auto">
+            </div>            <div className="rounded-md border bg-card">
                 {isFetchingData ? (
-                    <div className="flex items-center justify-center p-4">
-                        <span className="text-muted-foreground">Loading Data...</span>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent">
+                                <TableHead className="font-semibold">Change Time</TableHead>
+                                <TableHead className="font-semibold">Change Type</TableHead>
+                                <TableHead className="font-semibold">Entity Type</TableHead>
+                                <TableHead className="font-semibold">Entity ID</TableHead>
+                                <TableHead className="font-semibold">User Name</TableHead>
+                                <TableHead className="font-semibold">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {Array.from({ length: 5 }).map((_, index) => (
+                                <TableRow key={index} className="hover:bg-transparent">
+                                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 ) : (
                     <Table>
                         <TableHeader>
-                            <TableRow>
+                            <TableRow className="hover:bg-transparent">
                                 <TableHead
-                                    className="cursor-pointer hover:bg-muted/50 select-none"
+                                    className="cursor-pointer hover:bg-muted/50 select-none font-semibold transition-colors"
                                     onClick={() => handleSort('changeTime')}
                                 >
                                     Change Time{renderSortIcon('changeTime')}
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer hover:bg-muted/50 select-none"
+                                    className="cursor-pointer hover:bg-muted/50 select-none font-semibold transition-colors"
                                     onClick={() => handleSort('changeType')}
                                 >
                                     Change Type{renderSortIcon('changeType')}
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer hover:bg-muted/50 select-none"
+                                    className="cursor-pointer hover:bg-muted/50 select-none font-semibold transition-colors"
                                     onClick={() => handleSort('entityTypeFullName')}
                                 >
                                     Entity Type{renderSortIcon('entityTypeFullName')}
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer hover:bg-muted/50 select-none"
+                                    className="cursor-pointer hover:bg-muted/50 select-none font-semibold transition-colors"
                                     onClick={() => handleSort('entityId')}
                                 >
                                     Entity ID{renderSortIcon('entityId')}
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer hover:bg-muted/50 select-none"
-                                    onClick={() => handleSort('userName')}                                >
+                                    className="cursor-pointer hover:bg-muted/50 select-none font-semibold transition-colors"
+                                    onClick={() => handleSort('userName')}
+                                >
                                     User Name{renderSortIcon('userName')}
                                 </TableHead>
-                                <TableHead>Actions</TableHead>
+                                <TableHead className="font-semibold">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {entityChanges.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="text-center">
-                                        No data found.
+                                <TableRow className="hover:bg-transparent">
+                                    <TableCell colSpan={6} className="text-center py-12">
+                                        <div className="flex flex-col items-center space-y-2">
+                                            <FileText className="h-8 w-8 text-muted-foreground" />
+                                            <p className="text-muted-foreground">No data found.</p>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 entityChanges.map((entityChange) => (
-                                    <TableRow key={entityChange.id}>
-                                        <TableCell>
+                                    <TableRow key={entityChange.id} className="hover:bg-muted/50 transition-colors">
+                                        <TableCell className="font-mono text-sm">
                                             {new Date(entityChange.changeTime).toLocaleString()}
                                         </TableCell>
                                         <TableCell>
@@ -272,25 +312,33 @@ export default function EntityTypeChangesDataTable() {
                                             >
                                                 {getEntityChangeTypeText(entityChange.changeType)}
                                             </Badge>
+                                        </TableCell>                                        <TableCell className="max-w-xs">
+                                            <div className="truncate" title={entityChange.entityTypeFullName || undefined}>
+                                                {entityChange.entityTypeFullName}
+                                            </div>
                                         </TableCell>
-                                        <TableCell className="max-w-xs truncate">
-                                            {entityChange.entityTypeFullName}
+                                        <TableCell className="font-mono">
+                                            {entityChange.entityId}
                                         </TableCell>
-                                        <TableCell>{entityChange.entityId}</TableCell>
-                                        <TableCell>{entityChange.userName || '-'}</TableCell>
+                                        <TableCell>
+                                            <span className={entityChange.userName ? '' : 'text-muted-foreground'}>
+                                                {entityChange.userName || 'N/A'}
+                                            </span>
+                                        </TableCell>
                                         <TableCell>
                                             <div className="flex space-x-1">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleViewPropertyChanges(entityChange.id)}
-                                                    className="h-8 w-8 p-0"
+                                                    className="h-8 w-8 p-0 hover:bg-muted transition-colors"
                                                     disabled={loadingPropertyChanges}
                                                     title="View property changes"
                                                 >
                                                     <FileText className="h-4 w-4" />
                                                     <span className="sr-only">View property changes</span>
-                                                </Button>                                            </div>
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -298,25 +346,29 @@ export default function EntityTypeChangesDataTable() {
                         </TableBody>
                     </Table>
                 )}
-            </div>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between mt-4 px-4">
+            </div>            {/* Pagination Controls */}
+            <div className="flex items-center justify-between mt-6 px-2">
                 <div className="flex items-center space-x-4">
-                    <div>
-                        <label className="mr-2 text-sm">Rows per page:</label>
-                        <select
-                            className="border rounded px-2 py-1 text-sm"
-                            value={pageSize}
-                            onChange={e => {
-                                setPageSize(Number(e.target.value));
+                    <div className="flex items-center space-x-2">
+                        <label className="text-sm font-medium">Rows per page:</label>
+                        <Select
+                            value={pageSize.toString()}
+                            onValueChange={(value) => {
+                                setPageSize(Number(value));
                                 setPage(1);
                             }}
                         >
-                            {[5, 10, 25, 50, 100].map(size => (
-                                <option key={size} value={size}>{size}</option>
-                            ))}
-                        </select>
+                            <SelectTrigger className="w-20 h-8">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[5, 10, 25, 50, 100].map(size => (
+                                    <SelectItem key={size} value={size.toString()}>
+                                        {size}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
                 <Pagination>
@@ -325,12 +377,17 @@ export default function EntityTypeChangesDataTable() {
                             <PaginationPrevious
                                 onClick={() => setPage(prev => Math.max(prev - 1, 1))}
                                 aria-disabled={page === 1}
-                                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                             />
                         </PaginationItem>
                         {page > 2 && (
                             <PaginationItem>
-                                <PaginationLink onClick={() => setPage(1)}>1</PaginationLink>
+                                <PaginationLink
+                                    onClick={() => setPage(1)}
+                                    className="cursor-pointer"
+                                >
+                                    1
+                                </PaginationLink>
                             </PaginationItem>
                         )}
                         {page > 3 && (
@@ -340,7 +397,12 @@ export default function EntityTypeChangesDataTable() {
                         )}
                         {page > 1 && (
                             <PaginationItem>
-                                <PaginationLink onClick={() => setPage(page - 1)}>{page - 1}</PaginationLink>
+                                <PaginationLink
+                                    onClick={() => setPage(page - 1)}
+                                    className="cursor-pointer"
+                                >
+                                    {page - 1}
+                                </PaginationLink>
                             </PaginationItem>
                         )}
                         <PaginationItem>
@@ -348,7 +410,12 @@ export default function EntityTypeChangesDataTable() {
                         </PaginationItem>
                         {page < totalPages && (
                             <PaginationItem>
-                                <PaginationLink onClick={() => setPage(page + 1)}>{page + 1}</PaginationLink>
+                                <PaginationLink
+                                    onClick={() => setPage(page + 1)}
+                                    className="cursor-pointer"
+                                >
+                                    {page + 1}
+                                </PaginationLink>
                             </PaginationItem>
                         )}
                         {page < totalPages - 2 && (
@@ -358,14 +425,19 @@ export default function EntityTypeChangesDataTable() {
                         )}
                         {page < totalPages - 1 && totalPages > 1 && (
                             <PaginationItem>
-                                <PaginationLink onClick={() => setPage(totalPages)}>{totalPages}</PaginationLink>
+                                <PaginationLink
+                                    onClick={() => setPage(totalPages)}
+                                    className="cursor-pointer"
+                                >
+                                    {totalPages}
+                                </PaginationLink>
                             </PaginationItem>
                         )}
                         <PaginationItem>
                             <PaginationNext
                                 onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
                                 aria-disabled={page === totalPages || totalPages === 0}
-                                className={page === totalPages || totalPages === 0 ? "pointer-events-none opacity-50" : ""}
+                                className={page === totalPages || totalPages === 0 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                             />
                         </PaginationItem>
                     </PaginationContent>
@@ -374,52 +446,95 @@ export default function EntityTypeChangesDataTable() {
                     {totalCount > 0 ? (
                         `Showing ${firstItemNum} to ${lastItemNum} of ${totalCount} entries`
                     ) : (
-                        "No entries found")}
+                        "No entries found"
+                    )}
                 </div>
-            </div>
-
-            {/* Property Changes Dialog */}
+            </div>            {/* Property Changes Dialog */}
             <Dialog open={isPropertyChangesDialogOpen} onOpenChange={setIsPropertyChangesDialogOpen}>
-                <DialogContent className="max-w-none w-[95vw] max-h-[85vh] overflow-y-auto p-6">
-                    <DialogHeader>
-                        <DialogTitle>Entity Property Changes</DialogTitle>
+                <DialogContent className="max-w-none w-[95vw] max-h-[85vh] overflow-y-auto">
+                    <DialogHeader className="pb-4">
+                        <DialogTitle className="text-lg font-semibold">Entity Property Changes</DialogTitle>
                     </DialogHeader>
 
                     {loadingPropertyChanges ? (
-                        <div className="flex items-center justify-center p-8">
-                            <span className="text-muted-foreground">Loading property changes...</span>
-                        </div>
-                    ) : selectedPropertyChanges.length === 0 ? (
-                        <div className="text-center p-8">
-                            <p className="text-muted-foreground">No property changes found.</p>
-                        </div>
-                    ) : (
                         <div className="space-y-4">
-                            {selectedPropertyChanges.map((propertyChange) => (
-                                <div key={propertyChange.id} className="border rounded-lg p-4">
+                            {Array.from({ length: 3 }).map((_, index) => (
+                                <div key={index} className="border rounded-lg p-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium text-muted-foreground">Property Name:</label>
-                                            <p className="text-sm font-medium">{propertyChange.propertyName}</p>
+                                            <Skeleton className="h-4 w-24 mb-1" />
+                                            <Skeleton className="h-5 w-32" />
                                         </div>
                                         <div>
-                                            <label className="text-sm font-medium text-muted-foreground">Property Type:</label>
-                                            <p className="text-sm">{propertyChange.propertyTypeFullName || '-'}</p>
+                                            <Skeleton className="h-4 w-28 mb-1" />
+                                            <Skeleton className="h-5 w-40" />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                         <div>
-                                            <label className="text-sm font-medium text-muted-foreground">Original Value:</label>
-                                            <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded text-sm">
-                                                <code className="text-red-800">
+                                            <Skeleton className="h-4 w-28 mb-2" />
+                                            <Skeleton className="h-16 w-full" />
+                                        </div>
+                                        <div>
+                                            <Skeleton className="h-4 w-20 mb-2" />
+                                            <Skeleton className="h-16 w-full" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : selectedPropertyChanges.length === 0 ? (
+                        <div className="text-center py-12">
+                            <div className="flex flex-col items-center space-y-3">
+                                <FileText className="h-12 w-12 text-muted-foreground" />
+                                <p className="text-muted-foreground font-medium">No property changes found</p>
+                                <p className="text-sm text-muted-foreground/80">This entity change has no property modifications.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                            {selectedPropertyChanges.map((propertyChange, index) => (
+                                <div key={propertyChange.id} className="border rounded-lg p-4 bg-card/50 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <Badge variant="secondary" className="px-2 py-1">
+                                            Property #{index + 1}
+                                        </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                Property Name
+                                            </label>
+                                            <p className="text-sm font-semibold bg-background rounded px-2 py-1 border">
+                                                {propertyChange.propertyName}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                Property Type
+                                            </label>
+                                            <p className="text-sm bg-background rounded px-2 py-1 border">
+                                                {propertyChange.propertyTypeFullName || 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-medium text-destructive uppercase tracking-wide flex items-center">
+                                                Original Value
+                                            </label>
+                                            <div className="bg-destructive/5 border border-destructive/20 rounded p-3">
+                                                <code className="text-sm text-destructive font-mono break-all">
                                                     {propertyChange.originalValue || 'null'}
                                                 </code>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-muted-foreground">New Value:</label>
-                                            <div className="mt-1 p-2 bg-green-50 border border-green-200 rounded text-sm">
-                                                <code className="text-green-800">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-medium text-green-700 dark:text-green-400 uppercase tracking-wide">
+                                                New Value
+                                            </label>
+                                            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded p-3">
+                                                <code className="text-sm text-green-700 dark:text-green-400 font-mono break-all">
                                                     {propertyChange.newValue || 'null'}
                                                 </code>
                                             </div>
@@ -430,8 +545,11 @@ export default function EntityTypeChangesDataTable() {
                         </div>
                     )}
 
-                    <div className="flex justify-end mt-6">
-                        <Button onClick={() => setIsPropertyChangesDialogOpen(false)}>
+                    <div className="flex justify-end pt-4 border-t">
+                        <Button
+                            onClick={() => setIsPropertyChangesDialogOpen(false)}
+                            className="px-6"
+                        >
                             Close
                         </Button>
                     </div>
