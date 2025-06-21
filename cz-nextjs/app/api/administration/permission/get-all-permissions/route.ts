@@ -39,6 +39,7 @@ export async function POST() {
         apiResult.message = errorMessage;
         apiResult.error = responseData.error?.details || "";
       }
+      return NextResponse.json(apiResult, { status: response.status });
     }
 
     // Return the API result

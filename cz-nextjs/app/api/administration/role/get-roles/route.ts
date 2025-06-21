@@ -58,9 +58,8 @@ export async function POST(req: NextRequest) {
         apiResult.message = errorMessage;
         apiResult.error = responseData.error?.details || "";
       }
+      return NextResponse.json(apiResult, { status: response.status });
     }
-
-    console.log(responseData.result);
 
     // Return the API result
     apiResult.success = response.status === 200;
