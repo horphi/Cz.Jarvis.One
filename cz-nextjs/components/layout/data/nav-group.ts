@@ -50,7 +50,7 @@ export const navGroupData: NavGroup[] = [
         icon: IconFolderExclamation,
       },
       {
-        title: "Entity Changes",
+        title: "Entity Type Changes",
         url: "/administration/entity-changes",
         icon: IconFolderExclamation,
       },

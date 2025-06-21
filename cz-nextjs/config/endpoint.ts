@@ -36,4 +36,4 @@ export const GetEntityProertyChanges = `${Host}/api/services/app/AuditLog/GetEnt
 
 // Entity Changes
 export const GET_ENTITY_CHANGES = `${Host}/api/services/app/AuditLog/GetEntityChanges`;
-export const GET_ENTITY_PROPERTY_CHANGES = `${Host}/api/services/app/AuditLog/GetEntityTypeChanges`;
+export const GET_ENTITY_PROPERTY_CHANGES = `${Host}/api/services/app/AuditLog/GetEntityPropertyChanges`;

@@ -5,27 +5,29 @@ import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Eye, FileText } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
-import { TEntityChange, TEntityPropertyChange, getEntityChangeTypeText, getEntityChangeTypeColor } from '@/types/entity-change/entity-change-type';
+import { TEntityChange, getEntityChangeTypeText, getEntityChangeTypeColor, EntityListDto } from '@/types/audit-log/entity-change-type';
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TEntityPropertyChange } from '@/types/audit-log/entity-property-changes-type';
+import { ApiResult } from '@/types/http/api-result';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Types for DataTable
 type SortDirection = 'asc' | 'desc' | null;
 type SortableColumn = 'changeTime' | 'changeType' | 'entityTypeFullName' | 'entityId' | 'userName';
 
-export default function EntityChangesDataTable() {
+export default function EntityTypeChangesDataTable() {
     const router = useRouter();    // Filter states
-    const [filter, setFilter] = useState("");
     const [entityTypeFilter, setEntityTypeFilter] = useState("");
-    const [changeTypeFilter, setChangeTypeFilter] = useState("all");
     const [userNameFilter, setUserNameFilter] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     // State to hold fetched data
-    const [entityChanges, setEntityChanges] = useState<{ items: TEntityChange[] }>({ items: [] });
+    const [entityChanges, setEntityChanges] = useState<TEntityChange[]>([]);
     const [isFetchingData, setIsFetchingData] = useState(false);
 
     // DataTable Pagination
@@ -58,10 +60,10 @@ export default function EntityChangesDataTable() {
             maxResultCount: pageSize,
             skipCount: (page - 1) * pageSize,
             sorting: sorting,
-            filter: filter,
             entityTypeFullName: entityTypeFilter || undefined,
-            changeType: changeTypeFilter && changeTypeFilter !== "all" ? parseInt(changeTypeFilter) : undefined,
             userName: userNameFilter || undefined,
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
         };
 
         try {
@@ -73,37 +75,35 @@ export default function EntityChangesDataTable() {
                 body: JSON.stringify(requestBody),
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    router.push('/login');
-                }
-                throw new Error("Failed to fetch entity changes");
+            const responseResult: ApiResult<EntityListDto> = await response.json();
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful
+                setEntityChanges(responseResult.data?.items || []);
+                setTotalCount(responseResult.data?.totalCount || 0);
             }
 
-            const data = await response.json();
-
-            // Handle the response structure
-            const responseData = data?.data || {};
-            const items = responseData?.items || responseData || [];
-
-            setEntityChanges({ items: Array.isArray(items) ? items : [] });
-            setTotalCount(responseData?.totalCount || items?.length || 0);
         } catch (error) {
             console.error(error);
-            setEntityChanges({ items: [] });
+            setEntityChanges([]);
             toast.error("Failed to fetch entity changes.");
         } finally {
             setIsFetchingData(false);
         }
-    }, [filter, entityTypeFilter, changeTypeFilter, userNameFilter, router, page, pageSize, sortColumn, sortDirection]);
+    }, [entityTypeFilter, userNameFilter, startDate, endDate, router, page, pageSize, sortColumn, sortDirection]);
 
     // useEffect for initial load and when filters/pagination change
     useEffect(() => {
         fetchData();
     }, [page, pageSize, sortColumn, sortDirection, fetchData]);    // Function to handle view action
-    const handleView = (entityChange: TEntityChange) => {
-        router.push(`/administration/entity-changes/${entityChange.id}`);
-    };
+
+
 
     // Function to handle property changes view
     const handleViewPropertyChanges = async (entityChangeId: number) => {
@@ -124,6 +124,10 @@ export default function EntityChangesDataTable() {
             }
 
             const data = await response.json();
+
+            console.log(data);
+
+
             const propertyChanges = data?.data || [];
 
             setSelectedPropertyChanges(Array.isArray(propertyChanges) ? propertyChanges : []);
@@ -155,27 +159,17 @@ export default function EntityChangesDataTable() {
         setPage(1);
         fetchData();
     }; const handleReset = () => {
-        setFilter("");
         setEntityTypeFilter("");
-        setChangeTypeFilter("all");
         setUserNameFilter("");
+        setStartDate("");
+        setEndDate("");
         setPage(1);
     };
 
     return (
-        <>
-            {/* Filters */}
+        <>            {/* Filters */}
             <div className="mb-4 p-4 bg-card rounded-lg border space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Search</label>
-                        <Input
-                            placeholder="Search..."
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div>
                         <label className="text-sm font-medium mb-1 block">Entity Type</label>
                         <Input
@@ -186,25 +180,28 @@ export default function EntityChangesDataTable() {
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-medium mb-1 block">Change Type</label>                        <Select value={changeTypeFilter} onValueChange={setChangeTypeFilter}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select change type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="0">Created</SelectItem>
-                                <SelectItem value="1">Updated</SelectItem>
-                                <SelectItem value="2">Deleted</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
                         <label className="text-sm font-medium mb-1 block">User Name</label>
                         <Input
                             placeholder="User name..."
                             value={userNameFilter}
                             onChange={(e) => setUserNameFilter(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Start Date</label>
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">End Date</label>
+                        <Input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
                         />
                     </div>
                 </div>
@@ -252,19 +249,18 @@ export default function EntityChangesDataTable() {
                                     onClick={() => handleSort('userName')}                                >
                                     User Name{renderSortIcon('userName')}
                                 </TableHead>
-                                <TableHead>Reason</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {!entityChanges?.items || entityChanges.items.length === 0 ? (
+                            {entityChanges.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center">
                                         No data found.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                entityChanges.items.map((entityChange) => (
+                                entityChanges.map((entityChange) => (
                                     <TableRow key={entityChange.id}>
                                         <TableCell>
                                             {new Date(entityChange.changeTime).toLocaleString()}
@@ -282,21 +278,8 @@ export default function EntityChangesDataTable() {
                                         </TableCell>
                                         <TableCell>{entityChange.entityId}</TableCell>
                                         <TableCell>{entityChange.userName || '-'}</TableCell>
-                                        <TableCell className="max-w-xs truncate">
-                                            {entityChange.reason || '-'}
-                                        </TableCell>
                                         <TableCell>
                                             <div className="flex space-x-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleView(entityChange)}
-                                                    className="h-8 w-8 p-0"
-                                                    title="View details"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    <span className="sr-only">View details</span>
-                                                </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"

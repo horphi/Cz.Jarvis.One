@@ -2,9 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { HeaderContainer } from "@/components/header-container";
 import { Main } from "@/components/ui/main";
-import EntityChangesDataTable from "./components/entity-changes-datatable";
+import EntityTypeChangesDataTable from "./components/entity-type-changes-datatable";
 
-export default async function EntityChangesPage() {
+export default async function EntityTypeChangesPage() {
 
     return (
         <>
@@ -28,7 +28,7 @@ export default async function EntityChangesPage() {
                                     <CardTitle>Entity Changes History</CardTitle>
                                 </CardHeader>
                                 <CardContent className="pl-2">
-                                    <EntityChangesDataTable />
+                                    <EntityTypeChangesDataTable />
                                 </CardContent>
                             </Card>
                         </div>

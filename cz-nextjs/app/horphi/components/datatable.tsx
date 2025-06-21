@@ -10,6 +10,14 @@ import { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@radix-ui/react-alert-dialog';
 import { AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { ApiResult } from '@/types/http/api-result';
+
+
+export type MyObjectListDto = {
+    totalCount: number;
+    items: MyObject[];
+};
+
 
 // My Object type definition
 type MyObject = {
@@ -35,7 +43,7 @@ export default function DataTable() {
     const [filter] = useState("");
 
     // State to hold fetched data
-    const [myObjects, setMyObjects] = useState<{ items: MyObject[] }>({ items: [] });
+    const [myObjects, setMyObjects] = useState<MyObject[]>([]);
     const [isFetchingData, setIsFetchingData] = useState(false);
 
     // DataTable Pagination
@@ -94,13 +102,23 @@ export default function DataTable() {
                 throw new Error("Failed to fetch myObjects");
             }
 
-            const data = await response.json();
-            setMyObjects(data.data || { items: [] });
-            setTotalCount(data.data?.totalCount || 0);
+            const responseResult: ApiResult<MyObjectListDto> = await response.json();
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful
+                setMyObjects(responseResult.data?.items || []);
+                setTotalCount(responseResult.data?.totalCount || 0);
+            }
         } catch (error) {
             console.error(error);
-            setMyObjects({ items: [] });
-            toast.error("Failed to fetch users.");
+            setMyObjects([]);
+            toast.error("Failed to fetch categories.");
         } finally {
             setIsFetchingData(false);
         }
@@ -248,14 +266,14 @@ export default function DataTable() {
                         </TableHeader>
                         <TableBody>
                             {
-                                myObjects.items.length === 0 ? (
+                                myObjects.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={8} className="text-center">
                                             No data found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    myObjects.items.map((myObject) => (
+                                    myObjects.map((myObject) => (
                                         <TableRow key={myObject.id}>
                                             <TableCell>{myObject.userName}</TableCell>
                                             <TableCell>{myObject.name} {myObject.surname}</TableCell>

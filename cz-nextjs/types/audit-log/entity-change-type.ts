@@ -1,26 +1,21 @@
-export type TEntityChange = {
-  id: number;
-  changeTime: Date;
-  changeType: number; // 0 = Created, 1 = Updated, 2 = Deleted
-  entityId?: string | null;
-  entityTypeFullName?: string | null;
-  tenantId?: number | null;
-  userId?: number | null;
-  userName?: string | null;
-  impersonatorTenantId?: number | null;
-  impersonatorUserId?: number | null;
-  reason?: string | null;
-  propertyChanges?: TEntityPropertyChange[];
+import { TEntityPropertyChange } from "./entity-property-changes-type";
+
+export type EntityListDto = {
+  totalCount: number;
+  items: TEntityChange[];
 };
 
-export type TEntityPropertyChange = {
+export type TEntityChange = {
   id: number;
-  entityChangeId: number;
-  newValue?: string | null;
-  originalValue?: string | null;
-  propertyName?: string | null;
-  propertyTypeFullName?: string | null;
+  userId?: number | null;
+  userName?: string | null;
+  changeTime: Date;
+  changeType: number; // 0 = Created, 1 = Updated, 2 = Deleted
+  entityTypeFullName?: string | null;
+  entityId?: string | null;
   tenantId?: number | null;
+  entityChangeSetId?: number | null;
+  propertyChanges?: TEntityPropertyChange[];
 };
 
 export enum EntityChangeType {

@@ -8,7 +8,10 @@ import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Eye } from "lucide-r
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
-import { TAuditLog } from '@/types/audit-log/audit-log-type';
+import { AuditLogListDto, TAuditLog } from '@/types/audit-log/audit-log-type';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ApiResult } from '@/types/http/api-result';
 
 // Types for DataTable
 type SortDirection = 'asc' | 'desc' | null;
@@ -18,11 +21,17 @@ type SortableColumn =
 
 export default function AuditLogsDataTable() {
     const router = useRouter();
-    // Filter 
-    const [filter] = useState("");
+
+    // Filter states
+    const [userNameFilter, setUserNameFilter] = useState("");
+    const [serviceNameFilter, setServiceNameFilter] = useState("");
+    const [methodNameFilter, setMethodNameFilter] = useState("");
+    const [hasExceptionFilter, setHasExceptionFilter] = useState("all");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     // State to hold fetched data
-    const [myObjects, setTAuditLogs] = useState<{ items: TAuditLog[] }>({ items: [] });
+    const [myObjects, setTAuditLogs] = useState<TAuditLog[]>([]);
     const [isFetchingData, setIsFetchingData] = useState(false);
 
     // DataTable Pagination
@@ -45,14 +54,21 @@ export default function AuditLogsDataTable() {
     const fetchDatas = useCallback(async () => {
         setIsFetchingData(true);        // Build sorting string
         let sorting = "id asc"; // default sorting
+
         if (sortColumn && sortDirection) {
             sorting = `${sortColumn} ${sortDirection}`;
         }
+
         const requestBody = {
             maxResultCount: pageSize,
             skipCount: (page - 1) * pageSize,
             sorting: sorting,
-            filter: filter,
+            userName: userNameFilter || undefined,
+            serviceName: serviceNameFilter || undefined,
+            methodName: methodNameFilter || undefined,
+            hasException: hasExceptionFilter === "all" ? undefined : hasExceptionFilter === "true",
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
             // Additional filters and parameters can be added here
         };
         console.log("Request Body:", requestBody);
@@ -65,29 +81,31 @@ export default function AuditLogsDataTable() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(requestBody), // Remove the extra { requestBody } wrapper
-            }); if (!response.ok) {
-                if (response.status === 401) {
-                    router.push('/login');
-                }
-                throw new Error("Failed to fetch myObjects");
+            });
+
+            const responseResult: ApiResult<AuditLogListDto> = await response.json();
+            // Unauthorized, redirect to login
+            if (response.status === 401) { router.push('/login'); }
+            if (!responseResult.success) {
+                toast.error(responseResult.message || "Failed to process your request", {
+                    description: responseResult.error || "Please try again."
+                });
+                return;
+            } else {
+                // Response is Successful
+                // Defensive handling of the response structure
+                setTAuditLogs(responseResult.data?.items || []);
+                setTotalCount(responseResult.data?.totalCount || 0);
             }
-            const data = await response.json();
-            console.log("API Response:", data); // Add logging to debug
 
-            // Defensive handling of the response structure
-            const responseData = data?.data || {};
-            const items = responseData?.items || responseData || [];
-
-            setTAuditLogs({ items: Array.isArray(items) ? items : [] });
-            setTotalCount(responseData?.totalCount || items?.length || 0);
         } catch (error) {
             console.error(error);
-            setTAuditLogs({ items: [] });
+            setTAuditLogs([]);
             toast.error("Failed to fetch users.");
         } finally {
             setIsFetchingData(false);
         }
-    }, [filter, router, page, pageSize, sortColumn, sortDirection]);
+    }, [userNameFilter, serviceNameFilter, methodNameFilter, hasExceptionFilter, startDate, endDate, router, page, pageSize, sortColumn, sortDirection]);
 
     // useEffect for initial load and when specific filters/pagination change (excluding text filter for auto-trigger)
     useEffect(() => {
@@ -96,7 +114,7 @@ export default function AuditLogsDataTable() {
         // It calls the latest `fetchUsers` function, which is memoized with the current `filter` value.
         // Keystrokes in the filter input will update `filter` and re-memoize `fetchUsers`,
         // but won't trigger this effect directly.        //eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, pageSize, router, sortColumn, sortDirection, fetchDatas]); // insert other filter parameters here if needed
+    }, [page, pageSize, sortColumn, sortDirection, fetchDatas]); // insert other filter parameters here if needed
 
     // Function to handle view action
     const handleView = (auditLog: TAuditLog) => {
@@ -120,8 +138,88 @@ export default function AuditLogsDataTable() {
         return sortDirection === 'asc' ? <ChevronUp className="inline ml-1" /> : <ChevronDown className="inline ml-1" />;
     };
 
-    return (
+    const handleSearch = () => {
+        setPage(1);
+        fetchDatas();
+    };
+
+    const handleReset = () => {
+        setUserNameFilter("");
+        setServiceNameFilter("");
+        setMethodNameFilter("");
+        setHasExceptionFilter("all");
+        setStartDate("");
+        setEndDate("");
+        setPage(1);
+    }; return (
         <>
+            {/* Filters */}
+            <div className="mb-4 p-4 bg-card rounded-lg border space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Start Date</label>
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">End Date</label>
+                        <Input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">User Name</label>
+                        <Input
+                            placeholder="User name..."
+                            value={userNameFilter}
+                            onChange={(e) => setUserNameFilter(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Service Name</label>
+                        <Input
+                            placeholder="Service name..."
+                            value={serviceNameFilter}
+                            onChange={(e) => setServiceNameFilter(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Method Name</label>
+                        <Input
+                            placeholder="Method name..."
+                            value={methodNameFilter}
+                            onChange={(e) => setMethodNameFilter(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Has Exception</label>
+                        <Select value={hasExceptionFilter} onValueChange={setHasExceptionFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="true">With Exceptions</SelectItem>
+                                <SelectItem value="false">Without Exceptions</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                </div>
+                <div className="flex gap-2">
+                    <Button onClick={handleSearch} size="sm">Search</Button>
+                    <Button onClick={handleReset} variant="outline" size="sm">Reset</Button>
+                </div>
+            </div>
+
             <div className="overflow-x-auto">
                 {isFetchingData ? (
                     <div className="flex items-center justify-center p-4">
@@ -184,14 +282,14 @@ export default function AuditLogsDataTable() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {!myObjects?.items || myObjects.items.length === 0 ? (
+                            {myObjects.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={11} className="text-center">
                                         No data found.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                myObjects.items.map((myObject) => (
+                                myObjects.map((myObject) => (
                                     <TableRow key={myObject.id}>
                                         <TableCell>
                                             {!myObject.exception ? (
