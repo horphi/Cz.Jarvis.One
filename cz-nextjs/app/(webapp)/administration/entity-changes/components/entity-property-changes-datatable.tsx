@@ -20,9 +20,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type SortDirection = 'asc' | 'desc' | null;
 type SortableColumn = 'changeTime' | 'changeType' | 'entityTypeFullName' | 'entityId' | 'userName';
 
-export default function EntityTypeChangesDataTable() {
+export default function EntityPropertyChangesDataTable() {
     const router = useRouter();    // Filter states
-    const [entityTypeFilter, setEntityTypeFilter] = useState("");
+    const [entityTypeFilter, setEntityPropertyFilter] = useState("");
     const [userNameFilter, setUserNameFilter] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
@@ -160,7 +160,7 @@ export default function EntityTypeChangesDataTable() {
         setPage(1);
         fetchData();
     }; const handleReset = () => {
-        setEntityTypeFilter("");
+        setEntityPropertyFilter("");
         setUserNameFilter("");
         setStartDate("");
         setEndDate("");
@@ -178,7 +178,7 @@ export default function EntityTypeChangesDataTable() {
                         <Input
                             placeholder="Search entity type..."
                             value={entityTypeFilter}
-                            onChange={(e) => setEntityTypeFilter(e.target.value)}
+                            onChange={(e) => setEntityPropertyFilter(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             className="h-9"
                         />
