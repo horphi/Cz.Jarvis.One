@@ -17,7 +17,7 @@ namespace Cz.Jarvis.Web.OpenIddict
     public static class OpenIddictRegistrar
     {
         public static void Register(
-            IServiceCollection services, 
+            IServiceCollection services,
             IConfigurationRoot configuration,
             Action<OpenIddictCoreOptions> setupOptions)
         {
@@ -27,6 +27,7 @@ namespace Cz.Jarvis.Web.OpenIddict
             });
 
             services.AddOpenIddict()
+
 
                 // Register the OpenIddict core components.
                 .AddCore(builder =>
@@ -38,10 +39,14 @@ namespace Cz.Jarvis.Web.OpenIddict
                         .SetDefaultTokenEntity<OpenIddictTokenModel>();
 
                     builder
-                        .AddApplicationStore<AbpOpenIddictApplicationStore>()
-                        .AddAuthorizationStore<AbpOpenIddictAuthorizationStore>()
-                        .AddScopeStore<AbpOpenIddictScopeStore>()
-                        .AddTokenStore<AbpOpenIddictTokenStore>();
+                        .ReplaceApplicationStore<OpenIddictApplicationModel, AbpOpenIddictApplicationStore>()
+                        .ReplaceAuthorizationStore<OpenIddictAuthorizationModel, AbpOpenIddictAuthorizationStore>()
+                        .ReplaceScopeStore<OpenIddictScopeModel, AbpOpenIddictScopeStore>()
+                        .ReplaceTokenStore<OpenIddictTokenModel, AbpOpenIddictTokenStore>();
+
+                    // In OpenIddict 6.0+, use ReplaceApplicationStoreResolver instead of AddApplicationStore
+
+
                 })
 
                 // Register the OpenIddict server components.

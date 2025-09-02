@@ -25,7 +25,6 @@ using Cz.Jarvis.Identity;
 using Cz.Jarvis.Web.Chat.SignalR;
 using Cz.Jarvis.Web.Common;
 using Cz.Jarvis.Web.Swagger;
-using Stripe;
 using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 using GraphQL.Server.Ui.Playground;
 using HealthChecks.UI.Client;
@@ -230,11 +229,7 @@ namespace Cz.Jarvis.Web.Startup
                 });
             }
 
-            if (bool.Parse(_appConfiguration["Payment:Stripe:IsActive"]))
-            {
-                StripeConfiguration.ApiKey = _appConfiguration["Payment:Stripe:SecretKey"];
-            }
-
+            
             if (WebConsts.GraphQL.Enabled)
             {
                 app.UseGraphQL<MainSchema>(WebConsts.GraphQL.EndPoint);
