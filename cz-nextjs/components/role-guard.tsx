@@ -13,6 +13,14 @@ interface RoleGuardProps {
      */
     role?: string
     /**
+     * Permissions required to see the content. If user has any of these permissions, content will be shown
+     */
+    requiredPermissions?: string[]
+    /**
+     * Specific permission required (alternative to requiredPermissions for single permission)
+     */
+    permission?: string
+    /**
      * If true, requires admin access
      */
     requireAdmin?: boolean
@@ -31,7 +39,7 @@ interface RoleGuardProps {
 }
 
 /**
- * Component that conditionally renders content based on user roles
+ * Component that conditionally renders content based on user roles and permissions
  * 
  * @example
  * ```tsx
@@ -43,23 +51,26 @@ interface RoleGuardProps {
  *   <ModeratorContent />
  * </RoleGuard>
  * 
- * <RoleGuard role="user" hideWhenNoAccess>
- *   <UserOnlyButton />
+ * <RoleGuard permission="Pages.Administration.Users" hideWhenNoAccess>
+ *   <UserManagement />
  * </RoleGuard>
  * ```
  */
 export function RoleGuard({
     requiredRoles = [],
     role,
+    requiredPermissions = [],
+    permission,
     requireAdmin = false,
     children,
     fallback = <div className="text-gray-500 text-sm">Access denied</div>,
     hideWhenNoAccess = false
 }: RoleGuardProps) {
-    const { session, isLoading } = useAuth()
+    const { session, isLoading, hasPermission } = useAuth()
 
-    // Show nothing while loading
-    if (isLoading) {
+    // Show nothing while loading initial session
+    // If refetching (isLoading=true but session exists), keep showing content
+    if (isLoading && !session) {
         return null
     }
 
@@ -75,17 +86,53 @@ export function RoleGuard({
         ...(requireAdmin ? ['admin', 'administrator'] : [])
     ]
 
-    // If no roles specified, show content (public access)
-    if (rolesToCheck.length === 0) {
+    // Build permissions to check
+    const permissionsToCheck = [
+        ...requiredPermissions,
+        ...(permission ? [permission] : [])
+    ]
+
+    // If no roles or permissions specified, show content (public access)
+    if (rolesToCheck.length === 0 && permissionsToCheck.length === 0) {
         return <>{children}</>
     }
 
     // Check if user has any of the required roles
-    const hasAccess = rolesToCheck.some(requiredRole =>
+    const hasRoleAccess = rolesToCheck.length > 0 && rolesToCheck.some(requiredRole =>
         session.userRole?.some(userRole =>
             userRole.toLowerCase() === requiredRole.toLowerCase()
         )
     )
+
+    // Check if user has any of the required permissions
+    const hasPermissionAccess = permissionsToCheck.length > 0 && permissionsToCheck.some(requiredPermission =>
+        hasPermission(requiredPermission)
+    )
+
+    // If roles are specified, they must be met. If permissions are specified, they must be met.
+    // If both are specified, usually one or the other is sufficient, or both?
+    // Let's assume OR logic between roles and permissions for flexibility, 
+    // unless the user specifically wants AND. 
+    // However, typically RoleGuard is used for one type of check.
+    // If both are provided, let's say access is granted if EITHER role OR permission is satisfied.
+
+    // Wait, if rolesToCheck is empty, hasRoleAccess is false.
+    // If permissionsToCheck is empty, hasPermissionAccess is false.
+
+    // Correct logic:
+    // If only roles provided: check roles
+    // If only permissions provided: check permissions
+    // If both provided: check if (hasRole OR hasPermission)
+
+    let hasAccess = false;
+
+    if (rolesToCheck.length > 0 && permissionsToCheck.length > 0) {
+        hasAccess = hasRoleAccess || hasPermissionAccess;
+    } else if (rolesToCheck.length > 0) {
+        hasAccess = hasRoleAccess;
+    } else if (permissionsToCheck.length > 0) {
+        hasAccess = hasPermissionAccess;
+    }
 
     if (hasAccess) {
         return <>{children}</>

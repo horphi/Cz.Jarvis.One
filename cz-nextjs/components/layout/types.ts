@@ -19,11 +19,13 @@ interface BaseNavItem {
 type NavLink = BaseNavItem & {
   url: string;
   items?: never;
+  requiredPermissions?: string[];
 };
 
 type NavCollapsible = BaseNavItem & {
-  items: (BaseNavItem & { url: string })[];
+  items: (BaseNavItem & { url: string; requiredPermissions?: string[] })[];
   url?: never;
+  requiredPermissions?: string[];
 };
 
 type NavItem = NavCollapsible | NavLink;
@@ -32,6 +34,7 @@ interface NavGroup {
   title: string;
   items: NavItem[];
   requiredRoles?: string[]; // Optional array of roles required to see this group
+  requiredPermissions?: string[]; // Optional array of permissions required to see this group
 }
 
 export type { NavItem, NavGroup, NavLink, NavCollapsible };

@@ -6,6 +6,7 @@ export const LOG_OUT = `${Host}/api/TokenAuth/Logout`;
 export const GET_CURRENT_LOGIN_INFORMATIONS = `${Host}/api/services/app/Session/GetCurrentLoginInformations`;
 
 export const GET_ALL_PERMISSIONS = `${Host}/api/services/app/Permission/GetAllPermissions`;
+export const GET_USER_CONFIGURATION = `${Host}/AbpUserConfiguration/GetAll`;
 
 // Role
 export const GET_ROLES = `${Host}/api/services/app/Role/GetRoles`;

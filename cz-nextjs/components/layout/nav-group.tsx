@@ -31,14 +31,42 @@ import {
 } from '../ui/dropdown-menu'
 import { NavCollapsible, NavItem, NavLink, type NavGroup } from './types'
 
-export function NavGroup({ title, items }: NavGroup) {
+import { useAuth } from '@/hooks/use-auth'
+
+export function NavGroup({ title, items, requiredRoles, requiredPermissions }: NavGroup) {
     const { state } = useSidebar()
     const pathname = usePathname()
+    const { hasAnyRole, hasPermission, isLoading, isLoggedIn } = useAuth()
+
+    // Only hide if loading and we don't have a session yet (initial load)
+    // If we have a session but are refetching (isLoading=true), we keep showing the old data to prevent flickering
+    if (isLoading && !isLoggedIn) return null
+
+    // Check group level access
+    if (requiredRoles && requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {
+        return null
+    }
+
+    if (requiredPermissions && requiredPermissions.length > 0) {
+        const hasAccess = requiredPermissions.some(permission => hasPermission(permission))
+        if (!hasAccess) return null
+    }
+
+    // Filter items based on permissions
+    const visibleItems = items.filter(item => {
+        if (item.requiredPermissions && item.requiredPermissions.length > 0) {
+            return item.requiredPermissions.some(permission => hasPermission(permission))
+        }
+        return true
+    })
+
+    if (visibleItems.length === 0) return null
+
     return (
         <SidebarGroup>
             <SidebarGroupLabel>{title}</SidebarGroupLabel>
             <SidebarMenu>
-                {items.map((item) => {
+                {visibleItems.map((item) => {
                     const key = `${item.title}-${item.url}`
 
                     if (!item.items)

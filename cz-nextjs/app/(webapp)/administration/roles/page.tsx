@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getLocale, getTranslations } from "@/lib/i18n";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -21,7 +22,7 @@ export default async function RolesPage() {
                         </h1>
                         <div className="flex items-center space-x-2">
                             <Button variant="outline" asChild>
-                                <a href="/administration/roles/create">Create New Role</a>
+                                <Link href="/administration/roles/create">Create New Role</Link>
                             </Button>
                         </div>
                     </>

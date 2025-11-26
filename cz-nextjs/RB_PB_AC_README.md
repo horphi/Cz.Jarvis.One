@@ -1,15 +1,16 @@
-# Role-Based Access Control (RBAC) Implementation
+# Role-Based and Permission-Based Access Control (RBAC/PBAC) Implementation
 
-This document describes the role-based access control system implemented in the application.
+This document describes the role-based and permission-based access control system implemented in the application.
 
 ## Overview
 
-The RBAC system provides both client-side and server-side access control based on user roles. It includes:
+The access control system provides both client-side and server-side access control based on user roles and permissions. It includes:
 
-- **Navigation filtering**: Hide navigation items based on user roles
-- **Component-level access control**: Show/hide components based on roles
+- **Navigation filtering**: Hide navigation items based on user roles or permissions
+- **Component-level access control**: Show/hide components based on roles or permissions
 - **Route protection**: Server-side middleware to protect routes
-- **Utility functions**: Helper functions for role checking
+- **Utility functions**: Helper functions for role and permission checking
+- **Permission management**: Granular permission-based access control from backend
 
 ## Key Components
 
@@ -32,20 +33,25 @@ const isUserAdmin = isAdmin(userRoles)
 
 ### 2. Authentication Hook (`hooks/use-auth.ts`)
 
-React hook for authentication state and role checking:
+React hook for authentication state, role checking, and permission checking:
 
 ```typescript
 import { useAuth } from '@/hooks/use-auth'
 
 function MyComponent() {
-  const { session, isLoading, hasRole, isAdmin } = useAuth()
+  const { session, isLoading, hasRole, hasPermission, isAdmin } = useAuth()
   
   if (isLoading) return <div>Loading...</div>
   
   return (
     <div>
+      {/* Role-based access */}
       {isAdmin() && <AdminButton />}
       {hasRole('editor') && <EditButton />}
+      
+      {/* Permission-based access */}
+      {hasPermission('Pages.Administration.Users') && <UserManagement />}
+      {hasPermission('Pages.Administration.Roles') && <RoleManagement />}
     </div>
   )
 }
@@ -53,12 +59,12 @@ function MyComponent() {
 
 ### 3. RoleGuard Component (`components/role-guard.tsx`)
 
-Conditional rendering based on roles:
+Conditional rendering based on roles or permissions:
 
 ```typescript
 import { RoleGuard } from '@/components/role-guard'
 
-// Require admin access
+// Require admin access (role-based)
 <RoleGuard requireAdmin>
   <AdminPanel />
 </RoleGuard>
@@ -68,15 +74,29 @@ import { RoleGuard } from '@/components/role-guard'
   <ModeratorContent />
 </RoleGuard>
 
-// Require specific role, hide when no access
-<RoleGuard role="user" hideWhenNoAccess>
-  <UserOnlyButton />
+// Require specific permission (permission-based)
+<RoleGuard permission="Pages.Administration.Users" hideWhenNoAccess>
+  <UserManagement />
+</RoleGuard>
+
+// Require any of multiple permissions
+<RoleGuard requiredPermissions={['Pages.Administration.Users', 'Pages.Administration.Roles']}>
+  <AdministrationPanel />
+</RoleGuard>
+
+// Combine roles and permissions (OR logic)
+<RoleGuard 
+  requiredRoles={['admin']} 
+  requiredPermissions={['Pages.Administration.Users']}
+  fallback={<div>Access denied</div>}
+>
+  <UserManagement />
 </RoleGuard>
 ```
 
 ### 4. Navigation System
 
-The sidebar navigation automatically filters based on user roles:
+The sidebar navigation automatically filters based on user roles and permissions:
 
 #### Navigation Configuration (`components/layout/data/nav-group.ts`)
 
@@ -84,14 +104,26 @@ The sidebar navigation automatically filters based on user roles:
 export const navGroupData: NavGroup[] = [
   {
     title: "Administration",
-    requiredRoles: ["admin", "administrator"], // Only admins see this
+    requiredRoles: ["admin", "administrator"], // Role-based filtering
+    requiredPermissions: ["Pages.Administration"], // Permission-based filtering
     items: [
-      // admin menu items
+      {
+        title: "Users",
+        url: "/administration/users",
+        icon: Users,
+        requiredPermissions: ["Pages.Administration.Users"], // Item-level permission
+      },
+      {
+        title: "Roles",
+        url: "/administration/roles",
+        icon: Shield,
+        requiredPermissions: ["Pages.Administration.Roles"],
+      },
     ],
   },
   {
     title: "General",
-    // No requiredRoles means everyone sees this
+    // No requiredRoles or requiredPermissions means everyone sees this
     items: [
       // general menu items
     ],
@@ -123,7 +155,31 @@ Returns current user session data:
   "userRole": ["admin", "user"],
   "firstName": "John",
   "lastName": "Doe",
-  "email": "john@example.com"
+  "email": "john@example.com",
+  "grantedPermissions": {
+    "Pages.Administration": "true",
+    "Pages.Administration.Users": "true",
+    "Pages.Administration.Roles": "true"
+  }
+}
+```
+
+### GET `/api/auth/user-configuration`
+
+Returns user configuration including permissions from the backend:
+
+```json
+{
+  "success": true,
+  "data": {
+    "auth": {
+      "grantedPermissions": {
+        "Pages.Administration": "true",
+        "Pages.Administration.Users": "true",
+        "Pages.Administration.Roles": "true"
+      }
+    }
+  }
 }
 ```
 
@@ -131,9 +187,9 @@ Returns current user session data:
 
 ### 1. Hide Admin Navigation
 
-The administration section is automatically hidden for non-admin users.
+The administration section is automatically hidden for users without the required roles or permissions.
 
-### 2. Conditional Button Rendering
+### 2. Conditional Button Rendering (Role-Based)
 
 ```typescript
 function ActionButton() {
@@ -149,7 +205,23 @@ function ActionButton() {
 }
 ```
 
-### 3. Page-Level Protection
+### 2b. Conditional Button Rendering (Permission-Based)
+
+```typescript
+function ActionButton() {
+  const { hasPermission } = useAuth()
+  
+  return (
+    <div>
+      {hasPermission('Pages.Users.Delete') && <DeleteButton />}
+      {hasPermission('Pages.Users.Edit') && <EditButton />}
+      <ViewButton /> {/* Everyone can see this */}
+    </div>
+  )
+}
+```
+
+### 3. Page-Level Protection (Role-Based)
 
 ```typescript
 import { RoleGuard } from '@/components/role-guard'
@@ -163,12 +235,30 @@ export default function AdminPage() {
 }
 ```
 
-### 4. Nested Role Requirements
+### 3b. Page-Level Protection (Permission-Based)
+
+```typescript
+import { RoleGuard } from '@/components/role-guard'
+
+export default function UserManagementPage() {
+  return (
+    <RoleGuard 
+      permission="Pages.Administration.Users" 
+      fallback={<div>You don't have permission to manage users</div>}
+    >
+      <UserManagementDashboard />
+    </RoleGuard>
+  )
+}
+```
+
+### 4. Nested Role and Permission Requirements
 
 ```typescript
 function ComplexComponent() {
   return (
     <div>
+      {/* Nested role-based guards */}
       <RoleGuard requiredRoles={['admin', 'moderator']}>
         <ModerationPanel />
         
@@ -176,6 +266,36 @@ function ComplexComponent() {
           <AdminOnlySettings />
         </RoleGuard>
       </RoleGuard>
+      
+      {/* Nested permission-based guards */}
+      <RoleGuard permission="Pages.Administration">
+        <AdministrationPanel />
+        
+        <RoleGuard permission="Pages.Administration.Users">
+          <UserManagement />
+        </RoleGuard>
+      </RoleGuard>
+    </div>
+  )
+}
+```
+
+### 5. Using Permissions in useAuth Hook
+
+```typescript
+import { useAuth } from '@/hooks/use-auth'
+
+function UserActions() {
+  const { hasPermission, isGranted } = useAuth()
+  
+  // Both hasPermission and isGranted work the same way
+  const canManageUsers = hasPermission('Pages.Administration.Users')
+  const canManageRoles = isGranted('Pages.Administration.Roles')
+  
+  return (
+    <div>
+      {canManageUsers && <button>Manage Users</button>}
+      {canManageRoles && <button>Manage Roles</button>}
     </div>
   )
 }
