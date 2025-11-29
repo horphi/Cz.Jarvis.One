@@ -44,14 +44,14 @@ namespace Cz.Jarvis.DynamicEntityProperties
         [AbpAuthorize(AppPermissions.Pages_Administration_DynamicPropertyValue_Create)]
         public async Task Add(DynamicPropertyDto dto)
         {
-            dto.TenantId = AbpSession.TenantId;
+            dto.TenantId = ((int?)null);
             await _dynamicPropertyManager.AddAsync(ObjectMapper.Map<DynamicProperty>(dto));
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_DynamicPropertyValue_Edit)]
         public async Task Update(DynamicPropertyDto dto)
         {
-            dto.TenantId = AbpSession.TenantId;
+            dto.TenantId = ((int?)null);
             await _dynamicPropertyManager.UpdateAsync(ObjectMapper.Map<DynamicProperty>(dto));
         }
 

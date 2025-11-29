@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Cz.Jarvis.Configuration.Dto;
-using Cz.Jarvis.Configuration.Tenants.Dto;
 
 namespace Cz.Jarvis.Configuration.Host.Dto
 {
@@ -15,9 +14,7 @@ namespace Cz.Jarvis.Configuration.Host.Dto
         [Required]
         public EmailSettingsEditDto Email { get; set; }
 
-        [Required]
-        public TenantManagementSettingsEditDto TenantManagement { get; set; }
-
+       
         [Required]
         public SecuritySettingsEditDto Security { get; set; }
 

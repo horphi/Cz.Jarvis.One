@@ -16,7 +16,6 @@ using Cz.Jarvis.Auditing;
 using Cz.Jarvis.Authorization.Users.Password;
 using Cz.Jarvis.Configuration;
 using Cz.Jarvis.EntityFrameworkCore;
-using Cz.Jarvis.MultiTenancy;
 using Cz.Jarvis.Web.Startup.ExternalLoginInfoProviders;
 
 namespace Cz.Jarvis.Web.Startup
@@ -38,8 +37,7 @@ namespace Cz.Jarvis.Web.Startup
 
         public override void PreInitialize()
         {
-            Configuration.Modules.AbpWebCommon().MultiTenancy.DomainFormat =
-                _appConfiguration["App:ServerRootAddress"] ?? "https://localhost:44301/";
+            // Multi-tenancy removed
         }
 
         public override void Initialize()
@@ -58,7 +56,7 @@ namespace Cz.Jarvis.Web.Startup
             }
 
             var workManager = IocManager.Resolve<IBackgroundWorkerManager>();
-            
+
             var expiredAuditLogDeleterWorker = IocManager.Resolve<ExpiredAuditLogDeleterWorker>();
             if (Configuration.Auditing.IsEnabled && expiredAuditLogDeleterWorker.IsEnabled)
             {
@@ -73,46 +71,33 @@ namespace Cz.Jarvis.Web.Startup
         private void ConfigureExternalAuthProviders()
         {
             var externalAuthConfiguration = IocManager.Resolve<ExternalAuthConfiguration>();
-            
+
             //Facebook
             if (bool.Parse(_appConfiguration["Authentication:Facebook:IsEnabled"]))
             {
-                if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
-                {
-                    externalAuthConfiguration.ExternalLoginInfoProviders.Add(
-                        IocManager.Resolve<TenantBasedFacebookExternalLoginInfoProvider>());
-                }
-                else
-                {
-                    externalAuthConfiguration.ExternalLoginInfoProviders.Add(new FacebookExternalLoginInfoProvider(
-                        _appConfiguration["Authentication:Facebook:AppId"],
-                        _appConfiguration["Authentication:Facebook:AppSecret"]
-                    ));
-                }
+
+                externalAuthConfiguration.ExternalLoginInfoProviders.Add(new FacebookExternalLoginInfoProvider(
+                    _appConfiguration["Authentication:Facebook:AppId"],
+                    _appConfiguration["Authentication:Facebook:AppSecret"]
+                ));
+
             }
 
-            
+
             //Google
             if (bool.Parse(_appConfiguration["Authentication:Google:IsEnabled"]))
             {
-                if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
-                {
-                    externalAuthConfiguration.ExternalLoginInfoProviders.Add(
-                        IocManager.Resolve<TenantBasedGoogleExternalLoginInfoProvider>());
-                }
-                else
-                {
-                    externalAuthConfiguration.ExternalLoginInfoProviders.Add(
-                        new GoogleExternalLoginInfoProvider(
-                            _appConfiguration["Authentication:Google:ClientId"],
-                            _appConfiguration["Authentication:Google:ClientSecret"],
-                            _appConfiguration["Authentication:Google:UserInfoEndpoint"]
-                        )
-                    );
-                }
+
+                externalAuthConfiguration.ExternalLoginInfoProviders.Add(
+                    new GoogleExternalLoginInfoProvider(
+                        _appConfiguration["Authentication:Google:ClientId"],
+                        _appConfiguration["Authentication:Google:ClientSecret"],
+                        _appConfiguration["Authentication:Google:UserInfoEndpoint"]
+                    )
+                );
+
             }
 
-            
         }
     }
 }

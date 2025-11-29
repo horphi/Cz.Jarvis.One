@@ -80,16 +80,13 @@ namespace Cz.Jarvis.Web.Authentication.JwtBearer
         {
             using (var uow = _unitOfWorkManager.Begin())
             {
-                using (_unitOfWorkManager.Current.SetTenantId(userIdentifier.TenantId))
-                {
-                    var user = await _userManager.GetUserAsync(userIdentifier);
-                    await uow.CompleteAsync();
+                var user = await _userManager.GetUserAsync(userIdentifier);
+                await uow.CompleteAsync();
 
-                    //cache last requested value
-                    await SetSecurityStampCacheItem(userIdentifier.TenantId, userIdentifier.UserId, user.SecurityStamp);
+                //cache last requested value
+                await SetSecurityStampCacheItem(null, userIdentifier.UserId, user.SecurityStamp);
 
-                    return await _signInManager.ValidateSecurityStampAsync(user, securityStamp);
-                }
+                return await _signInManager.ValidateSecurityStampAsync(user, securityStamp);
             }
         }
     }

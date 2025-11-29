@@ -38,28 +38,24 @@ namespace Abp.Authorization.Users
         {
             _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (_unitOfWorkManager.Current.SetTenantId(null))
-                {
-                    var userAccount = _userAccountRepository.FirstOrDefault(
-                        ua => ua.TenantId == eventData.Entity.TenantId && ua.UserId == eventData.Entity.Id
-                    );
+                var userAccount = _userAccountRepository.FirstOrDefault(
+                    ua => ua.UserId == eventData.Entity.Id
+                );
 
-                    if (userAccount == null)
+                if (userAccount == null)
+                {
+                    _userAccountRepository.Insert(new UserAccount
                     {
-                        _userAccountRepository.Insert(new UserAccount
-                        {
-                            TenantId = eventData.Entity.TenantId,
-                            UserName = eventData.Entity.UserName,
-                            UserId = eventData.Entity.Id,
-                            EmailAddress = eventData.Entity.EmailAddress
-                        });
-                    }
-                    else
-                    {
-                        userAccount.UserName = eventData.Entity.UserName;
-                        userAccount.EmailAddress = eventData.Entity.EmailAddress;
-                        _userAccountRepository.Update(userAccount);
-                    }
+                        UserName = eventData.Entity.UserName,
+                        UserId = eventData.Entity.Id,
+                        EmailAddress = eventData.Entity.EmailAddress
+                    });
+                }
+                else
+                {
+                    userAccount.UserName = eventData.Entity.UserName;
+                    userAccount.EmailAddress = eventData.Entity.EmailAddress;
+                    _userAccountRepository.Update(userAccount);
                 }
             });
         }
@@ -72,16 +68,13 @@ namespace Abp.Authorization.Users
         {
             _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (_unitOfWorkManager.Current.SetTenantId(null))
+                var userAccount = _userAccountRepository.FirstOrDefault(
+                    ua => ua.UserId == eventData.Entity.Id
+                );
+
+                if (userAccount != null)
                 {
-                    var userAccount = _userAccountRepository.FirstOrDefault(
-                        ua => ua.TenantId == eventData.Entity.TenantId && ua.UserId == eventData.Entity.Id
-                    );
-                    
-                    if (userAccount != null)
-                    {
-                        _userAccountRepository.Delete(userAccount);
-                    }
+                    _userAccountRepository.Delete(userAccount);
                 }
             });
         }
@@ -94,35 +87,26 @@ namespace Abp.Authorization.Users
         {
             _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (_unitOfWorkManager.Current.SetTenantId(null))
+                var userAccount = _userAccountRepository.FirstOrDefault(ua =>
+                    ua.UserId == eventData.Entity.Id
+                );
+
+                if (userAccount != null)
                 {
-                    var userAccount = _userAccountRepository.FirstOrDefault(ua =>
-                        ua.TenantId == eventData.Entity.TenantId && ua.UserId == eventData.Entity.Id
-                    );
-                    
-                    if (userAccount != null)
-                    {
-                        userAccount.UserName = eventData.Entity.UserName;
-                        userAccount.EmailAddress = eventData.Entity.EmailAddress;
-                        _userAccountRepository.Update(userAccount);
-                    }
+                    userAccount.UserName = eventData.Entity.UserName;
+                    userAccount.EmailAddress = eventData.Entity.EmailAddress;
+                    _userAccountRepository.Update(userAccount);
                 }
             });
         }
 
         /// <summary>
-        /// Handles deletion event of tenant
+        /// Handles deletion event of tenant - multi-tenancy removed, method stubbed
         /// </summary>
         /// <param name="eventData"></param>
         public virtual void HandleEvent(EntityDeletedEventData<AbpTenantBase> eventData)
         {
-            _unitOfWorkManager.WithUnitOfWork(() =>
-            {
-                using (_unitOfWorkManager.Current.SetTenantId(null))
-                {
-                    _userAccountRepository.Delete(ua => ua.TenantId == eventData.Entity.Id);
-                }
-            });
+            // Multi-tenancy removed - no action needed
         }
     }
 }

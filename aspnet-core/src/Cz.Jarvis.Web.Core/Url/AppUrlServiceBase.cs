@@ -14,12 +14,10 @@ namespace Cz.Jarvis.Web.Url
         public abstract string PasswordResetRoute { get; }
 
         protected readonly IWebUrlService WebUrlService;
-        protected readonly ITenantCache TenantCache;
 
-        protected AppUrlServiceBase(IWebUrlService webUrlService, ITenantCache tenantCache)
+        protected AppUrlServiceBase(IWebUrlService webUrlService)
         {
             WebUrlService = webUrlService;
-            TenantCache = tenantCache;
         }
 
         public string CreateEmailActivationUrlFormat(int? tenantId)
@@ -83,7 +81,8 @@ namespace Cz.Jarvis.Web.Url
         
         private string GetTenancyName(int? tenantId)
         {
-            return tenantId.HasValue ? TenantCache.Get(tenantId.Value).TenancyName : null;
+            // Multi-tenancy removed - always return null
+            return null;
         }
     }
 }

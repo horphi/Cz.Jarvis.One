@@ -96,9 +96,9 @@ namespace Abp.Web.Configuration
             return new AbpUserSessionConfigDto
             {
                 UserId = AbpSession.UserId,
-                TenantId = AbpSession.TenantId,
+                TenantId = ((int?)null),
                 ImpersonatorUserId = AbpSession.ImpersonatorUserId,
-                ImpersonatorTenantId = AbpSession.ImpersonatorTenantId,
+                ImpersonatorTenantId = ((int?)null),
                 MultiTenancySide = AbpSession.MultiTenancySide
             };
         }

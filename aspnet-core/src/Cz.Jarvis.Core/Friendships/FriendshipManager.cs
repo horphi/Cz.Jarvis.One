@@ -24,17 +24,13 @@ namespace Cz.Jarvis.Friendships
         {
             await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
-                if (friendship.TenantId == friendship.FriendTenantId &&
-                    friendship.UserId == friendship.FriendUserId)
+                if (friendship.UserId == friendship.FriendUserId)
                 {
                     throw new UserFriendlyException(L("YouCannotBeFriendWithYourself"));
                 }
 
-                using (CurrentUnitOfWork.SetTenantId(friendship.TenantId))
-                {
-                    await _friendshipRepository.InsertAsync(friendship);
-                    await CurrentUnitOfWork.SaveChangesAsync();
-                }
+                await _friendshipRepository.InsertAsync(friendship);
+                await CurrentUnitOfWork.SaveChangesAsync();
             });
         }
 
@@ -42,11 +38,8 @@ namespace Cz.Jarvis.Friendships
         {
             await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
-                using (CurrentUnitOfWork.SetTenantId(friendship.TenantId))
-                {
-                    await _friendshipRepository.UpdateAsync(friendship);
-                    await CurrentUnitOfWork.SaveChangesAsync();
-                }
+                await _friendshipRepository.UpdateAsync(friendship);
+                await CurrentUnitOfWork.SaveChangesAsync();
             });
         }
 
@@ -54,14 +47,9 @@ namespace Cz.Jarvis.Friendships
         {
             return await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
-                using (CurrentUnitOfWork.SetTenantId(user.TenantId))
-                {
-                    return await _friendshipRepository.FirstOrDefaultAsync(friendship =>
-                        friendship.UserId == user.UserId &&
-                        friendship.TenantId == user.TenantId &&
-                        friendship.FriendUserId == probableFriend.UserId &&
-                        friendship.FriendTenantId == probableFriend.TenantId);
-                }
+                return await _friendshipRepository.FirstOrDefaultAsync(friendship =>
+                    friendship.UserId == user.UserId &&
+                    friendship.FriendUserId == probableFriend.UserId);
             });
         }
 

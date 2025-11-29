@@ -26,11 +26,7 @@ namespace Cz.Jarvis.Web.Startup.ExternalLoginInfoProviders
 
         private string GetCacheKey(string name)
         {
-            if (_abpSession.TenantId.HasValue)
-            {
-                return $"{name}-{_abpSession.TenantId.Value}";
-            }
-
+            // Multi-tenancy removed - no tenant-based cache differentiation
             return $"{name}";
         }
     }

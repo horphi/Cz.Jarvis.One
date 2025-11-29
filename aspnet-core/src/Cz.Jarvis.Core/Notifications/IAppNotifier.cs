@@ -5,7 +5,6 @@ using Abp;
 using Abp.Localization;
 using Abp.Notifications;
 using Cz.Jarvis.Authorization.Users;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Notifications
 {
@@ -15,7 +14,6 @@ namespace Cz.Jarvis.Notifications
 
         Task NewUserRegisteredAsync(User user);
 
-        Task NewTenantRegisteredAsync(Tenant tenant);
 
         Task GdprDataPrepared(UserIdentifier user, Guid binaryObjectId);
 

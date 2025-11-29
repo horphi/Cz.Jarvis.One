@@ -20,9 +20,9 @@ namespace Abp.Runtime.Caching.Redis
         {
             var normalizedKey = $"n:{args.CacheName},c:{RedisCacheOptions.KeyPrefix}{args.Key}";
 
-            if (args.MultiTenancyEnabled && AbpSession.TenantId != null && RedisCacheOptions.TenantKeyEnabled)
+            if (args.MultiTenancyEnabled && ((int?)null) != null && RedisCacheOptions.TenantKeyEnabled)
             {
-                normalizedKey = $"t:{AbpSession.TenantId},{normalizedKey}";
+                normalizedKey = $"t:{((int?)null)},{normalizedKey}";
             }
 
             return normalizedKey;

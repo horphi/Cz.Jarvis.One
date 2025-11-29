@@ -23,19 +23,15 @@
 
         /// <summary>
         /// Gets current Tenant's Id.
-        /// Throws <see cref="AbpException"/> if <see cref="IAbpSession.TenantId"/> is null.
+        /// Multi-tenancy removed - always returns null.
         /// </summary>
         /// <param name="session">Session object.</param>
         /// <returns>Current Tenant's Id.</returns>
         /// <exception cref="AbpException"></exception>
-        public static int GetTenantId(this IAbpSession session)
+        public static int? GetTenantId(this IAbpSession session)
         {
-            if (!session.TenantId.HasValue)
-            {
-                throw new AbpException("Session.TenantId is null! Possible problems: No user logged in or current logged in user in a host user (TenantId is always null for host users).");
-            }
-
-            return session.TenantId.Value;
+            // Multi-tenancy removed
+            return null;
         }
 
         /// <summary>
@@ -45,9 +41,10 @@
         /// <param name="session">The session.</param>
         public static UserIdentifier ToUserIdentifier(this IAbpSession session)
         {
+            // Multi-tenancy removed
             return session.UserId == null
                 ? null
-                : new UserIdentifier(session.TenantId, session.GetUserId());
+                : new UserIdentifier(null, session.GetUserId());
         }
     }
 }

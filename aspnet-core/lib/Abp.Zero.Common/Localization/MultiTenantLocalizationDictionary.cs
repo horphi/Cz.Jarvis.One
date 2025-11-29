@@ -91,17 +91,17 @@ namespace Abp.Localization
 
         public string TryGetKey(string value)
         {
-            return TryGetKey(_session.TenantId, value);
+            return TryGetKey(((int?)null), value);
         }
 
         public LocalizedString GetOrNull(string name)
         {
-            return GetOrNull(_session.TenantId, name);
+            return GetOrNull(((int?)null), name);
         }
 
         public IReadOnlyList<LocalizedString> GetStringsOrNull(List<string> names)
         {
-            return GetStringsOrNull(_session.TenantId, names);
+            return GetStringsOrNull(((int?)null), names);
         }
 
         public LocalizedString GetOrNull(int? tenantId, string name)
@@ -175,7 +175,7 @@ namespace Abp.Localization
 
         public IReadOnlyList<LocalizedString> GetAllStrings()
         {
-            return GetAllStrings(_session.TenantId);
+            return GetAllStrings(((int?)null));
         }
 
         public IReadOnlyList<LocalizedString> GetAllStrings(int? tenantId)

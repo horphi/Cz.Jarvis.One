@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Cz.Jarvis.Authorization.Roles;
 using Cz.Jarvis.Authorization.Users;
 using Cz.Jarvis.EntityFrameworkCore;
-using Cz.Jarvis.MultiTenancy;
+// using Cz.Jarvis.MultiTenancy; // Multi-tenancy removed
 using Cz.Jarvis.Test.Base.TestData;
 
 namespace Cz.Jarvis.Test.Base
@@ -42,11 +42,11 @@ namespace Cz.Jarvis.Test.Base
             {
                 context.EntityChangeEventHelper = NullEntityChangeEventHelper.Instance;
                 context.EventBus = NullEventBus.Instance;
-                context.SuppressAutoSetTenantId = true;
+                // context.SuppressAutoSetTenantId = true; // Multi-tenancy removed
             }
 
             //Seed initial data for default tenant
-            AbpSession.TenantId = 1;
+            // AbpSession.TenantId = 1; // Multi-tenancy removed
 
             UsingDbContext(context =>
             {
@@ -152,9 +152,8 @@ namespace Cz.Jarvis.Test.Base
 
         protected void LoginAsHost(string userName)
         {
-            AbpSession.TenantId = null;
-
-            var user = UsingDbContext(context => context.Users.FirstOrDefault(u => u.TenantId == AbpSession.TenantId && u.UserName == userName));
+            // Multi-tenancy removed
+            var user = UsingDbContext(context => context.Users.FirstOrDefault(u => u.UserName == userName));
             if (user == null)
             {
                 throw new Exception("There is no user: " + userName + " for host.");
@@ -165,20 +164,11 @@ namespace Cz.Jarvis.Test.Base
 
         protected void LoginAsTenant(string tenancyName, string userName)
         {
-            AbpSession.TenantId = null;
-
-            var tenant = UsingDbContext(context => context.Tenants.FirstOrDefault(t => t.TenancyName == tenancyName));
-            if (tenant == null)
-            {
-                throw new Exception("There is no tenant: " + tenancyName);
-            }
-
-            AbpSession.TenantId = tenant.Id;
-
-            var user = UsingDbContext(context => context.Users.FirstOrDefault(u => u.TenantId == AbpSession.TenantId && u.UserName == userName));
+            // Multi-tenancy removed - just login as user
+            var user = UsingDbContext(context => context.Users.FirstOrDefault(u => u.UserName == userName));
             if (user == null)
             {
-                throw new Exception("There is no user: " + userName + " for tenant: " + tenancyName);
+                throw new Exception("There is no user: " + userName);
             }
 
             AbpSession.UserId = user.Id;
@@ -212,6 +202,8 @@ namespace Cz.Jarvis.Test.Base
 
         #region GetCurrentTenant
 
+        // Multi-tenancy removed - tenant helper methods commented out
+        /*
         /// <summary>
         /// Gets current tenant if <see cref="IAbpSession.TenantId"/> is not null.
         /// Throws exception if there is no current tenant.
@@ -255,6 +247,7 @@ namespace Cz.Jarvis.Test.Base
         {
             return await UsingDbContext(null, async context => await context.Tenants.FirstOrDefaultAsync(t => t.TenancyName == tenancyName));
         }
+        */
 
         #endregion
 
@@ -262,12 +255,12 @@ namespace Cz.Jarvis.Test.Base
 
         protected Role GetRole(string roleName)
         {
-            return UsingDbContext(context => context.Roles.Single(r => r.Name == roleName && r.TenantId == AbpSession.TenantId));
+            return UsingDbContext(context => context.Roles.Single(r => r.Name == roleName));
         }
 
         protected async Task<Role> GetRoleAsync(string roleName)
         {
-            return await UsingDbContext(async context => await context.Roles.SingleAsync(r => r.Name == roleName && r.TenantId == AbpSession.TenantId));
+            return await UsingDbContext(async context => await context.Roles.SingleAsync(r => r.Name == roleName));
         }
 
         #endregion
@@ -299,10 +292,7 @@ namespace Cz.Jarvis.Test.Base
         protected User GetUserByUserNameOrNull(string userName)
         {
             return UsingDbContext(context =>
-                context.Users.FirstOrDefault(u =>
-                    u.UserName == userName &&
-                    u.TenantId == AbpSession.TenantId
-                    ));
+                context.Users.FirstOrDefault(u => u.UserName == userName));
         }
 
         protected async Task<User> GetUserByUserNameOrNullAsync(string userName, bool includeRoles = false)
@@ -310,10 +300,7 @@ namespace Cz.Jarvis.Test.Base
             return await UsingDbContextAsync(async context =>
                 await context.Users
                     .IncludeIf(includeRoles, u => u.Roles)
-                    .FirstOrDefaultAsync(u =>
-                            u.UserName == userName &&
-                            u.TenantId == AbpSession.TenantId
-                    ));
+                    .FirstOrDefaultAsync(u => u.UserName == userName));
         }
 
         #endregion

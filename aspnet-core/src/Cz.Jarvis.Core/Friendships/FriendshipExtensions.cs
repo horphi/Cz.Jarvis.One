@@ -6,12 +6,12 @@ namespace Cz.Jarvis.Friendships
     {
         public static UserIdentifier ToUserIdentifier(this Friendship friendship)
         {
-            return new UserIdentifier(friendship.TenantId, friendship.UserId);
+            return new UserIdentifier(null, friendship.UserId);
         }
 
         public static UserIdentifier ToFriendIdentifier(this Friendship friendship)
         {
-            return new UserIdentifier(friendship.FriendTenantId, friendship.FriendUserId);
+            return new UserIdentifier(null, friendship.FriendUserId);
         }
     }
 }

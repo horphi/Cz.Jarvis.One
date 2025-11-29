@@ -12,7 +12,7 @@ using Abp.Localization;
 using Abp.Net.Mail;
 using Cz.Jarvis.Chat;
 using Cz.Jarvis.Localization;
-using Cz.Jarvis.MultiTenancy;
+// Cz.Jarvis.MultiTenancy removed - multi-tenancy removed
 using System.Net.Mail;
 using System.Web;
 using Abp.Runtime.Security;
@@ -31,7 +31,6 @@ namespace Cz.Jarvis.Authorization.Users
     {
         private readonly IEmailTemplateProvider _emailTemplateProvider;
         private readonly IEmailSender _emailSender;
-        private readonly IRepository<Tenant> _tenantRepository;
         private readonly ICurrentUnitOfWorkProvider _unitOfWorkProvider;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly ISettingManager _settingManager;
@@ -47,7 +46,6 @@ namespace Cz.Jarvis.Authorization.Users
         public UserEmailer(
             IEmailTemplateProvider emailTemplateProvider,
             IEmailSender emailSender,
-            IRepository<Tenant> tenantRepository,
             ICurrentUnitOfWorkProvider unitOfWorkProvider,
             IUnitOfWorkManager unitOfWorkManager,
             ISettingManager settingManager,
@@ -56,7 +54,6 @@ namespace Cz.Jarvis.Authorization.Users
         {
             _emailTemplateProvider = emailTemplateProvider;
             _emailSender = emailSender;
-            _tenantRepository = tenantRepository;
             _unitOfWorkProvider = unitOfWorkProvider;
             _unitOfWorkManager = unitOfWorkManager;
             _settingManager = settingManager;
@@ -84,25 +81,13 @@ namespace Cz.Jarvis.Authorization.Users
                 link = link.Replace("{userId}", user.Id.ToString());
                 link = link.Replace("{confirmationCode}", Uri.EscapeDataString(user.EmailConfirmationCode));
 
-                if (user.TenantId.HasValue)
-                {
-                    link = link.Replace("{tenantId}", user.TenantId.ToString());
-                }
-
                 link = EncryptQueryParameters(link);
 
-                var tenancyName = GetTenancyNameOrNull(user.TenantId);
-                var emailTemplate = GetTitleAndSubTitle(user.TenantId, L("EmailActivation_Title"),
+                var emailTemplate = GetTitleAndSubTitle(null, L("EmailActivation_Title"),
                     L("EmailActivation_SubTitle"));
                 var mailMessage = new StringBuilder();
 
                 mailMessage.AppendLine("<b>" + L("NameSurname") + "</b>: " + user.Name + " " + user.Surname + "<br />");
-
-                if (!tenancyName.IsNullOrEmpty())
-                {
-                    mailMessage.AppendLine("<b>" + L("TenancyName") + "</b>: " + tenancyName + "<br />");
-                }
-
                 mailMessage.AppendLine("<b>" + L("UserName") + "</b>: " + user.UserName + "<br />");
 
                 if (!plainPassword.IsNullOrEmpty())
@@ -142,18 +127,11 @@ namespace Cz.Jarvis.Authorization.Users
                 throw new Exception("PasswordResetCode should be set in order to send password reset link.");
             }
 
-            var tenancyName = GetTenancyNameOrNull(user.TenantId);
-            var emailTemplate = GetTitleAndSubTitle(user.TenantId, L("PasswordResetEmail_Title"),
+            var emailTemplate = GetTitleAndSubTitle(null, L("PasswordResetEmail_Title"),
                 L("PasswordResetEmail_SubTitle"));
             var mailMessage = new StringBuilder();
 
             mailMessage.AppendLine("<b>" + L("NameSurname") + "</b>: " + user.Name + " " + user.Surname + "<br />");
-
-            if (!tenancyName.IsNullOrEmpty())
-            {
-                mailMessage.AppendLine("<b>" + L("TenancyName") + "</b>: " + tenancyName + "<br />");
-            }
-
             mailMessage.AppendLine("<b>" + L("UserName") + "</b>: " + user.UserName + "<br />");
             mailMessage.AppendLine("<b>" + L("ResetCode") + "</b>: " + user.PasswordResetCode + "<br />");
 
@@ -166,11 +144,6 @@ namespace Cz.Jarvis.Authorization.Users
                     .ToString(JarvisConsts.DateTimeOffsetFormat, CultureInfo.InvariantCulture));
 
                 link = link.Replace("{expireDate}", expireDate);
-
-                if (user.TenantId.HasValue)
-                {
-                    link = link.Replace("{tenantId}", user.TenantId.ToString());
-                }
 
                 link = EncryptQueryParameters(link);
 
@@ -197,8 +170,7 @@ namespace Cz.Jarvis.Authorization.Users
                 throw new Exception("Code should be set in order to send passwordless code link.");
             }
 
-            var tenancyName = GetTenancyNameOrNull(user.TenantId);
-            var emailTemplate = GetTitleAndSubTitle(user.TenantId, L("PasswordlessCode_Title"), "");
+            var emailTemplate = GetTitleAndSubTitle(null, L("PasswordlessCode_Title"), "");
 
             var mailMessage = new StringBuilder();
 
@@ -233,7 +205,7 @@ namespace Cz.Jarvis.Authorization.Users
         {
             try
             {
-                var emailTemplate = GetTitleAndSubTitle(user.TenantId, L("NewChatMessageEmail_Title"),
+                var emailTemplate = GetTitleAndSubTitle(null, L("NewChatMessageEmail_Title"),
                     L("NewChatMessageEmail_SubTitle"));
                 var mailMessage = new StringBuilder();
 
@@ -262,25 +234,13 @@ namespace Cz.Jarvis.Authorization.Users
                 link = link.Replace("{emailAddress}", Uri.EscapeDataString(emailAddress));
                 link = link.Replace("{oldMailAddress}", Uri.EscapeDataString(user.EmailAddress));
 
-                if (user.TenantId.HasValue)
-                {
-                    link = link.Replace("{tenantId}", user.TenantId.ToString());
-                }
-
                 link = EncryptQueryParameters(link);
 
-                var tenancyName = GetTenancyNameOrNull(user.TenantId);
-                var emailTemplate = GetTitleAndSubTitle(user.TenantId, L("EmailChangeRequest_Title"),
+                var emailTemplate = GetTitleAndSubTitle(null, L("EmailChangeRequest_Title"),
                     L("EmailChangeRequest_SubTitle"));
                 var mailMessage = new StringBuilder();
 
                 mailMessage.AppendLine("<b>" + L("NameSurname") + "</b>: " + user.Name + " " + user.Surname + "<br />");
-
-                if (!tenancyName.IsNullOrEmpty())
-                {
-                    mailMessage.AppendLine("<b>" + L("TenancyName") + "</b>: " + tenancyName + "<br />");
-                }
-
                 mailMessage.AppendLine("<b>" + L("UserName") + "</b>: " + user.UserName + "<br />");
                 
                 mailMessage.AppendLine("<b>" + L("NewEmailAddress") + "</b>: " + emailAddress + "<br />");
@@ -301,17 +261,10 @@ namespace Cz.Jarvis.Authorization.Users
             });
         }
         
+        // Multi-tenancy removed - method no longer needed but kept for compatibility
         private string GetTenancyNameOrNull(int? tenantId)
         {
-            if (tenantId == null)
-            {
-                return null;
-            }
-
-            using (_unitOfWorkProvider.Current.SetTenantId(null))
-            {
-                return _tenantRepository.Get(tenantId.Value).TenancyName;
-            }
+            return null;
         }
 
         private StringBuilder GetTitleAndSubTitle(int? tenantId, string title, string subTitle)

@@ -40,7 +40,7 @@ namespace Cz.Jarvis.WebHooks
 
         public async Task<ListResultDto<GetAllSubscriptionsOutput>> GetAllSubscriptions()
         {
-            var subscriptions = await _webHookSubscriptionManager.GetAllSubscriptionsAsync(AbpSession.TenantId);
+            var subscriptions = await _webHookSubscriptionManager.GetAllSubscriptionsAsync(((int?)null));
             return new ListResultDto<GetAllSubscriptionsOutput>(
                 ObjectMapper.Map<List<GetAllSubscriptionsOutput>>(subscriptions)
                 );
@@ -60,7 +60,7 @@ namespace Cz.Jarvis.WebHooks
         [AbpAuthorize(AppPermissions.Pages_Administration_WebhookSubscription_Create)]
         public async Task AddSubscription(WebhookSubscription subscription)
         {
-            subscription.TenantId = AbpSession.TenantId;
+            subscription.TenantId = ((int?)null);
 
             await _webHookSubscriptionManager.AddOrUpdateSubscriptionAsync(subscription);
         }
@@ -73,7 +73,7 @@ namespace Cz.Jarvis.WebHooks
                 throw new ArgumentNullException(nameof(subscription.Id));
             }
 
-            subscription.TenantId = AbpSession.TenantId;
+            subscription.TenantId = ((int?)null);
 
             await _webHookSubscriptionManager.AddOrUpdateSubscriptionAsync(subscription);
         }
@@ -86,12 +86,12 @@ namespace Cz.Jarvis.WebHooks
 
         public async Task<bool> IsSubscribed(string webhookName)
         {
-            return await _webHookSubscriptionManager.IsSubscribedAsync(AbpSession.TenantId, webhookName);
+            return await _webHookSubscriptionManager.IsSubscribedAsync(((int?)null), webhookName);
         }
 
         public async Task<ListResultDto<GetAllSubscriptionsOutput>> GetAllSubscriptionsIfFeaturesGranted(string webhookName)
         {
-            var subscriptions = await _webHookSubscriptionManager.GetAllSubscriptionsIfFeaturesGrantedAsync(AbpSession.TenantId, webhookName);
+            var subscriptions = await _webHookSubscriptionManager.GetAllSubscriptionsIfFeaturesGrantedAsync(((int?)null), webhookName);
             return new ListResultDto<GetAllSubscriptionsOutput>(
                 ObjectMapper.Map<List<GetAllSubscriptionsOutput>>(subscriptions)
             );
@@ -104,7 +104,7 @@ namespace Cz.Jarvis.WebHooks
 
             foreach (var webhookDefinition in webhooks)
             {
-                if (await _webhookDefinitionManager.IsAvailableAsync(AbpSession.TenantId, webhookDefinition.Name))
+                if (await _webhookDefinitionManager.IsAvailableAsync(((int?)null), webhookDefinition.Name))
                 {
                     definitions.Add(new GetAllAvailableWebhooksOutput()
                     {

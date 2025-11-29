@@ -58,7 +58,7 @@ namespace Abp.Domain.Entities.Caching
                 return _unitOfWorkManager.Current.GetTenantId();
             }
 
-            return AbpSession.TenantId;
+            return ((int?)null);
         }
 
         public virtual string GetCacheKey(TPrimaryKey id)

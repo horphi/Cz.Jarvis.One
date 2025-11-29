@@ -12,7 +12,7 @@ namespace Abp
     {
         /// <summary>
         /// Tenant Id of the user.
-        /// Can be null for host users in a multi tenant application.
+        /// Multi-tenancy removed - always null.
         /// </summary>
         public int? TenantId { get; protected set; }
 
@@ -32,11 +32,11 @@ namespace Abp
         /// <summary>
         /// Initializes a new instance of the <see cref="UserIdentifier"/> class.
         /// </summary>
-        /// <param name="tenantId">Tenant Id of the user.</param>
+        /// <param name="tenantId">Tenant Id of the user (ignored - multi-tenancy removed).</param>
         /// <param name="userId">Id of the user.</param>
         public UserIdentifier(int? tenantId, long userId)
         {
-            TenantId = tenantId;
+            TenantId = null; // Multi-tenancy removed - always null
             UserId = userId;
         }
 
@@ -44,50 +44,30 @@ namespace Abp
         /// Parses given string and creates a new <see cref="UserIdentifier"/> object.
         /// </summary>
         /// <param name="userIdentifierString">
-        /// Should be formatted one of the followings:
-        /// 
-        /// - "userId@tenantId". Ex: "42@3" (for tenant users).
-        /// - "userId". Ex: 1 (for host users)
+        /// Should be formatted as: "userId". Ex: "42"
+        /// Legacy format "userId@tenantId" is supported but tenantId is ignored.
         /// </param>
         public static UserIdentifier Parse(string userIdentifierString)
         {
             if (userIdentifierString.IsNullOrEmpty())
             {
-                throw new ArgumentNullException(nameof(userIdentifierString), "userAtTenant can not be null or empty!");
+                throw new ArgumentNullException(nameof(userIdentifierString), "userIdentifierString can not be null or empty!");
             }
 
             var splitted = userIdentifierString.Split('@');
-            if (splitted.Length == 1)
-            {
-                return new UserIdentifier(null, splitted[0].To<long>());
-
-            }
-
-            if (splitted.Length == 2)
-            {
-                return new UserIdentifier(splitted[1].To<int>(), splitted[0].To<long>());
-            }
-
-            throw new ArgumentException("userAtTenant is not properly formatted", nameof(userIdentifierString));
+            // Always parse just the userId (first part), ignore tenant if present
+            return new UserIdentifier(null, splitted[0].To<long>());
         }
 
         /// <summary>
         /// Creates a string represents this <see cref="UserIdentifier"/> instance.
-        /// Formatted one of the followings:
-        /// 
-        /// - "userId@tenantId". Ex: "42@3" (for tenant users).
-        /// - "userId". Ex: 1 (for host users)
-        /// 
+        /// Formatted as: "userId". Ex: "42"
+        ///
         /// Returning string can be used in <see cref="Parse"/> method to re-create identical <see cref="UserIdentifier"/> object.
         /// </summary>
         public string ToUserIdentifierString()
         {
-            if (TenantId == null)
-            {
-                return UserId.ToString();
-            }
-
-            return UserId + "@" + TenantId;
+            return UserId.ToString();
         }
 
         public override bool Equals(object obj)
@@ -114,16 +94,13 @@ namespace Abp
                 return false;
             }
 
-            return TenantId == other.TenantId && UserId == other.UserId;
+            return UserId == other.UserId; // Multi-tenancy removed - only compare UserId
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            var hash = 17;
-            hash = TenantId.HasValue ? hash * 23 + TenantId.GetHashCode() : hash;
-            hash = hash * 23 + UserId.GetHashCode();
-            return hash;
+            return UserId.GetHashCode(); // Multi-tenancy removed - only use UserId
         }
 
         /// <inheritdoc/>

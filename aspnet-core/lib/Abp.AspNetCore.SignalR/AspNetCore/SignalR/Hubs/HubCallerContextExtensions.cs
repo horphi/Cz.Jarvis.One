@@ -14,7 +14,7 @@ public static class HubCallerContextExtensions
             return null;
         }
 
-        var tenantIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.TenantId);
+        var tenantIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == "http://www.aspnetboilerplate.com/identity/claims/tenantId");
         if (string.IsNullOrEmpty(tenantIdClaim?.Value))
         {
             return null;
@@ -78,7 +78,7 @@ public static class HubCallerContextExtensions
             return null;
         }
 
-        var impersonatorTenantIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
+        var impersonatorTenantIdClaim = context.User.Claims.FirstOrDefault(c => c.Type == "http://www.aspnetboilerplate.com/identity/claims/impersonatorTenantId");
         if (string.IsNullOrEmpty(impersonatorTenantIdClaim?.Value))
         {
             return null;

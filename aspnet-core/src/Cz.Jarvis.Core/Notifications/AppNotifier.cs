@@ -5,7 +5,6 @@ using Abp;
 using Abp.Localization;
 using Abp.Notifications;
 using Cz.Jarvis.Authorization.Users;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Notifications
 {
@@ -40,22 +39,9 @@ namespace Cz.Jarvis.Notifications
             notificationData["userName"] = user.UserName;
             notificationData["emailAddress"] = user.EmailAddress;
 
-            await _notificationPublisher.PublishAsync(AppNotificationNames.NewUserRegistered, notificationData,
-                tenantIds: new[] {user.TenantId});
+            await _notificationPublisher.PublishAsync(AppNotificationNames.NewUserRegistered, notificationData);
         }
 
-        public async Task NewTenantRegisteredAsync(Tenant tenant)
-        {
-            var notificationData = new LocalizableMessageNotificationData(
-                new LocalizableString(
-                    "NewTenantRegisteredNotificationMessage",
-                    JarvisConsts.LocalizationSourceName
-                )
-            );
-
-            notificationData["tenancyName"] = tenant.TenancyName;
-            await _notificationPublisher.PublishAsync(AppNotificationNames.NewTenantRegistered, notificationData);
-        }
 
         public async Task GdprDataPrepared(UserIdentifier user, Guid binaryObjectId)
         {
@@ -87,7 +73,7 @@ namespace Cz.Jarvis.Notifications
         public async Task SendMessageAsync(string notificationName, string message, UserIdentifier[] userIds = null,
             NotificationSeverity severity = NotificationSeverity.Info)
         {
-            var tenants = NotificationPublisher.AllTenants;
+            // Multi-tenancy removed
             await _notificationPublisher.PublishAsync(
                 notificationName : notificationName,
                 new MessageNotificationData(message),

@@ -10,7 +10,7 @@ using Cz.Jarvis.Authorization.Accounts;
 using Cz.Jarvis.Authorization.Accounts.Dto;
 using Cz.Jarvis.Authorization.Users;
 using Cz.Jarvis.Identity;
-using Cz.Jarvis.MultiTenancy;
+// using Cz.Jarvis.MultiTenancy; // Multi-tenancy removed
 using Cz.Jarvis.Web.Models.Ui;
 using Cz.Jarvis.Web.Session;
 
@@ -119,7 +119,7 @@ namespace Cz.Jarvis.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress, string password, string tenancyName)
+        private async Task<AbpLoginResult<User>> GetLoginResultAsync(string usernameOrEmailAddress, string password, string tenancyName)
         {
             var loginResult = await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName);
 

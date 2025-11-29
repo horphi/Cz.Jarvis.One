@@ -39,23 +39,8 @@ public static class ModelBuilderExtensions
         modelBuilder.HasDbFunction(methodInfo)
             .HasTranslation(args =>
             {
-                // (int? tenantId, int? currentTenantId, bool boolParam)
-                var tenantId = args[0];
-                var currentTenantId = args[1];
+                // Multi-tenancy removed - always return true (no filtering)
                 var boolParam = args[2];
-
-                if (abpEfCoreCurrentDbContext.Context?.IsMayHaveTenantFilterEnabled == true)
-                {
-                    // TenantId == CurrentTenantId
-                    return new SqlBinaryExpression(
-                        ExpressionType.Equal,
-                        tenantId,
-                        currentTenantId,
-                        boolParam.Type,
-                        boolParam.TypeMapping);
-                }
-
-                // empty where sql
                 return new SqlConstantExpression(Expression.Constant(true), boolParam.TypeMapping);
             });
 
@@ -67,23 +52,8 @@ public static class ModelBuilderExtensions
         modelBuilder.HasDbFunction(methodInfo)
             .HasTranslation(args =>
             {
-                // (int tenantId, int? currentTenantId, bool boolParam)
-                var tenantId = args[0];
-                var currentTenantId = args[1];
+                // Multi-tenancy removed - always return true (no filtering)
                 var boolParam = args[2];
-
-                if (abpEfCoreCurrentDbContext.Context?.IsMustHaveTenantFilterEnabled == true)
-                {
-                    // TenantId == CurrentTenantId
-                    return new SqlBinaryExpression(
-                        ExpressionType.Equal,
-                        tenantId,
-                        currentTenantId,
-                        boolParam.Type,
-                        boolParam.TypeMapping);
-                }
-
-                // empty where sql
                 return new SqlConstantExpression(Expression.Constant(true), boolParam.TypeMapping);
             });
 

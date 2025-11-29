@@ -103,10 +103,10 @@ namespace Abp.Auditing
         {
             var auditInfo = new AuditInfo
             {
-                TenantId = AbpSession.TenantId,
+                TenantId = ((int?)null),
                 UserId = AbpSession.UserId,
                 ImpersonatorUserId = AbpSession.ImpersonatorUserId,
-                ImpersonatorTenantId = AbpSession.ImpersonatorTenantId,
+                ImpersonatorTenantId = ((int?)null),
                 ServiceName = type != null
                     ? type.FullName
                     : "",

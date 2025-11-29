@@ -4,11 +4,8 @@
     {
         public long? UserId { get; }
 
-        public int? TenantId { get; }
-
-        public SessionOverride(int? tenantId, long? userId)
+        public SessionOverride(long? userId)
         {
-            TenantId = tenantId;
             UserId = userId;
         }
     }

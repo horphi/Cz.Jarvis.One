@@ -7,10 +7,8 @@ using Abp.Domain.Entities;
 namespace Cz.Jarvis.Storage
 {
     [Table("AppBinaryObjects")]
-    public class BinaryObject : Entity<Guid>, IMayHaveTenant
+    public class BinaryObject : Entity<Guid>
     {
-        public virtual int? TenantId { get; set; }
-
         public virtual string Description { get; set; }
 
         [Required]
@@ -22,10 +20,9 @@ namespace Cz.Jarvis.Storage
             Id = SequentialGuidGenerator.Instance.Create();
         }
 
-        public BinaryObject(int? tenantId, byte[] bytes, string description = null)
+        public BinaryObject(byte[] bytes, string description = null)
             : this()
         {
-            TenantId = tenantId;
             Bytes = bytes;
             Description = description;
         }

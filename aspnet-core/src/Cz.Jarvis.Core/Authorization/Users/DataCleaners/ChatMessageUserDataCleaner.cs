@@ -29,38 +29,31 @@ namespace Cz.Jarvis.Authorization.Users.DataCleaners
             await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
                 // Delete all messages of the user
-                using (_unitOfWorkManager.Current.SetTenantId(userIdentifier.TenantId))
-                {
-                    var chatMessagesQuery = await _chatMessageRepository
-                        .GetAllAsync();
-                    chatMessages = await chatMessagesQuery
-                        .Where(f => f.UserId == userIdentifier.UserId)
-                        .ToListAsync();
+                var chatMessagesQuery = await _chatMessageRepository
+                    .GetAllAsync();
+                chatMessages = await chatMessagesQuery
+                    .Where(f => f.UserId == userIdentifier.UserId)
+                    .ToListAsync();
 
-                    await DeleteChatMessages(chatMessages);
-                }
-                
+                await DeleteChatMessages(chatMessages);
+
                 if (!chatMessages.Any())
                 {
                     return;
                 }
 
-                // Delete all reverse friendships of a friendship
+                // Delete all reverse messages
                 foreach (var chatMessage in chatMessages)
                 {
-                    using (_unitOfWorkManager.Current.SetTenantId(chatMessage.TargetTenantId))
-                    {
-                        var targetChatMessagesQuery = await _chatMessageRepository.GetAllAsync();
-                        var targetChatMessages = await targetChatMessagesQuery
-                            .Where(f =>
-                                f.UserId == chatMessage.TargetUserId &&
-                                f.TargetTenantId == userIdentifier.TenantId &&
-                                f.TargetUserId == userIdentifier.UserId
-                            )
-                            .ToListAsync();
+                    var targetChatMessagesQuery = await _chatMessageRepository.GetAllAsync();
+                    var targetChatMessages = await targetChatMessagesQuery
+                        .Where(f =>
+                            f.UserId == chatMessage.TargetUserId &&
+                            f.TargetUserId == userIdentifier.UserId
+                        )
+                        .ToListAsync();
 
-                        await DeleteChatMessages(targetChatMessages);
-                    }
+                    await DeleteChatMessages(targetChatMessages);
                 }
             });
         }

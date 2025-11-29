@@ -28,12 +28,9 @@ namespace Abp.Authorization.Users
         {
             _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (_unitOfWorkManager.Current.SetTenantId(eventData.Entity.TenantId))
-                {
-                    _userRoleRepository.Delete(
-                        ur => ur.UserId == eventData.Entity.Id
-                    );
-                }
+                _userRoleRepository.Delete(
+                    ur => ur.UserId == eventData.Entity.Id
+                );
             });
         }
     }

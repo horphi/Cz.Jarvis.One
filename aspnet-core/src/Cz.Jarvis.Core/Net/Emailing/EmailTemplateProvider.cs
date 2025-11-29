@@ -13,13 +13,11 @@ namespace Cz.Jarvis.Net.Emailing
     public class EmailTemplateProvider : IEmailTemplateProvider, ISingletonDependency
     {
         private readonly IWebUrlService _webUrlService;
-        private readonly ITenantCache _tenantCache;
         private readonly ConcurrentDictionary<string, string> _defaultTemplates;
 
-        public EmailTemplateProvider(IWebUrlService webUrlService, ITenantCache tenantCache)
+        public EmailTemplateProvider(IWebUrlService webUrlService)
         {
             _webUrlService = webUrlService;
-            _tenantCache = tenantCache;
             _defaultTemplates = new ConcurrentDictionary<string, string>();
         }
 
@@ -42,15 +40,8 @@ namespace Cz.Jarvis.Net.Emailing
 
         private string GetTenantLogoUrl(int? tenantId)
         {
-            if (!tenantId.HasValue)
-            {
-                return _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + "/TenantCustomization/GetTenantLogo/light?tenantId=&extension=png";
-            }
-
-            var tenant = _tenantCache.Get(tenantId.Value);
-
-            return _webUrlService.GetServerRootAddress(tenant.TenancyName).EnsureEndsWith('/') 
-                + "TenantCustomization/GetTenantLogo/light/" + tenantId.Value + "/png";       
+            // Multi-tenancy removed - always return single logo URL
+            return _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + "TenantCustomization/GetTenantLogo/light?tenantId=&extension=png";
         }
 
         private string GetTwitterIconUrl()

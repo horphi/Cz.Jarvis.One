@@ -10,8 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace Abp.Authorization;
 
-public class AbpSecurityStampValidator<TTenant, TRole, TUser> : SecurityStampValidator<TUser>
-    where TTenant : AbpTenant<TUser>
+public class AbpSecurityStampValidator<TRole, TUser> : SecurityStampValidator<TUser>
     where TRole : AbpRole<TUser>, new()
     where TUser : AbpUser<TUser>
 {
@@ -19,7 +18,7 @@ public class AbpSecurityStampValidator<TTenant, TRole, TUser> : SecurityStampVal
 
     public AbpSecurityStampValidator(
         IOptions<SecurityStampValidatorOptions> options,
-        AbpSignInManager<TTenant, TRole, TUser> signInManager,
+        AbpSignInManager<TRole, TUser> signInManager,
         ILoggerFactory loggerFactory,
         IUnitOfWorkManager unitOfWorkManager)
         : base(

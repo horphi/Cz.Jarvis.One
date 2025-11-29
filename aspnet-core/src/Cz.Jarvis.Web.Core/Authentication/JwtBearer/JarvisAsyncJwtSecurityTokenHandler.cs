@@ -102,28 +102,23 @@ namespace Cz.Jarvis.Web.Authentication.JwtBearer
             {
                 using (var uow = unitOfWorkManager.Object.Begin())
                 {
-                    using (unitOfWorkManager.Object.Current.SetTenantId(userIdentifier.TenantId))
+                    using (var userManager = IocManager.Instance.ResolveAsDisposable<UserManager>())
                     {
-                        using (var userManager = IocManager.Instance.ResolveAsDisposable<UserManager>())
-                        {
-                            var userManagerObject = userManager.Object;
-                            var user = await userManagerObject.GetUserAsync(userIdentifier);
-                            isValid = await userManagerObject.IsTokenValidityKeyValidAsync(
-                                user,
-                                tokenValidityKeyClaim.Value
-                            );
+                        var userManagerObject = userManager.Object;
+                        var user = await userManagerObject.GetUserAsync(userIdentifier);
+                        isValid = await userManagerObject.IsTokenValidityKeyValidAsync(
+                            user,
+                            tokenValidityKeyClaim.Value
+                        );
 
-                            await uow.CompleteAsync();
-                        }
+                        await uow.CompleteAsync();
                     }
                 }
             }
-
             return isValid;
         }
 
-        private static async Task<bool> TokenValidityKeyExistsInCache(Claim tokenValidityKeyClaim,
-            ICacheManager cacheManager)
+        private static async Task<bool> TokenValidityKeyExistsInCache(Claim tokenValidityKeyClaim, ICacheManager cacheManager)
         {
             var tokenValidityKeyInCache = await cacheManager
                 .GetCache(AppConsts.TokenValidityKey)
@@ -159,7 +154,7 @@ namespace Cz.Jarvis.Web.Authentication.JwtBearer
                 return;
             }
 
-            var impersonatorTenant = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
+            // var impersonatorTenant = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId); // Multi-tenancy removed
             var user = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.UserId);
             var impersonatorUser = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorUserId);
 
@@ -168,8 +163,7 @@ namespace Cz.Jarvis.Web.Authentication.JwtBearer
                 return;
             }
 
-            var impersonatorTenantId = impersonatorTenant == null ? null :
-                impersonatorTenant.Value.IsNullOrEmpty() ? (int?)null : Convert.ToInt32(impersonatorTenant.Value);
+            var impersonatorTenantId = (int?)null; // Multi-tenancy removed
             var sourceUserId = Convert.ToInt64(user.Value);
             var impersonatorUserId = Convert.ToInt64(impersonatorUser.Value);
 

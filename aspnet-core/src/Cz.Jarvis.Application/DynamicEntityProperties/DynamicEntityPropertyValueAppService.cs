@@ -50,7 +50,7 @@ namespace Cz.Jarvis.DynamicEntityProperties
         public async Task Add(DynamicEntityPropertyValueDto input)
         {
             var entity = ObjectMapper.Map<DynamicEntityPropertyValue>(input);
-            entity.TenantId = AbpSession.TenantId;
+            entity.TenantId = ((int?)null);
             await _dynamicEntityPropertyValueManager.AddAsync(entity);
         }
 
@@ -58,7 +58,7 @@ namespace Cz.Jarvis.DynamicEntityProperties
         public async Task Update(DynamicEntityPropertyValueDto input)
         {
             var entity = await _dynamicEntityPropertyValueManager.GetAsync(input.Id);
-            if (entity == null || entity.TenantId != AbpSession.TenantId)
+            if (entity == null || entity.TenantId != ((int?)null))
             {
                 throw new EntityNotFoundException(typeof(DynamicEntityPropertyValue), input.Id);
             }
@@ -142,7 +142,7 @@ namespace Cz.Jarvis.DynamicEntityProperties
                         DynamicEntityPropertyId = item.DynamicEntityPropertyId,
                         EntityId = item.EntityId,
                         Value = newValue,
-                        TenantId = AbpSession.TenantId
+                        TenantId = ((int?)null)
                     });
                 }
             }

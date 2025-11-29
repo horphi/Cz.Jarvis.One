@@ -136,7 +136,7 @@ namespace Cz.Jarvis.Notifications
         public async Task<SetNotificationAsReadOutput> SetNotificationAsRead(EntityDto<Guid> input)
         {
             var userNotification =
-                await _userNotificationManager.GetUserNotificationAsync(AbpSession.TenantId, input.Id);
+                await _userNotificationManager.GetUserNotificationAsync(((int?)null), input.Id);
             if (userNotification == null)
             {
                 return new SetNotificationAsReadOutput(false);
@@ -154,7 +154,7 @@ namespace Cz.Jarvis.Notifications
                 return new SetNotificationAsReadOutput(false);
             }
 
-            await _userNotificationManager.UpdateUserNotificationStateAsync(AbpSession.TenantId, input.Id,
+            await _userNotificationManager.UpdateUserNotificationStateAsync(((int?)null), input.Id,
                 UserNotificationState.Read);
             return new SetNotificationAsReadOutput(true);
         }
@@ -206,7 +206,7 @@ namespace Cz.Jarvis.Notifications
 
         public async Task DeleteNotification(EntityDto<Guid> input)
         {
-            var notification = await _userNotificationManager.GetUserNotificationAsync(AbpSession.TenantId, input.Id);
+            var notification = await _userNotificationManager.GetUserNotificationAsync(((int?)null), input.Id);
             if (notification == null)
             {
                 return;
@@ -217,7 +217,7 @@ namespace Cz.Jarvis.Notifications
                 throw new UserFriendlyException(L("ThisNotificationDoesntBelongToYou"));
             }
 
-            await _userNotificationManager.DeleteUserNotificationAsync(AbpSession.TenantId, input.Id);
+            await _userNotificationManager.DeleteUserNotificationAsync(((int?)null), input.Id);
         }
 
         public async Task DeleteAllUserNotifications(DeleteAllUserNotificationsInput input)
@@ -275,7 +275,7 @@ namespace Cz.Jarvis.Notifications
 
             if (!input.UserIds.IsNullOrEmpty())
             {
-                userIds.AddRange(input.UserIds.Select(i => new UserIdentifier(AbpSession.TenantId, i)));
+                userIds.AddRange(input.UserIds.Select(i => new UserIdentifier(((int?)null), i)));
             }
 
             if (userIds.Count == 0)

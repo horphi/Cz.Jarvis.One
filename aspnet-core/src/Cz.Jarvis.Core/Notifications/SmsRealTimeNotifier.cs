@@ -34,51 +34,45 @@ namespace Cz.Jarvis.Notifications
 
     public async Task SendNotificationsAsync(UserNotification[] userNotifications)
     {
-        var userNotificationsGroupedByTenant = userNotifications.GroupBy(un => un.TenantId);
-        foreach (var userNotificationByTenant in userNotificationsGroupedByTenant)
-        {
-            using (_unitOfWorkManager.Current.SetTenantId(userNotificationByTenant.First().TenantId))
-            {
-                var allUserIds = userNotificationByTenant.ToList().Select(x => x.UserId).Distinct().ToList();
-                var usersToNotify = await _userRepository.GetAll()
-                    .Where(x => allUserIds.Contains(x.Id))
-                    .Select(u => new
-                        {
-                            u.Id,
-                            u.PhoneNumber,
-                            u.Name
-                        }
-                    )
-                    .ToListAsync();
-
-                foreach (var userNotification in userNotificationByTenant)
+        // Multi-tenancy removed - process all notifications directly
+        var allUserIds = userNotifications.Select(x => x.UserId).Distinct().ToList();
+        var usersToNotify = await _userRepository.GetAll()
+            .Where(x => allUserIds.Contains(x.Id))
+            .Select(u => new
                 {
-                    if (!userNotification.Notification.Data.Properties.ContainsKey("Message") ||
-                        userNotification.Notification.Data["Message"] is not string)
-                    {
-                        Logger.Info("Message property is not found in notification data. Notification cannot be sent.");
-                        continue;
-                    }
-
-                    var user = usersToNotify.FirstOrDefault(x => x.Id == userNotification.UserId);
-                    if (user == null)
-                    {
-                        Logger.Info("Can not send sms to user: " + userNotification.UserId +
-                                    ". User does not exists!");
-                        continue;
-                    }
-
-                    if (user.PhoneNumber.IsNullOrWhiteSpace())
-                    {
-                        Logger.Info("User " + user.Name + " has no phone number to send SMS.");
-                        continue;
-                    }
-
-                    await _smsSender.SendAsync(user.PhoneNumber,
-                        userNotification.Notification.Data["Message"].ToString()
-                    );
+                    u.Id,
+                    u.PhoneNumber,
+                    u.Name
                 }
+            )
+            .ToListAsync();
+
+        foreach (var userNotification in userNotifications)
+        {
+            if (!userNotification.Notification.Data.Properties.ContainsKey("Message") ||
+                userNotification.Notification.Data["Message"] is not string)
+            {
+                Logger.Info("Message property is not found in notification data. Notification cannot be sent.");
+                continue;
             }
+
+            var user = usersToNotify.FirstOrDefault(x => x.Id == userNotification.UserId);
+            if (user == null)
+            {
+                Logger.Info("Can not send sms to user: " + userNotification.UserId +
+                            ". User does not exists!");
+                continue;
+            }
+
+            if (user.PhoneNumber.IsNullOrWhiteSpace())
+            {
+                Logger.Info("User " + user.Name + " has no phone number to send SMS.");
+                continue;
+            }
+
+            await _smsSender.SendAsync(user.PhoneNumber,
+                userNotification.Notification.Data["Message"].ToString()
+            );
         }
     }
 }

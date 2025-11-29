@@ -52,23 +52,12 @@ namespace Cz.Jarvis.Sessions
                         Features = new Dictionary<string, bool>(),
                         Currency = JarvisConsts.Currency,
                         CurrencySign = JarvisConsts.CurrencySign,
-                        AllowTenantsToChangeEmailSettings = JarvisConsts.AllowTenantsToChangeEmailSettings,
                         UserDelegationIsEnabled = _userDelegationConfiguration.IsEnabled,
                         TwoFactorCodeExpireSeconds = TwoFactorCodeCacheItem.DefaultSlidingExpireTime.TotalSeconds,
                         PasswordlessLoginCodeExpireSeconds =
                             PasswordlessLoginCodeCacheItem.DefaultSlidingExpireTime.TotalSeconds,
                     }
                 };
-                
-                if (AbpSession.TenantId.HasValue)
-                {
-                    output.Tenant = await GetTenantLoginInfo(AbpSession.GetTenantId());
-                }
-
-                if (AbpSession.ImpersonatorTenantId.HasValue)
-                {
-                    output.ImpersonatorTenant = await GetTenantLoginInfo(AbpSession.ImpersonatorTenantId.Value);
-                }
 
                 if (AbpSession.UserId.HasValue)
                 {
@@ -81,28 +70,10 @@ namespace Cz.Jarvis.Sessions
                     output.ImpersonatorUser = ObjectMapper.Map<UserLoginInfoDto>(await GetImpersonatorUserAsync());
                 }
 
-                if (output.Tenant == null)
-                {
-                    return output;
-                }
-
-                output.Tenant.CreationTimeString = output.Tenant.CreationTime.ToString("d");
-
                 return output;
             });
         }
 
-        private async Task<TenantLoginInfoDto> GetTenantLoginInfo(int tenantId)
-        {
-            var tenant = await TenantManager.Tenants
-                .FirstAsync(t => t.Id == AbpSession.GetTenantId());
-
-            var tenantLoginInfo = ObjectMapper
-                .Map<TenantLoginInfoDto>(tenant);
-            
-            return tenantLoginInfo;
-        }
-        
 
         public async Task<UpdateUserSignInTokenOutput> UpdateUserSignInToken()
         {
@@ -116,25 +87,19 @@ namespace Cz.Jarvis.Sessions
             return new UpdateUserSignInTokenOutput
             {
                 SignInToken = user.SignInToken,
-                EncodedUserId = Convert.ToBase64String(Encoding.UTF8.GetBytes(user.Id.ToString())),
-                EncodedTenantId = user.TenantId.HasValue
-                    ? Convert.ToBase64String(Encoding.UTF8.GetBytes(user.TenantId.Value.ToString()))
-                    : ""
+                EncodedUserId = Convert.ToBase64String(Encoding.UTF8.GetBytes(user.Id.ToString()))
             };
         }
 
         protected virtual async Task<User> GetImpersonatorUserAsync()
         {
-            using (CurrentUnitOfWork.SetTenantId(AbpSession.ImpersonatorTenantId))
+            var user = await UserManager.FindByIdAsync(AbpSession.ImpersonatorUserId.ToString());
+            if (user == null)
             {
-                var user = await UserManager.FindByIdAsync(AbpSession.ImpersonatorUserId.ToString());
-                if (user == null)
-                {
-                    throw new Exception("User not found!");
-                }
-
-                return user;
+                throw new Exception("User not found!");
             }
+
+            return user;
         }
 
         private async Task<LoginType> GetUserLoginTypeAsync(long userId)

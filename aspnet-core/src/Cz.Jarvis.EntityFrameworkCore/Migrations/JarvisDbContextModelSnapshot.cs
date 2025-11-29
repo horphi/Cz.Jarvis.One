@@ -89,11 +89,11 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "ExecutionDuration");
+                    b.HasIndex("ExecutionDuration");
 
-                    b.HasIndex("TenantId", "ExecutionTime");
+                    b.HasIndex("ExecutionTime");
 
-                    b.HasIndex("TenantId", "UserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("AbpAuditLogs");
                 });
@@ -125,12 +125,9 @@ namespace Cz.Jarvis.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "Name");
+                    b.HasIndex("Name");
 
                     b.ToTable("AbpPermissions");
 
@@ -168,9 +165,9 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("ClaimType");
 
-                    b.HasIndex("TenantId", "ClaimType");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("AbpRoleClaims");
                 });
@@ -208,9 +205,6 @@ namespace Cz.Jarvis.Migrations
                     b.Property<long?>("LastModifierUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
@@ -225,13 +219,9 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasIndex("EmailAddress");
 
+                    b.HasIndex("UserId");
+
                     b.HasIndex("UserName");
-
-                    b.HasIndex("TenantId", "EmailAddress");
-
-                    b.HasIndex("TenantId", "UserId");
-
-                    b.HasIndex("TenantId", "UserName");
 
                     b.ToTable("AbpUserAccounts");
                 });
@@ -265,9 +255,9 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ClaimType");
 
-                    b.HasIndex("TenantId", "ClaimType");
+                    b.HasIndex("UserId");
 
                     b.ToTable("AbpUserClaims");
                 });
@@ -298,14 +288,12 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("ProviderKey", "TenantId")
+                    b.HasIndex("ProviderKey")
                         .IsUnique();
 
-                    b.HasIndex("TenantId", "UserId");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("TenantId", "LoginProvider", "ProviderKey");
+                    b.HasIndex("LoginProvider", "ProviderKey");
 
                     b.ToTable("AbpUserLogins");
                 });
@@ -356,9 +344,9 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "TenantId");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("TenancyName", "UserNameOrEmailAddress", "Result");
+                    b.HasIndex("UserNameOrEmailAddress", "Result");
 
                     b.ToTable("AbpUserLoginAttempts");
                 });
@@ -380,19 +368,14 @@ namespace Cz.Jarvis.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RoleId");
+
                     b.HasIndex("UserId");
-
-                    b.HasIndex("TenantId", "RoleId");
-
-                    b.HasIndex("TenantId", "UserId");
 
                     b.ToTable("AbpUserRoles");
                 });
@@ -429,8 +412,6 @@ namespace Cz.Jarvis.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("TenantId", "UserId");
 
                     b.ToTable("AbpUserTokens");
                 });
@@ -519,7 +500,7 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("TenantId", "Name", "UserId")
+                    b.HasIndex("Name", "UserId")
                         .IsUnique();
 
                     b.ToTable("AbpSettings");
@@ -547,7 +528,7 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasIndex("DynamicPropertyId");
 
-                    b.HasIndex("EntityFullName", "DynamicPropertyId", "TenantId")
+                    b.HasIndex("EntityFullName", "DynamicPropertyId")
                         .IsUnique();
 
                     b.ToTable("AbpDynamicEntityProperties");
@@ -607,7 +588,7 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PropertyName", "TenantId")
+                    b.HasIndex("PropertyName")
                         .IsUnique();
 
                     b.ToTable("AbpDynamicProperties");
@@ -719,11 +700,11 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "CreationTime");
+                    b.HasIndex("CreationTime");
 
-                    b.HasIndex("TenantId", "Reason");
+                    b.HasIndex("Reason");
 
-                    b.HasIndex("TenantId", "UserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("AbpEntityChangeSets");
                 });
@@ -822,7 +803,7 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "Name");
+                    b.HasIndex("Name");
 
                     b.ToTable("AbpLanguages");
                 });
@@ -872,7 +853,7 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "Source", "LanguageName", "Key");
+                    b.HasIndex("Source", "LanguageName", "Key");
 
                     b.ToTable("AbpLanguageTexts");
                 });
@@ -980,8 +961,6 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasIndex("NotificationName", "EntityTypeName", "EntityId", "UserId");
 
-                    b.HasIndex("TenantId", "NotificationName", "EntityTypeName", "EntityId", "UserId");
-
                     b.ToTable("AbpNotificationSubscriptions");
                 });
 
@@ -1029,8 +1008,6 @@ namespace Cz.Jarvis.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
 
                     b.ToTable("AbpTenantNotifications");
                 });
@@ -1484,14 +1461,11 @@ namespace Cz.Jarvis.Migrations
                     b.Property<long>("TargetUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "SourceUserId");
+                    b.HasIndex("SourceUserId");
 
-                    b.HasIndex("TenantId", "TargetUserId");
+                    b.HasIndex("TargetUserId");
 
                     b.ToTable("AppUserDelegations");
                 });
@@ -1551,9 +1525,6 @@ namespace Cz.Jarvis.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("varchar(32)");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorUserId");
@@ -1562,7 +1533,7 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasIndex("LastModifierUserId");
 
-                    b.HasIndex("TenantId", "NormalizedName");
+                    b.HasIndex("NormalizedName");
 
                     b.ToTable("AbpRoles");
                 });
@@ -1582,9 +1553,6 @@ namespace Cz.Jarvis.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
@@ -1717,9 +1685,6 @@ namespace Cz.Jarvis.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -1733,9 +1698,9 @@ namespace Cz.Jarvis.Migrations
 
                     b.HasIndex("LastModifierUserId");
 
-                    b.HasIndex("TenantId", "NormalizedEmailAddress");
+                    b.HasIndex("NormalizedEmailAddress");
 
-                    b.HasIndex("TenantId", "NormalizedUserName");
+                    b.HasIndex("NormalizedUserName");
 
                     b.ToTable("AbpUsers");
                 });
@@ -1768,27 +1733,17 @@ namespace Cz.Jarvis.Migrations
                     b.Property<int>("Side")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TargetTenantId")
-                        .HasColumnType("int");
-
                     b.Property<long>("TargetUserId")
                         .HasColumnType("bigint");
-
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TargetTenantId", "TargetUserId", "ReadState");
+                    b.HasIndex("TargetUserId", "ReadState");
 
-                    b.HasIndex("TargetTenantId", "UserId", "ReadState");
-
-                    b.HasIndex("TenantId", "TargetUserId", "ReadState");
-
-                    b.HasIndex("TenantId", "UserId", "ReadState");
+                    b.HasIndex("UserId", "ReadState");
 
                     b.ToTable("AppChatMessages");
                 });
@@ -1807,12 +1762,6 @@ namespace Cz.Jarvis.Migrations
                     b.Property<Guid?>("FriendProfilePictureId")
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("FriendTenancyName")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("FriendTenantId")
-                        .HasColumnType("int");
-
                     b.Property<long>("FriendUserId")
                         .HasColumnType("bigint");
 
@@ -1824,115 +1773,16 @@ namespace Cz.Jarvis.Migrations
                     b.Property<int>("State")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FriendTenantId", "FriendUserId");
+                    b.HasIndex("FriendUserId");
 
-                    b.HasIndex("FriendTenantId", "UserId");
-
-                    b.HasIndex("TenantId", "FriendUserId");
-
-                    b.HasIndex("TenantId", "UserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("AppFriendships");
-                });
-
-            modelBuilder.Entity("Cz.Jarvis.MultiTenancy.Tenant", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConnectionString")
-                        .HasMaxLength(1024)
-                        .HasColumnType("varchar(1024)");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid?>("CustomCssId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("DarkLogoFileType")
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<Guid?>("DarkLogoId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("DarkLogoMinimalFileType")
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<Guid?>("DarkLogoMinimalId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("LightLogoFileType")
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<Guid?>("LightLogoId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("LightLogoMinimalFileType")
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<Guid?>("LightLogoMinimalId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("varchar(128)");
-
-                    b.Property<string>("TenancyName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreationTime");
-
-                    b.HasIndex("CreatorUserId");
-
-                    b.HasIndex("DeleterUserId");
-
-                    b.HasIndex("LastModifierUserId");
-
-                    b.HasIndex("TenancyName");
-
-                    b.ToTable("AbpTenants");
                 });
 
             modelBuilder.Entity("Cz.Jarvis.Storage.BinaryObject", b =>
@@ -1949,12 +1799,7 @@ namespace Cz.Jarvis.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
 
                     b.ToTable("AppBinaryObjects");
                 });
@@ -2141,27 +1986,6 @@ namespace Cz.Jarvis.Migrations
                 });
 
             modelBuilder.Entity("Cz.Jarvis.Authorization.Users.User", b =>
-                {
-                    b.HasOne("Cz.Jarvis.Authorization.Users.User", "CreatorUser")
-                        .WithMany()
-                        .HasForeignKey("CreatorUserId");
-
-                    b.HasOne("Cz.Jarvis.Authorization.Users.User", "DeleterUser")
-                        .WithMany()
-                        .HasForeignKey("DeleterUserId");
-
-                    b.HasOne("Cz.Jarvis.Authorization.Users.User", "LastModifierUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifierUserId");
-
-                    b.Navigation("CreatorUser");
-
-                    b.Navigation("DeleterUser");
-
-                    b.Navigation("LastModifierUser");
-                });
-
-            modelBuilder.Entity("Cz.Jarvis.MultiTenancy.Tenant", b =>
                 {
                     b.HasOne("Cz.Jarvis.Authorization.Users.User", "CreatorUser")
                         .WithMany()

@@ -27,19 +27,19 @@ namespace Abp.Caching
 
         public void HandleEvent(EntityChangedEventData<UserPermissionSetting> eventData)
         {
-            _cachedUniqueKeyPerUser.RemoveKey(CacheName, eventData.Entity.TenantId, eventData.Entity.UserId);
+            _cachedUniqueKeyPerUser.RemoveKey(CacheName, eventData.Entity.UserId);
         }
 
         public void HandleEvent(EntityChangedEventData<UserRole> eventData)
         {
-            _cachedUniqueKeyPerUser.RemoveKey(CacheName, eventData.Entity.TenantId, eventData.Entity.UserId);
+            _cachedUniqueKeyPerUser.RemoveKey(CacheName, eventData.Entity.UserId);
         }
 
         public void HandleEvent(EntityDeletedEventData<AbpUserBase> eventData)
         {
-            _cachedUniqueKeyPerUser.RemoveKey(CacheName, eventData.Entity.TenantId, eventData.Entity.Id);
+            _cachedUniqueKeyPerUser.RemoveKey(CacheName, eventData.Entity.Id);
         }
-        
+
         public void HandleEvent(EntityChangedEventData<LanguageInfo> eventData)
         {
             _cachedUniqueKeyPerUser.ClearCache(CacheName);

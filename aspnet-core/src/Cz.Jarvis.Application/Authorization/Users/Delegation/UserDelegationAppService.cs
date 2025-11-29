@@ -65,7 +65,6 @@ namespace Cz.Jarvis.Authorization.Users.Delegation
 
             var delegation = ObjectMapper.Map<UserDelegation>(input);
 
-            delegation.TenantId = AbpSession.TenantId;
             delegation.SourceUserId = AbpSession.GetUserId();
 
             await _userDelegationRepository.InsertAsync(delegation);

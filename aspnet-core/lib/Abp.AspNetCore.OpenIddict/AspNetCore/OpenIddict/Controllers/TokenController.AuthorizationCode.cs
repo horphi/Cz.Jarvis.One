@@ -9,7 +9,7 @@ using OpenIddict.Server.AspNetCore;
 
 namespace Abp.AspNetCore.OpenIddict.Controllers;
 
-public partial class TokenController<TTenant, TRole, TUser>
+public partial class TokenController<TRole, TUser>
 {
     protected virtual async Task<IActionResult> HandleAuthorizationCodeAsync(OpenIddictRequest request)
     {

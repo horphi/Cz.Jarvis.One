@@ -42,7 +42,6 @@ using Cz.Jarvis.DynamicEntityProperties;
 using Cz.Jarvis.Friendships;
 using Cz.Jarvis.Friendships.Cache;
 using Cz.Jarvis.Localization;
-using Cz.Jarvis.MultiTenancy;
 using Cz.Jarvis.Net.Emailing;
 using Cz.Jarvis.Notifications;
 using Cz.Jarvis.WebHooks;
@@ -68,7 +67,6 @@ namespace Cz.Jarvis
             Configuration.Auditing.IsEnabledForAnonymousUsers = true;
 
             //Declare entity types
-            Configuration.Modules.Zero().EntityTypes.Tenant = typeof(Tenant);
             Configuration.Modules.Zero().EntityTypes.Role = typeof(Role);
             Configuration.Modules.Zero().EntityTypes.User = typeof(User);
 

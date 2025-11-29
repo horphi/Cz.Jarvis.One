@@ -32,12 +32,8 @@ namespace Cz.Jarvis.EntityFrameworkCore
             {
                 using (var uow =_unitOfWorkManager.Begin())
                 {
-                    // Switching to host is necessary for single tenant mode.
-                    using (_unitOfWorkManager.Current.SetTenantId(null))
-                    {
-                        _dbContextProvider.GetDbContext().Database.OpenConnection();
-                        uow.Complete();
-                    }
+                    _dbContextProvider.GetDbContext().Database.OpenConnection();
+                    uow.Complete();
                 }
             }
             catch

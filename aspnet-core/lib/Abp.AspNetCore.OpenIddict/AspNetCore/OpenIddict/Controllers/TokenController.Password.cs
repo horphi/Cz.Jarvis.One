@@ -18,7 +18,7 @@ using OpenIddict.Server.AspNetCore;
 
 namespace Abp.AspNetCore.OpenIddict.Controllers;
 
-public partial class TokenController<TTenant, TRole, TUser>
+public partial class TokenController< TRole, TUser>
 {
     protected virtual async Task<IActionResult> HandlePasswordAsync(OpenIddictRequest request)
     {
@@ -27,7 +27,7 @@ public partial class TokenController<TTenant, TRole, TUser>
         var session = IocManager.Instance.Resolve<IAbpSession>();
         var uowManager = IocManager.Instance.Resolve<IUnitOfWorkManager>();
         var userManager = IocManager.Instance.Resolve<AbpUserManager<TRole, TUser>>();
-        var signInManager = IocManager.Instance.Resolve<AbpSignInManager<TTenant, TRole, TUser>>();
+        var signInManager = IocManager.Instance.Resolve<AbpSignInManager< TRole, TUser>>();
 
         return await uowManager.WithUnitOfWorkAsync(async () =>
         {
@@ -91,7 +91,7 @@ public partial class TokenController<TTenant, TRole, TUser>
 
     protected virtual async Task<IActionResult> SetSuccessResultAsync(OpenIddictRequest request, TUser user)
     {
-        var signInManager = IocManager.Instance.Resolve<AbpSignInManager<TTenant, TRole, TUser>>();
+        var signInManager = IocManager.Instance.Resolve<AbpSignInManager< TRole, TUser>>();
         var openIddictClaimsPrincipalManager = IocManager.Instance.Resolve<AbpOpenIddictClaimsPrincipalManager>();
 
         // Create a new ClaimsPrincipal containing the claims that
@@ -104,10 +104,7 @@ public partial class TokenController<TTenant, TRole, TUser>
         // different from abp.io
         // ----------------------------------------------------------------------------------
         principal.SetClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString());
-        if (user.TenantId.HasValue)
-        {
-            principal.SetClaim(AbpClaimTypes.TenantId, user.TenantId?.ToString());
-        }
+       
         // ----------------------------------------------------------------------------------
 
         await openIddictClaimsPrincipalManager.HandleAsync(request, principal);

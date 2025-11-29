@@ -15,11 +15,10 @@ using Cz.Jarvis.Authorization;
 using Cz.Jarvis.Authorization.Delegation;
 using Cz.Jarvis.Authorization.Roles;
 using Cz.Jarvis.Authorization.Users;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Identity
 {
-    public class SecurityStampValidator : AbpSecurityStampValidator<Tenant, Role, User>
+    public class SecurityStampValidator : AbpSecurityStampValidator<Role, User>
     {
         private readonly IUserDelegationManager _userDelegationManager;
         private readonly IUserDelegationConfiguration _userDelegationConfiguration;
@@ -54,7 +53,6 @@ namespace Cz.Jarvis.Identity
                 return;
             }
 
-            var impersonatorTenant = context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
             var user = context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.UserId);
             var impersonatorUser = context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorUserId);
 
@@ -63,11 +61,11 @@ namespace Cz.Jarvis.Identity
                 return;
             }
 
-            var impersonatorTenantId = impersonatorTenant == null ? null : impersonatorTenant.Value.IsNullOrEmpty() ? (int?)null : Convert.ToInt32(impersonatorTenant.Value);
             var sourceUserId = Convert.ToInt64(user.Value);
             var targetUserId = Convert.ToInt64(impersonatorUser.Value);
 
-            if (_permissionChecker.IsGranted(new UserIdentifier(impersonatorTenantId, targetUserId), AppPermissions.Pages_Administration_Users_Impersonation))
+            // Multi-tenancy removed
+            if (_permissionChecker.IsGranted(new UserIdentifier(null, targetUserId), AppPermissions.Pages_Administration_Users_Impersonation))
             {
                 return;
             }

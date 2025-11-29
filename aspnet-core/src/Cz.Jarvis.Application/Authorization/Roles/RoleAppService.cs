@@ -126,7 +126,7 @@ namespace Cz.Jarvis.Authorization.Roles
         [AbpAuthorize(AppPermissions.Pages_Administration_Roles_Create)]
         protected virtual async Task CreateRoleAsync(CreateOrUpdateRoleInput input)
         {
-            var role = new Role(AbpSession.TenantId, input.Role.DisplayName) { IsDefault = input.Role.IsDefault };
+            var role = new Role(null, input.Role.DisplayName) { IsDefault = input.Role.IsDefault };
             // role 
             role.Name = input.Role.DisplayName;  
             CheckErrors(await _roleManager.CreateAsync(role));

@@ -15,7 +15,6 @@ namespace Cz.Jarvis.Friendships.Cache
         private readonly ICacheManager _cacheManager;
         private readonly IRepository<Friendship, long> _friendshipRepository;
         private readonly IRepository<ChatMessage, long> _chatMessageRepository;
-        private readonly ITenantCache _tenantCache;
         private readonly UserStore _userStore;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
@@ -25,14 +24,12 @@ namespace Cz.Jarvis.Friendships.Cache
             ICacheManager cacheManager,
             IRepository<Friendship, long> friendshipRepository,
             IRepository<ChatMessage, long> chatMessageRepository,
-            ITenantCache tenantCache,
             IUnitOfWorkManager unitOfWorkManager,
             UserStore userStore)
         {
             _cacheManager = cacheManager;
             _friendshipRepository = friendshipRepository;
             _chatMessageRepository = chatMessageRepository;
-            _tenantCache = tenantCache;
             _unitOfWorkManager = unitOfWorkManager;
             _userStore = userStore;
         }
@@ -181,43 +178,34 @@ namespace Cz.Jarvis.Friendships.Cache
         {
             return _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                var tenancyName = userIdentifier.TenantId.HasValue
-                    ? _tenantCache.GetOrNull(userIdentifier.TenantId.Value)?.TenancyName
-                    : null;
-
-                using (_unitOfWorkManager.Current.SetTenantId(userIdentifier.TenantId))
-                {
-                    var friendCacheItems = _friendshipRepository.GetAll()
-                        .Where(friendship => friendship.UserId == userIdentifier.UserId)
-                        .Select(friendship => new FriendCacheItem
-                        {
-                            FriendUserId = friendship.FriendUserId,
-                            FriendTenantId = friendship.FriendTenantId,
-                            State = friendship.State,
-                            FriendUserName = friendship.FriendUserName,
-                            FriendTenancyName = friendship.FriendTenancyName,
-                            FriendProfilePictureId = friendship.FriendProfilePictureId,
-                            UnreadMessageCount = _chatMessageRepository.GetAll().Count(cm =>
-                                cm.ReadState == ChatMessageReadState.Unread &&
-                                cm.UserId == userIdentifier.UserId &&
-                                cm.TenantId == userIdentifier.TenantId &&
-                                cm.TargetUserId == friendship.FriendUserId &&
-                                cm.TargetTenantId == friendship.FriendTenantId &&
-                                cm.Side == ChatSide.Receiver)
-                        }).ToList();
-
-                    var user = _userStore.FindById(userIdentifier.UserId.ToString());
-
-                    return new UserWithFriendsCacheItem
+                var friendCacheItems = _friendshipRepository.GetAll()
+                    .Where(friendship => friendship.UserId == userIdentifier.UserId)
+                    .Select(friendship => new FriendCacheItem
                     {
-                        TenantId = userIdentifier.TenantId,
-                        UserId = userIdentifier.UserId,
-                        TenancyName = tenancyName,
-                        UserName = user.UserName,
-                        ProfilePictureId = user.ProfilePictureId,
-                        Friends = friendCacheItems
-                    };
-                }
+                        FriendUserId = friendship.FriendUserId,
+                        FriendTenantId = null, // Multi-tenancy removed
+                        State = friendship.State,
+                        FriendUserName = friendship.FriendUserName,
+                        FriendTenancyName = null, // Multi-tenancy removed
+                        FriendProfilePictureId = friendship.FriendProfilePictureId,
+                        UnreadMessageCount = _chatMessageRepository.GetAll().Count(cm =>
+                            cm.ReadState == ChatMessageReadState.Unread &&
+                            cm.UserId == userIdentifier.UserId &&
+                            cm.TargetUserId == friendship.FriendUserId &&
+                            cm.Side == ChatSide.Receiver)
+                    }).ToList();
+
+                var user = _userStore.FindById(userIdentifier.UserId.ToString());
+
+                return new UserWithFriendsCacheItem
+                {
+                    TenantId = userIdentifier.TenantId,
+                    UserId = userIdentifier.UserId,
+                    UserName = user.UserName,
+                    ProfilePictureId = user.ProfilePictureId,
+                    Friends = friendCacheItems
+                };
+
             });
         }
 

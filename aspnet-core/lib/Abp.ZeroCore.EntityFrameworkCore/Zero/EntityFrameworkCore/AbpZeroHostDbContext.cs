@@ -74,11 +74,9 @@ public abstract class AbpZeroHostDbContext<TTenant, TRole, TUser, TSelf> : AbpZe
 
         modelBuilder.Entity<UserAccount>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.UserId });
-            b.HasIndex(e => new { e.TenantId, e.UserName });
-            b.HasIndex(e => new { e.TenantId, e.EmailAddress });
-            b.HasIndex(e => new { e.UserName });
-            b.HasIndex(e => new { e.EmailAddress });
+            b.HasIndex(e => e.UserId);
+            b.HasIndex(e => e.UserName);
+            b.HasIndex(e => e.EmailAddress);
         });
     }
 }

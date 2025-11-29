@@ -23,7 +23,7 @@ namespace Cz.Jarvis.Authorization.Users
             return (
                 from user in GetAll()
                 let lastRecentPasswordOfUser = context.RecentPasswords
-                    .Where(rp => rp.UserId == user.Id && rp.TenantId == user.TenantId)
+                    .Where(rp => rp.UserId == user.Id)
                     .OrderByDescending(rp => rp.CreationTime).FirstOrDefault()
                 where user.IsActive && !user.ShouldChangePasswordOnNextLogin &&
                       (

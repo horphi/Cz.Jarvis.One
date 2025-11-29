@@ -14,7 +14,6 @@ using Cz.Jarvis.Authorization.Accounts.Dto;
 using Cz.Jarvis.Authorization.Impersonation;
 using Cz.Jarvis.Authorization.Users;
 using Cz.Jarvis.Configuration;
-using Cz.Jarvis.MultiTenancy;
 using Cz.Jarvis.Security.Recaptcha;
 using Cz.Jarvis.Url;
 using Cz.Jarvis.Authorization.Delegation;
@@ -71,26 +70,15 @@ namespace Cz.Jarvis.Authorization.Accounts
 
         public async Task<IsTenantAvailableOutput> IsTenantAvailable(IsTenantAvailableInput input)
         {
-            var tenant = await TenantManager.FindByTenancyNameAsync(input.TenancyName);
-            if (tenant == null)
-            {
-                return new IsTenantAvailableOutput(TenantAvailabilityState.NotFound);
-            }
-
-            if (!tenant.IsActive)
-            {
-                return new IsTenantAvailableOutput(TenantAvailabilityState.InActive);
-            }
-
-            return new IsTenantAvailableOutput(TenantAvailabilityState.Available, tenant.Id,
-                _webUrlService.GetServerRootAddress(input.TenancyName));
+            // Multi-tenancy has been removed - always return not found
+            return await Task.FromResult(new IsTenantAvailableOutput(TenantAvailabilityState.NotFound));
         }
 
         public Task<int?> ResolveTenantId(ResolveTenantIdInput input)
         {
             if (string.IsNullOrEmpty(input.c))
             {
-                return Task.FromResult(AbpSession.TenantId);
+                return Task.FromResult(((int?)null));
             }
 
             var parameters = SimpleStringCipher.Instance.Decrypt(input.c);
@@ -119,7 +107,7 @@ namespace Cz.Jarvis.Authorization.Accounts
                 input.UserName,
                 input.Password,
                 false,
-                AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId)
+                AppUrlService.CreateEmailActivationUrlFormat(((int?)null))
             );
 
             var isEmailConfirmationRequiredForLogin =
@@ -147,7 +135,7 @@ namespace Cz.Jarvis.Authorization.Accounts
             user.SetNewPasswordResetCode();
             await _userEmailer.SendPasswordResetLinkAsync(
                 user,
-                AppUrlService.CreatePasswordResetUrlFormat(AbpSession.TenantId)
+                AppUrlService.CreatePasswordResetUrlFormat(((int?)null))
             );
         }
 
@@ -164,7 +152,7 @@ namespace Cz.Jarvis.Authorization.Accounts
                 throw new UserFriendlyException(L("InvalidPasswordResetCode"), L("InvalidPasswordResetCode_Detail"));
             }
 
-            await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+            await UserManager.InitializeOptionsAsync(((int?)null));
             CheckErrors(await UserManager.ChangePasswordAsync(user, input.Password));
             user.PasswordResetCode = null;
             user.IsEmailConfirmed = true;
@@ -217,7 +205,7 @@ namespace Cz.Jarvis.Authorization.Accounts
             }
 
             var code = await _passwordlessLoginManager.GeneratePasswordlessLoginCode(
-                AbpSession.TenantId,
+                ((int?)null),
                 emailAddress
             );
 
@@ -238,7 +226,7 @@ namespace Cz.Jarvis.Authorization.Accounts
             }
 
             var code = await _passwordlessLoginManager.GeneratePasswordlessLoginCode(
-                AbpSession.TenantId,
+                ((int?)null),
                 phoneNumber
             );
 
@@ -250,7 +238,7 @@ namespace Cz.Jarvis.Authorization.Accounts
         public async Task VerifyPasswordlessLoginCode(VerifyPasswordlessLoginCodeInput input)
         {
             await _passwordlessLoginManager.VerifyPasswordlessLoginCode(
-                AbpSession.TenantId,
+                ((int?)null),
                 input.ProviderValue,
                 input.Code
             );
@@ -306,8 +294,8 @@ namespace Cz.Jarvis.Authorization.Accounts
             return new ImpersonateOutput
             {
                 ImpersonationToken =
-                    await _impersonationManager.GetImpersonationToken(input.UserId, AbpSession.TenantId),
-                TenancyName = await GetTenancyNameOrNullAsync(input.TenantId)
+                    await _impersonationManager.GetImpersonationToken(input.UserId, ((int?)null)),
+                TenancyName = null // Multi-tenancy removed
             };
         }
 
@@ -317,7 +305,7 @@ namespace Cz.Jarvis.Authorization.Accounts
             return new ImpersonateOutput
             {
                 ImpersonationToken = await _impersonationManager.GetImpersonationToken(input.UserId, input.TenantId),
-                TenancyName = await GetTenancyNameOrNullAsync(input.TenantId)
+                TenancyName = null // Multi-tenancy removed
             };
         }
 
@@ -333,8 +321,8 @@ namespace Cz.Jarvis.Authorization.Accounts
             {
                 ImpersonationToken =
                     await _impersonationManager.GetImpersonationToken(userDelegation.SourceUserId,
-                        userDelegation.TenantId),
-                TenancyName = await GetTenancyNameOrNullAsync(userDelegation.TenantId)
+                        null), // Multi-tenancy removed
+                TenancyName = null // Multi-tenancy removed
             };
         }
 
@@ -343,7 +331,7 @@ namespace Cz.Jarvis.Authorization.Accounts
             return new ImpersonateOutput
             {
                 ImpersonationToken = await _impersonationManager.GetBackToImpersonatorToken(),
-                TenancyName = await GetTenancyNameOrNullAsync(AbpSession.ImpersonatorTenantId)
+                TenancyName = null // Multi-tenancy removed
             };
         }
 
@@ -358,7 +346,7 @@ namespace Cz.Jarvis.Authorization.Accounts
             {
                 SwitchAccountToken =
                     await _userLinkManager.GetAccountSwitchToken(input.TargetUserId, input.TargetTenantId),
-                TenancyName = await GetTenancyNameOrNullAsync(input.TargetTenantId)
+                TenancyName = null // Multi-tenancy removed
             };
         }
 
@@ -372,33 +360,13 @@ namespace Cz.Jarvis.Authorization.Accounts
             return SettingManager.GetSettingValue<bool>(AppSettings.TenantManagement.UseCaptchaOnEmailActivation);
         }
 
-        private async Task<Tenant> GetActiveTenantAsync(int tenantId)
-        {
-            var tenant = await TenantManager.FindByIdAsync(tenantId);
-            if (tenant == null)
-            {
-                throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId));
-            }
-
-            if (!tenant.IsActive)
-            {
-                throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
-            }
-
-            return tenant;
-        }
-
-        private async Task<string> GetTenancyNameOrNullAsync(int? tenantId)
-        {
-            return tenantId.HasValue ? (await GetActiveTenantAsync(tenantId.Value)).TenancyName : null;
-        }
 
         private async Task SendEmailActivationLinkInternal(User user)
         {
             user.SetNewEmailConfirmationCode();
             await _userEmailer.SendEmailActivationLinkAsync(
                 user,
-                AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId)
+                AppUrlService.CreateEmailActivationUrlFormat(((int?)null))
             );
         }
     }

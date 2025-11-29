@@ -647,7 +647,7 @@ public class AbpUserStore<TRole, TUser> :
             }
 
             await UserRepository.EnsureCollectionLoadedAsync(user, u => u.Roles, cancellationToken);
-            user.Roles.Add(new UserRole(user.TenantId, user.Id, role.Id));
+            user.Roles.Add(new UserRole(user.Id, role.Id));
         });
     }
 
@@ -684,7 +684,7 @@ public class AbpUserStore<TRole, TUser> :
             }
 
             UserRepository.EnsureCollectionLoaded(user, u => u.Roles, cancellationToken);
-            user.Roles.Add(new UserRole(user.TenantId, user.Id, role.Id));
+            user.Roles.Add(new UserRole(user.Id, role.Id));
         });
     }
 
@@ -1116,7 +1116,7 @@ public class AbpUserStore<TRole, TUser> :
 
             await UserRepository.EnsureCollectionLoadedAsync(user, u => u.Logins, cancellationToken);
 
-            user.Logins.Add(new UserLogin(user.TenantId, user.Id, login.LoginProvider, login.ProviderKey));
+            user.Logins.Add(new UserLogin(null, user.Id, login.LoginProvider, login.ProviderKey));
         });
     }
 
@@ -1141,7 +1141,7 @@ public class AbpUserStore<TRole, TUser> :
 
             UserRepository.EnsureCollectionLoaded(user, u => u.Logins, cancellationToken);
 
-            user.Logins.Add(new UserLogin(user.TenantId, user.Id, login.LoginProvider, login.ProviderKey));
+            user.Logins.Add(new UserLogin(null, user.Id, login.LoginProvider, login.ProviderKey));
         });
     }
 
@@ -1280,8 +1280,7 @@ public class AbpUserStore<TRole, TUser> :
             var query = from userLogin in await _userLoginRepository.GetAllAsync()
                         join user in await UserRepository.GetAllAsync() on userLogin.UserId equals user.Id
                         where userLogin.LoginProvider == loginProvider &&
-                                  userLogin.ProviderKey == providerKey &&
-                                  userLogin.TenantId == AbpSession.TenantId
+                                  userLogin.ProviderKey == providerKey
                         select user;
 
             return await AsyncQueryableExecuter.FirstOrDefaultAsync(query);
@@ -1312,8 +1311,7 @@ public class AbpUserStore<TRole, TUser> :
             var query = from userLogin in _userLoginRepository.GetAll()
                         join user in UserRepository.GetAll() on userLogin.UserId equals user.Id
                         where userLogin.LoginProvider == loginProvider &&
-                                  userLogin.ProviderKey == providerKey &&
-                                  userLogin.TenantId == AbpSession.TenantId
+                                  userLogin.ProviderKey == providerKey
                         select user;
 
             return query.FirstOrDefault();
@@ -2208,8 +2206,7 @@ public class AbpUserStore<TRole, TUser> :
 
             var query = from userclaims in await _userClaimRepository.GetAllAsync()
                         join user in await UserRepository.GetAllAsync() on userclaims.UserId equals user.Id
-                        where userclaims.ClaimValue == claim.Value && userclaims.ClaimType == claim.Type &&
-                                  userclaims.TenantId == AbpSession.TenantId
+                        where userclaims.ClaimValue == claim.Value && userclaims.ClaimType == claim.Type
                         select user;
 
             return await AsyncQueryableExecuter.ToListAsync(query);
@@ -2236,8 +2233,7 @@ public class AbpUserStore<TRole, TUser> :
 
             var query = from userclaims in _userClaimRepository.GetAll()
                         join user in UserRepository.GetAll() on userclaims.UserId equals user.Id
-                        where userclaims.ClaimValue == claim.Value && userclaims.ClaimType == claim.Type &&
-                                  userclaims.TenantId == AbpSession.TenantId
+                        where userclaims.ClaimValue == claim.Value && userclaims.ClaimType == claim.Type
                         select user;
 
             return query.ToList();
@@ -2677,7 +2673,6 @@ public class AbpUserStore<TRole, TUser> :
             await _userPermissionSettingRepository.InsertAsync(
                 new UserPermissionSetting
                 {
-                    TenantId = user.TenantId,
                     UserId = user.Id,
                     Name = permissionGrant.Name,
                     IsGranted = permissionGrant.IsGranted
@@ -2698,7 +2693,6 @@ public class AbpUserStore<TRole, TUser> :
             _userPermissionSettingRepository.Insert(
                 new UserPermissionSetting
                 {
-                    TenantId = user.TenantId,
                     UserId = user.Id,
                     Name = permissionGrant.Name,
                     IsGranted = permissionGrant.IsGranted

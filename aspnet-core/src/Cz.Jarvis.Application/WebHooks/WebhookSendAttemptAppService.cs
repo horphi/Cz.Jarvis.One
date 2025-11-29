@@ -45,7 +45,7 @@ namespace Cz.Jarvis.WebHooks
             }
 
             var list = await _webhookSendAttemptStore.GetAllSendAttemptsBySubscriptionAsPagedListAsync(
-                AbpSession.TenantId,
+                ((int?)null),
                 Guid.Parse(input.SubscriptionId),
                 input.MaxResultCount,
                 input.SkipCount
@@ -62,7 +62,7 @@ namespace Cz.Jarvis.WebHooks
             }
 
             var list = await _webhookSendAttemptStore.GetAllSendAttemptsByWebhookEventIdAsync(
-                AbpSession.TenantId,
+                ((int?)null),
                 Guid.Parse(input.Id)
             );
 
@@ -84,13 +84,13 @@ namespace Cz.Jarvis.WebHooks
         [AbpAuthorize(AppPermissions.Pages_Administration_Webhook_ResendWebhook)]
         public async Task Resend(string sendAttemptId)
         {
-            var webhookSendAttempt = await _webhookSendAttemptStore.GetAsync(AbpSession.TenantId, Guid.Parse(sendAttemptId));
+            var webhookSendAttempt = await _webhookSendAttemptStore.GetAsync(((int?)null), Guid.Parse(sendAttemptId));
             var webhookEvent = await _webhookEventAppService.Get(webhookSendAttempt.WebhookEventId.ToString());
             var webhookSubscription = await _webhookSubscriptionAppService.GetSubscription(webhookSendAttempt.WebhookSubscriptionId.ToString());
 
             await _backgroundJobManager.EnqueueAsync<WebhookSenderJob, WebhookSenderArgs>(new WebhookSenderArgs()
             {
-                TenantId = AbpSession.TenantId,
+                TenantId = ((int?)null),
                 WebhookEventId = webhookSendAttempt.WebhookEventId,
                 WebhookSubscriptionId = webhookSendAttempt.WebhookSubscriptionId,
                 Data = webhookEvent.Data,

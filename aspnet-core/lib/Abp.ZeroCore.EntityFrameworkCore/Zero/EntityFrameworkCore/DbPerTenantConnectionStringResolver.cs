@@ -19,19 +19,16 @@ public class DbPerTenantConnectionStringResolver : DefaultConnectionStringResolv
     public IAbpSession AbpSession { get; set; }
 
     private readonly ICurrentUnitOfWorkProvider _currentUnitOfWorkProvider;
-    private readonly ITenantCache _tenantCache;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DbPerTenantConnectionStringResolver"/> class.
     /// </summary>
     public DbPerTenantConnectionStringResolver(
         IAbpStartupConfiguration configuration,
-        ICurrentUnitOfWorkProvider currentUnitOfWorkProvider,
-        ITenantCache tenantCache)
+        ICurrentUnitOfWorkProvider currentUnitOfWorkProvider)
         : base(configuration)
     {
         _currentUnitOfWorkProvider = currentUnitOfWorkProvider;
-        _tenantCache = tenantCache;
 
         AbpSession = NullAbpSession.Instance;
     }
@@ -48,20 +45,8 @@ public class DbPerTenantConnectionStringResolver : DefaultConnectionStringResolv
 
     public virtual string GetNameOrConnectionString(DbPerTenantConnectionStringResolveArgs args)
     {
-        if (args.TenantId == null)
-        {
-            //Requested for host
-            return base.GetNameOrConnectionString(args);
-        }
-
-        var tenantCacheItem = _tenantCache.Get(args.TenantId.Value);
-        if (tenantCacheItem.ConnectionString.IsNullOrEmpty())
-        {
-            //Tenant has not dedicated database
-            return base.GetNameOrConnectionString(args);
-        }
-
-        return tenantCacheItem.ConnectionString;
+        // Multi-tenancy removed - always use base connection string
+        return base.GetNameOrConnectionString(args);
     }
 
 
@@ -77,26 +62,14 @@ public class DbPerTenantConnectionStringResolver : DefaultConnectionStringResolv
 
     public virtual async Task<string> GetNameOrConnectionStringAsync(DbPerTenantConnectionStringResolveArgs args)
     {
-        if (args.TenantId == null)
-        {
-            //Requested for host
-            return await base.GetNameOrConnectionStringAsync(args);
-        }
-
-        var tenantCacheItem = await _tenantCache.GetAsync(args.TenantId.Value);
-        if (tenantCacheItem.ConnectionString.IsNullOrEmpty())
-        {
-            //Tenant has not dedicated database
-            return await base.GetNameOrConnectionStringAsync(args);
-        }
-
-        return tenantCacheItem.ConnectionString;
+        // Multi-tenancy removed - always use base connection string
+        return await base.GetNameOrConnectionStringAsync(args);
     }
 
     protected virtual int? GetCurrentTenantId()
     {
         return _currentUnitOfWorkProvider.Current != null
             ? _currentUnitOfWorkProvider.Current.GetTenantId()
-            : AbpSession.TenantId;
+            : ((int?)null);
     }
 }

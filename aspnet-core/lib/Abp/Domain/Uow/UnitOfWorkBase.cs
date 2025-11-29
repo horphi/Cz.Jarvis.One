@@ -121,7 +121,7 @@ namespace Abp.Domain.Uow
 
             SetFilters(options.FilterOverrides);
 
-            SetTenantId(AbpSession.TenantId, false);
+            SetTenantId(((int?)null), false);
 
             BeginUow();
         }
@@ -450,7 +450,7 @@ namespace Abp.Domain.Uow
                 }
             }
 
-            if (AbpSession.TenantId == null)
+            if (((int?)null) == null)
             {
                 ChangeFilterIsEnabledIfNotOverrided(filterOverrides, AbpDataFilters.MustHaveTenant, false);
             }

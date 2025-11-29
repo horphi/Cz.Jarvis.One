@@ -9,17 +9,13 @@ using Abp.Timing;
 namespace Cz.Jarvis.Chat
 {
     [Table("AppChatMessages")]
-    public class ChatMessage : Entity<long>, IHasCreationTime, IMayHaveTenant
+    public class ChatMessage : Entity<long>, IHasCreationTime
     {
         public const int MaxMessageLength = 4 * 1024; //4KB
 
         public long UserId { get; set; }
 
-        public int? TenantId { get; set; }
-
         public long TargetUserId { get; set; }
-
-        public int? TargetTenantId { get; set; }
 
         [Required]
         [StringLength(MaxMessageLength)]
@@ -45,9 +41,7 @@ namespace Cz.Jarvis.Chat
             ChatMessageReadState receiverReadState)
         {
             UserId = user.UserId;
-            TenantId = user.TenantId;
             TargetUserId = targetUser.UserId;
-            TargetTenantId = targetUser.TenantId;
             Message = message;
             Side = side;
             ReadState = readState;

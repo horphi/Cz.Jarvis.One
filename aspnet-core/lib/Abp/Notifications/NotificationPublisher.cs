@@ -61,7 +61,7 @@ namespace Abp.Notifications
             NotificationSeverity severity = NotificationSeverity.Info,
             UserIdentifier[] userIds = null,
             UserIdentifier[] excludedUserIds = null,
-            int?[] tenantIds = null,
+            //int?[] tenantIds = null,
             Type[] targetNotifiers = null)
         {
             using (var uow = UnitOfWorkManager.Begin())
@@ -71,16 +71,7 @@ namespace Abp.Notifications
                     throw new ArgumentException("NotificationName can not be null or whitespace!", nameof(notificationName));
                 }
 
-                if (!tenantIds.IsNullOrEmpty() && !userIds.IsNullOrEmpty())
-                {
-                    throw new ArgumentException("tenantIds can be set only if userIds is not set!", nameof(tenantIds));
-                }
-
-                if (tenantIds.IsNullOrEmpty() && userIds.IsNullOrEmpty())
-                {
-                    tenantIds = new[] { AbpSession.TenantId };
-                }
-
+               
                 var notificationInfo = new NotificationInfo(_guidGenerator.Create())
                 {
                     NotificationName = notificationName,
@@ -90,7 +81,7 @@ namespace Abp.Notifications
                     Severity = severity,
                     UserIds = userIds.IsNullOrEmpty() ? null : userIds.Select(uid => uid.ToUserIdentifierString()).JoinAsString(","),
                     ExcludedUserIds = excludedUserIds.IsNullOrEmpty() ? null : excludedUserIds.Select(uid => uid.ToUserIdentifierString()).JoinAsString(","),
-                    TenantIds = GetTenantIdsAsStr(tenantIds),
+                    //TenantIds = GetTenantIdsAsStr(tenantIds),
                     Data = data?.ToJsonString(),
                     DataTypeName = data?.GetType().AssemblyQualifiedName
                 };

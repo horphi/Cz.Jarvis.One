@@ -53,12 +53,8 @@ namespace Abp.Zero.Configuration
             get { return _tenant; }
             set
             {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (!typeof(AbpTenantBase).IsAssignableFrom(value))
+                // Multi-tenancy removed - allow null for Tenant type
+                if (value != null && !typeof(AbpTenantBase).IsAssignableFrom(value))
                 {
                     throw new AbpException(value.AssemblyQualifiedName + " should be derived from " + typeof(AbpTenantBase).AssemblyQualifiedName);
                 }

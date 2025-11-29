@@ -15,12 +15,11 @@ using OpenIddict.Abstractions;
 
 namespace Abp.AspNetCore.OpenIddict.Controllers;
 
-public abstract class AbpOpenIdDictControllerBase<TTenant, TRole, TUser> : AbpController
-    where TTenant : AbpTenant<TUser>
+public abstract class AbpOpenIdDictControllerBase<TRole, TUser> : AbpController
     where TRole : AbpRole<TUser>, new()
     where TUser : AbpUser<TUser>
 {
-    protected readonly AbpSignInManager<TTenant, TRole, TUser> SignInManager;
+    protected readonly AbpSignInManager<TRole, TUser> SignInManager;
     protected readonly AbpUserManager<TRole, TUser> UserManager;
     protected readonly IOpenIddictApplicationManager ApplicationManager;
     protected readonly IOpenIddictAuthorizationManager AuthorizationManager;
@@ -29,7 +28,7 @@ public abstract class AbpOpenIdDictControllerBase<TTenant, TRole, TUser> : AbpCo
     protected readonly AbpOpenIddictClaimsPrincipalManager OpenIddictClaimsPrincipalManager;
 
     protected AbpOpenIdDictControllerBase(
-        AbpSignInManager<TTenant, TRole, TUser> signInManager,
+        AbpSignInManager<TRole, TUser> signInManager,
         AbpUserManager<TRole, TUser> userManager,
         IOpenIddictApplicationManager applicationManager,
         IOpenIddictAuthorizationManager authorizationManager,

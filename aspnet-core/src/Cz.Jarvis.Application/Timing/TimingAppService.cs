@@ -42,7 +42,7 @@ namespace Cz.Jarvis.Timing
 
         private async Task<List<NameValueDto>> GetTimezoneInfos(SettingScopes defaultTimezoneScope)
         {
-            var defaultTimezoneId = await _timeZoneService.GetDefaultTimezoneAsync(defaultTimezoneScope, AbpSession.TenantId);
+            var defaultTimezoneId = await _timeZoneService.GetDefaultTimezoneAsync(defaultTimezoneScope, ((int?)null));
 
             var timeZones = _timeZoneService.GetWindowsTimezones();
 

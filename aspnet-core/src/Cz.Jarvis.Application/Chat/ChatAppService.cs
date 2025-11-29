@@ -69,7 +69,7 @@ namespace Cz.Jarvis.Chat
             var userId = AbpSession.GetUserId();
             var messages = await _chatMessageRepository.GetAll()
                     .WhereIf(input.MinMessageId.HasValue, m => m.Id < input.MinMessageId.Value)
-                    .Where(m => m.UserId == userId && m.TargetTenantId == input.TenantId && m.TargetUserId == input.UserId)
+                    .Where(m => m.UserId == userId && m.TargetUserId == input.UserId)
                     .OrderByDescending(m => m.CreationTime)
                     .Take(input.MaxResultCount)
                     .ToListAsync();
@@ -82,14 +82,13 @@ namespace Cz.Jarvis.Chat
         public async Task MarkAllUnreadMessagesOfUserAsRead(MarkAllUnreadMessagesOfUserAsReadInput input)
         {
             var userId = AbpSession.GetUserId();
-            var tenantId = AbpSession.TenantId;
+            var tenantId = ((int?)null);
 
             // receiver messages
             var messages = await _chatMessageRepository
                  .GetAll()
                  .Where(m =>
                         m.UserId == userId &&
-                        m.TargetTenantId == input.TenantId &&
                         m.TargetUserId == input.UserId &&
                         m.ReadState == ChatMessageReadState.Unread)
                  .ToListAsync();
@@ -105,21 +104,18 @@ namespace Cz.Jarvis.Chat
             }
 
             // sender messages
-            using (CurrentUnitOfWork.SetTenantId(input.TenantId))
+            var reverseMessages = await _chatMessageRepository.GetAll()
+                .Where(m => m.UserId == input.UserId && m.TargetUserId == userId)
+                .ToListAsync();
+
+            if (!reverseMessages.Any())
             {
-                var reverseMessages = await _chatMessageRepository.GetAll()
-                    .Where(m => m.UserId == input.UserId && m.TargetTenantId == tenantId && m.TargetUserId == userId)
-                    .ToListAsync();
+                return;
+            }
 
-                if (!reverseMessages.Any())
-                {
-                    return;
-                }
-
-                foreach (var message in reverseMessages)
-                {
-                    message.ChangeReceiverReadState(ChatMessageReadState.Read);
-                }
+            foreach (var message in reverseMessages)
+            {
+                message.ChangeReceiverReadState(ChatMessageReadState.Read);
             }
 
             var userIdentifier = AbpSession.ToUserIdentifier();

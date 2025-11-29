@@ -44,7 +44,7 @@ namespace Cz.Jarvis.DynamicEntityProperties
         [AbpAuthorize(AppPermissions.Pages_Administration_DynamicEntityProperties_Create)]
         public async Task Add(DynamicEntityPropertyDto dto)
         {
-            dto.TenantId = AbpSession.TenantId;
+            dto.TenantId = ((int?)null);
             await _dynamicEntityPropertyManager.AddAsync(ObjectMapper.Map<DynamicEntityProperty>(dto));
         }
 

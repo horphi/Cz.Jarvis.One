@@ -32,7 +32,7 @@ namespace Abp.Localization
         /// </summary>
         public async Task<IReadOnlyList<LanguageInfo>> GetLanguagesAsync()
         {
-            var languageInfos = (await _applicationLanguageManager.GetLanguagesAsync(AbpSession.TenantId))
+            var languageInfos = (await _applicationLanguageManager.GetLanguagesAsync(((int?)null)))
                     .OrderBy(l => l.DisplayName)
                     .Select(l => l.ToLanguageInfo())
                     .ToList();
@@ -47,7 +47,7 @@ namespace Abp.Localization
         /// </summary>
         public IReadOnlyList<LanguageInfo> GetLanguages()
         {
-            var languageInfos = _applicationLanguageManager.GetLanguages(AbpSession.TenantId)
+            var languageInfos = _applicationLanguageManager.GetLanguages(((int?)null))
                     .OrderBy(l => l.DisplayName)
                     .Select(l => l.ToLanguageInfo())
                     .ToList();
@@ -61,7 +61,7 @@ namespace Abp.Localization
         /// </summary>
         public IReadOnlyList<LanguageInfo> GetActiveLanguages()
         {
-            var languageInfos = _applicationLanguageManager.GetActiveLanguages(AbpSession.TenantId)
+            var languageInfos = _applicationLanguageManager.GetActiveLanguages(((int?)null))
                .OrderBy(l => l.DisplayName)
                .Select(l => l.ToLanguageInfo())
                .ToList();
@@ -78,7 +78,7 @@ namespace Abp.Localization
                 return;
             }
 
-            var defaultLanguage = await _applicationLanguageManager.GetDefaultLanguageOrNullAsync(AbpSession.TenantId);
+            var defaultLanguage = await _applicationLanguageManager.GetDefaultLanguageOrNullAsync(((int?)null));
             if (defaultLanguage == null)
             {
                 languageInfos[0].IsDefault = true;
@@ -102,7 +102,7 @@ namespace Abp.Localization
                 return;
             }
 
-            var defaultLanguage = _applicationLanguageManager.GetDefaultLanguageOrNull(AbpSession.TenantId);
+            var defaultLanguage = _applicationLanguageManager.GetDefaultLanguageOrNull(((int?)null));
             if (defaultLanguage == null)
             {
                 languageInfos[0].IsDefault = true;

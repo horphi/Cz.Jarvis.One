@@ -9,51 +9,47 @@ using Abp.Zero.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Cz.Jarvis.Authorization.Roles;
 using Cz.Jarvis.Authorization.Users;
-using Cz.Jarvis.MultiTenancy;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Cz.Jarvis.Authorization
 {
-    public class LogInManager : AbpLogInManager<Tenant, Role, User>
+    public class LogInManager : AbpLogInManager<Role, User>
     {
         public LogInManager(
-            UserManager userManager, 
-            IMultiTenancyConfig multiTenancyConfig, 
-            IRepository<Tenant> tenantRepository, 
-            IUnitOfWorkManager unitOfWorkManager, 
-            ISettingManager settingManager, 
-            IRepository<UserLoginAttempt, long> userLoginAttemptRepository, 
-            IUserManagementConfig userManagementConfig, 
-            IIocResolver iocResolver, 
+            UserManager userManager,
+            IMultiTenancyConfig multiTenancyConfig,
+            IUnitOfWorkManager unitOfWorkManager,
+            ISettingManager settingManager,
+            IRepository<UserLoginAttempt, long> userLoginAttemptRepository,
+            IUserManagementConfig userManagementConfig,
+            IIocResolver iocResolver,
             RoleManager roleManager,
             IPasswordHasher<User> passwordHasher,
             UserClaimsPrincipalFactory claimsPrincipalFactory)
             : base(
-                  userManager, 
-                  multiTenancyConfig, 
-                  tenantRepository, 
-                  unitOfWorkManager, 
-                  settingManager, 
-                  userLoginAttemptRepository, 
-                  userManagementConfig, 
-                  iocResolver, 
+                  userManager,
+                  multiTenancyConfig,
+                  unitOfWorkManager,
+                  settingManager,
+                  userLoginAttemptRepository,
+                  userManagementConfig,
+                  iocResolver,
                   passwordHasher,
                   roleManager,
                   claimsPrincipalFactory)
         {
-            
+
         }
 
         /// <summary>
         /// Exposes protected method CreateLoginResultAsync
         /// </summary>
         /// <param name="user">User to create login result</param>
-        /// <param name="tenant">Tenant of the given user</param>
         /// <returns></returns>
-        public Task<AbpLoginResult<Tenant, User>> CreateLoginResultAsync(User user, Tenant tenant = null)
+        public Task<AbpLoginResult<User>> CreateLoginResultAsync(User user)
         {
-            return base.CreateLoginResultAsync(user, tenant);
+            return base.CreateLoginResultAsync(user);
         }
     }
 }

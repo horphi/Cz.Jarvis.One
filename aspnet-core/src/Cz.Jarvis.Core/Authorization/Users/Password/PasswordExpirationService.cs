@@ -4,7 +4,6 @@ using Abp.Configuration;
 using Abp.Domain.Repositories;
 using Abp.Timing;
 using Cz.Jarvis.Configuration;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Authorization.Users.Password
 {
@@ -12,16 +11,13 @@ namespace Cz.Jarvis.Authorization.Users.Password
     {
         private readonly IRepository<RecentPassword, Guid> _recentPasswordRepository;
         private readonly IUserRepository _userRepository;
-        private readonly IRepository<Tenant> _tenantRepository;
 
         public PasswordExpirationService(
             IRepository<RecentPassword, Guid> recentPasswordRepository,
-            IUserRepository userRepository,
-            IRepository<Tenant> tenantRepository)
+            IUserRepository userRepository)
         {
             _recentPasswordRepository = recentPasswordRepository;
             _userRepository = userRepository;
-            _tenantRepository = tenantRepository;
         }
 
         public void ForcePasswordExpiredUsersToChangeTheirPassword()
@@ -36,41 +32,34 @@ namespace Cz.Jarvis.Authorization.Users.Password
             }
 
             // check host users 
-            ForcePasswordExpiredUsersToChangeTheirPasswordInternal(null);
 
-            // check tenants
-            var tenantIds = _tenantRepository.GetAll().Select(tenant => tenant.Id).ToList();
-            foreach (var tenantId in tenantIds)
-            {
-                ForcePasswordExpiredUsersToChangeTheirPasswordInternal(tenantId);
-            }
+            // Multi-tenancy removed - process all users in single database
+            ForcePasswordExpiredUsersToChangeTheirPasswordInternal();
         }
 
-        private void ForcePasswordExpiredUsersToChangeTheirPasswordInternal(int? tenantId)
+        private void ForcePasswordExpiredUsersToChangeTheirPasswordInternal()
         {
-            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            var passwordExpirationDayCount = SettingManager.GetSettingValueForApplication<int>(
+                AppSettings.UserManagement.Password.PasswordExpirationDayCount
+            );
+
+            var passwordExpireDate = Clock.Now.AddDays(-passwordExpirationDayCount).ToUniversalTime();
+
+            // TODO: Query seems wrong !
+            var passwordExpiredUsers = _userRepository.GetPasswordExpiredUserIds(passwordExpireDate);
+
+            var separationCount = 1000;
+            var separationLoopCount = passwordExpiredUsers.Count / separationCount + 1;
+
+            for (int i = 0; i < separationLoopCount; i++)
             {
-                var passwordExpirationDayCount = SettingManager.GetSettingValueForApplication<int>(
-                    AppSettings.UserManagement.Password.PasswordExpirationDayCount
-                );
-
-                var passwordExpireDate = Clock.Now.AddDays(-passwordExpirationDayCount).ToUniversalTime();
-
-                // TODO: Query seems wrong !
-                var passwordExpiredUsers = _userRepository.GetPasswordExpiredUserIds(passwordExpireDate);
-
-                var separationCount = 1000;
-                var separationLoopCount = passwordExpiredUsers.Count / separationCount + 1;
-
-                for (int i = 0; i < separationLoopCount; i++)
+                var userIdsToUpdate = passwordExpiredUsers.Skip(i * separationCount).Take(separationCount).ToList();
+                if (userIdsToUpdate.Count > 0)
                 {
-                    var userIdsToUpdate = passwordExpiredUsers.Skip(i * separationCount).Take(separationCount).ToList();
-                    if (userIdsToUpdate.Count > 0)
-                    {
-                        _userRepository.UpdateUsersToChangePasswordOnNextLogin(userIdsToUpdate);
-                    }
+                    _userRepository.UpdateUsersToChangePasswordOnNextLogin(userIdsToUpdate);
                 }
             }
+
         }
     }
 }

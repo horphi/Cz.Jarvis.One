@@ -33,7 +33,7 @@ namespace Cz.Jarvis.Auditing.Exporting
             {
                 items.Add(new Dictionary<string, object>()
                 {
-                    {L("Time"), _timeZoneConverter.Convert(auditLog.ExecutionTime, _abpSession.TenantId, _abpSession.GetUserId())},
+                    {L("Time"), _timeZoneConverter.Convert(auditLog.ExecutionTime, ((int?)null), _abpSession.GetUserId())},
                     {L("UserName"), auditLog.UserName},
                     {L("Service"), auditLog.ServiceName},
                     {L("Action"), auditLog.MethodName},
@@ -60,7 +60,7 @@ namespace Cz.Jarvis.Auditing.Exporting
                     {L("Action"), entityChange.ChangeType.ToString()},
                     {L("Object"), entityChange.EntityTypeFullName},
                     {L("UserName"), entityChange.UserName},
-                    {L("Time"), _timeZoneConverter.Convert(entityChange.ChangeTime, _abpSession.TenantId, _abpSession.GetUserId())},
+                    {L("Time"), _timeZoneConverter.Convert(entityChange.ChangeTime, ((int?)null), _abpSession.GetUserId())},
                 });
             }
 

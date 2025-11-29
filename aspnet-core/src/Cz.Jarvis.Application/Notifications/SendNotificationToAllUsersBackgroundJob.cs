@@ -45,7 +45,7 @@ namespace Cz.Jarvis.Notifications
                     return await _userAccountRepository.GetAll().Skip(i * MaxUserCount)
                         .AsNoTracking()
                         .Take(MaxUserCount)
-                        .Select(u => new UserIdentifier(u.TenantId, u.UserId))
+                        .Select(u => new UserIdentifier(null, u.UserId)) // Multi-tenancy removed
                         .ToArrayAsync();
                 });
 

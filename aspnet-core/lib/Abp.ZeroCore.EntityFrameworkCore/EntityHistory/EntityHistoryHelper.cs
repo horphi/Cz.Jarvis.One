@@ -37,9 +37,9 @@ public class EntityHistoryHelper : EntityHistoryHelperBase, IEntityHistoryHelper
             ClientIpAddress =
                 ClientInfoProvider.ClientIpAddress.TruncateWithPostfix(EntityChangeSet.MaxClientIpAddressLength),
             ClientName = ClientInfoProvider.ComputerName.TruncateWithPostfix(EntityChangeSet.MaxClientNameLength),
-            ImpersonatorTenantId = AbpSession.ImpersonatorTenantId,
+            ImpersonatorTenantId = ((int?)null),
             ImpersonatorUserId = AbpSession.ImpersonatorUserId,
-            TenantId = AbpSession.TenantId,
+            TenantId = ((int?)null),
             UserId = AbpSession.UserId
         };
 
@@ -223,7 +223,7 @@ public class EntityHistoryHelper : EntityHistoryHelperBase, IEntityHistoryHelper
             EntityEntry = entityEntry, // [NotMapped]
             EntityId = entityId,
             EntityTypeFullName = entityTypeFullName,
-            TenantId = AbpSession.TenantId
+            TenantId = ((int?)null)
         };
     }
 
@@ -361,7 +361,7 @@ public class EntityHistoryHelper : EntityHistoryHelperBase, IEntityHistoryHelper
             PropertyTypeFullName = property.ClrType.FullName.TruncateWithPostfix(
                 EntityPropertyChange.MaxPropertyTypeFullNameLength
             ),
-            TenantId = AbpSession.TenantId
+            TenantId = ((int?)null)
         };
 
         entityPropertyChange.SetNewValue(newValue?.ToJsonString());

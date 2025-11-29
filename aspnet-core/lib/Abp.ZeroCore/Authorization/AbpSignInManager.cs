@@ -18,8 +18,7 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace Abp.Authorization;
 
-public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITransientDependency
-    where TTenant : AbpTenant<TUser>
+public class AbpSignInManager<TRole, TUser> : SignInManager<TUser>, ITransientDependency
     where TRole : AbpRole<TUser>, new()
     where TUser : AbpUser<TUser>
 {
@@ -49,7 +48,7 @@ public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITr
         _settingManager = settingManager;
     }
 
-    public virtual async Task<SignInResult> SignInOrTwoFactorAsync(AbpLoginResult<TTenant, TUser> loginResult,
+    public virtual async Task<SignInResult> SignInOrTwoFactorAsync(AbpLoginResult<TUser> loginResult,
         bool isPersistent, bool? rememberBrowser = null, string loginProvider = null, bool bypassTwoFactor = false)
     {
         if (loginResult.Result != AbpLoginResultType.Success)
@@ -57,13 +56,11 @@ public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITr
             throw new ArgumentException("loginResult.Result should be success in order to sign in!");
         }
 
-        using (_unitOfWorkManager.Current.SetTenantId(loginResult.Tenant?.Id))
-        {
-            await UserManager.As<AbpUserManager<TRole, TUser>>().InitializeOptionsAsync(loginResult.Tenant?.Id);
+        // Multi-tenancy removed
+        await UserManager.As<AbpUserManager<TRole, TUser>>().InitializeOptionsAsync(null);
 
-            if (!bypassTwoFactor && IsTrue(AbpZeroSettingNames.UserManagement.TwoFactorLogin.IsEnabled,
-                loginResult.Tenant?.Id))
-            {
+        if (!bypassTwoFactor && IsTrue(AbpZeroSettingNames.UserManagement.TwoFactorLogin.IsEnabled, null))
+        {
                 if (await UserManager.GetTwoFactorEnabledAsync(loginResult.User))
                 {
                     if ((await UserManager.GetValidTwoFactorProvidersAsync(loginResult.User)).Count > 0)
@@ -81,14 +78,13 @@ public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITr
                 }
             }
 
-            if (loginProvider != null)
-            {
-                await Context.SignOutAsync(IdentityConstants.ExternalScheme);
-            }
-
-            await SignInAsync(loginResult.User, isPersistent, loginProvider);
-            return SignInResult.Success;
+        if (loginProvider != null)
+        {
+            await Context.SignOutAsync(IdentityConstants.ExternalScheme);
         }
+
+        await SignInAsync(loginResult.User, isPersistent, loginProvider);
+        return SignInResult.Success;
     }
 
     public virtual async Task SignOutAndSignInAsync(ClaimsIdentity identity, bool isPersistent)
@@ -119,10 +115,7 @@ public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITr
 
         identity.AddClaim(new Claim(ClaimTypes.Name, user.Id.ToString()));
 
-        if (user.TenantId.HasValue)
-        {
-            identity.AddClaim(new Claim(AbpClaimTypes.TenantId, user.TenantId.Value.ToString()));
-        }
+        // Multi-tenancy removed - no TenantId claim
 
         if (loginProvider != null)
         {
@@ -138,10 +131,7 @@ public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITr
 
         rememberBrowserIdentity.AddClaim(new Claim(ClaimTypes.Name, user.Id.ToString()));
 
-        if (user.TenantId.HasValue)
-        {
-            rememberBrowserIdentity.AddClaim(new Claim(AbpClaimTypes.TenantId, user.TenantId.Value.ToString()));
-        }
+        // Multi-tenancy removed - no TenantId claim
 
         if (UserManager.SupportsUserSecurityStamp)
         {
@@ -168,9 +158,9 @@ public class AbpSignInManager<TTenant, TRole, TUser> : SignInManager<TUser>, ITr
     {
         var result = await Context.AuthenticateAsync(IdentityConstants.TwoFactorRememberMeScheme);
 
+        // Multi-tenancy removed - only check user ID
         return result?.Principal != null &&
-               result.Principal.FindFirstValue(ClaimTypes.Name) == user.Id.ToString() &&
-               AbpZeroClaimsIdentityHelper.GetTenantId(result.Principal) == user.TenantId;
+               result.Principal.FindFirstValue(ClaimTypes.Name) == user.Id.ToString();
     }
 
     public override async Task RememberTwoFactorClientAsync(TUser user)

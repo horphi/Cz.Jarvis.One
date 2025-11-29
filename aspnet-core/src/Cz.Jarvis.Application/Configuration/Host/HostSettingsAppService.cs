@@ -50,7 +50,6 @@ namespace Cz.Jarvis.Configuration.Host
             return new HostSettingsEditDto
             {
                 General = await GetGeneralSettingsAsync(),
-                TenantManagement = await GetTenantManagementSettingsAsync(),
                 UserManagement = await GetUserManagementAsync(),
                 Email = await GetEmailSettingsAsync(),
                 Security = await GetSecuritySettingsAsync(),
@@ -70,7 +69,7 @@ namespace Cz.Jarvis.Configuration.Host
             };
 
             var defaultTimeZoneId =
-                await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.Application, AbpSession.TenantId);
+                await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.Application, ((int?)null));
             if (settings.Timezone == defaultTimeZoneId)
             {
                 settings.Timezone = string.Empty;
@@ -79,35 +78,6 @@ namespace Cz.Jarvis.Configuration.Host
             return settings;
         }
 
-        private async Task<TenantManagementSettingsEditDto> GetTenantManagementSettingsAsync()
-        {
-            var settings = new TenantManagementSettingsEditDto
-            {
-                AllowSelfRegistration =
-                    await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement.AllowSelfRegistration),
-                IsNewRegisteredTenantActiveByDefault =
-                    await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement
-                        .IsNewRegisteredTenantActiveByDefault),
-                
-                CaptchaSettings = new CaptchaSettingsEditDto()
-                {
-                    UseCaptchaOnRegistration =
-                    await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement
-                        .UseCaptchaOnRegistration),
-                    UseCaptchaOnEmailActivation =
-                    await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement
-                        .UseCaptchaOnEmailActivation),
-                    UseCaptchaOnResetPassword =
-                    await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement
-                        .UseCaptchaOnResetPassword),
-                },
-
-                IsRestrictedEmailDomainEnabled =
-                    await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement.IsRestrictedEmailDomainEnabled),
-            };
-            
-            return settings;
-        }
 
         private async Task<HostUserManagementSettingsEditDto> GetUserManagementAsync()
         {
@@ -372,7 +342,6 @@ namespace Cz.Jarvis.Configuration.Host
         public async Task UpdateAllSettings(HostSettingsEditDto input)
         {
             await UpdateGeneralSettingsAsync(input.General);
-            await UpdateTenantManagementAsync(input.TenantManagement);
             await UpdateUserManagementSettingsAsync(input.UserManagement);
             await UpdateSecuritySettingsAsync(input.Security);
             await UpdateEmailSettingsAsync(input.Email);
@@ -404,7 +373,7 @@ namespace Cz.Jarvis.Configuration.Host
                 if (settings.Timezone.IsNullOrEmpty())
                 {
                     var defaultValue =
-                       await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.Application, AbpSession.TenantId);
+                       await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.Application, ((int?)null));
                     await SettingManager.ChangeSettingForApplicationAsync(TimingSettingNames.TimeZone, defaultValue);    
                 }
                 else
@@ -416,43 +385,43 @@ namespace Cz.Jarvis.Configuration.Host
             }
         }
 
-        private async Task UpdateTenantManagementAsync(TenantManagementSettingsEditDto settings)
-        {
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.AllowSelfRegistration,
-                settings.AllowSelfRegistration.ToString().ToLowerInvariant()
-            );
+        //private async Task UpdateTenantManagementAsync(TenantManagementSettingsEditDto settings)
+        //{
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.AllowSelfRegistration,
+        //        settings.AllowSelfRegistration.ToString().ToLowerInvariant()
+        //    );
 
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.IsNewRegisteredTenantActiveByDefault,
-                settings.IsNewRegisteredTenantActiveByDefault.ToString().ToLowerInvariant()
-            );
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.IsNewRegisteredTenantActiveByDefault,
+        //        settings.IsNewRegisteredTenantActiveByDefault.ToString().ToLowerInvariant()
+        //    );
 
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.UseCaptchaOnRegistration,
-                settings.CaptchaSettings.UseCaptchaOnRegistration.ToString().ToLowerInvariant()
-            );
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.UseCaptchaOnRegistration,
+        //        settings.CaptchaSettings.UseCaptchaOnRegistration.ToString().ToLowerInvariant()
+        //    );
 
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.UseCaptchaOnEmailActivation,
-                settings.CaptchaSettings.UseCaptchaOnEmailActivation.ToString().ToLowerInvariant()
-            );
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.UseCaptchaOnEmailActivation,
+        //        settings.CaptchaSettings.UseCaptchaOnEmailActivation.ToString().ToLowerInvariant()
+        //    );
 
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.UseCaptchaOnResetPassword,
-                settings.CaptchaSettings.UseCaptchaOnResetPassword.ToString().ToLowerInvariant()
-            );
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.UseCaptchaOnResetPassword,
+        //        settings.CaptchaSettings.UseCaptchaOnResetPassword.ToString().ToLowerInvariant()
+        //    );
 
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.DefaultEdition,
-                settings.DefaultEditionId?.ToString() ?? ""
-            );
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.DefaultEdition,
+        //        settings.DefaultEditionId?.ToString() ?? ""
+        //    );
 
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AppSettings.TenantManagement.IsRestrictedEmailDomainEnabled,
-                settings.IsRestrictedEmailDomainEnabled.ToString().ToLowerInvariant()
-            );
-        }
+        //    await SettingManager.ChangeSettingForApplicationAsync(
+        //        AppSettings.TenantManagement.IsRestrictedEmailDomainEnabled,
+        //        settings.IsRestrictedEmailDomainEnabled.ToString().ToLowerInvariant()
+        //    );
+        //}
 
         private async Task UpdateUserManagementSettingsAsync(HostUserManagementSettingsEditDto settings)
         {

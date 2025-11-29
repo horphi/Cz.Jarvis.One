@@ -12,28 +12,24 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class AbpZeroServiceCollectionExtensions
 {
-    public static AbpIdentityBuilder AddAbpIdentity<TTenant, TUser, TRole>(this IServiceCollection services)
-        where TTenant : AbpTenant<TUser>
+    public static AbpIdentityBuilder AddAbpIdentity<TUser, TRole>(this IServiceCollection services)
         where TRole : AbpRole<TUser>, new()
         where TUser : AbpUser<TUser>
     {
-        return services.AddAbpIdentity<TTenant, TUser, TRole>(setupAction: null);
+        return services.AddAbpIdentity<TUser, TRole>(setupAction: null);
     }
 
-    public static AbpIdentityBuilder AddAbpIdentity<TTenant, TUser, TRole>(this IServiceCollection services, Action<IdentityOptions> setupAction)
-        where TTenant : AbpTenant<TUser>
+    public static AbpIdentityBuilder AddAbpIdentity<TUser, TRole>(this IServiceCollection services, Action<IdentityOptions> setupAction)
         where TRole : AbpRole<TUser>, new()
         where TUser : AbpUser<TUser>
     {
+        // Multi-tenancy removed
         services.AddSingleton<IAbpZeroEntityTypes>(new AbpZeroEntityTypes
         {
-            Tenant = typeof(TTenant),
+            Tenant = null,
             Role = typeof(TRole),
             User = typeof(TUser)
         });
-
-        //AbpTenantManager
-        services.TryAddScoped<AbpTenantManager<TTenant, TUser>>();
 
         //AbpRoleManager
         services.TryAddScoped<AbpRoleManager<TRole, TUser>>();
@@ -44,11 +40,11 @@ public static class AbpZeroServiceCollectionExtensions
         services.TryAddScoped(typeof(UserManager<TUser>), provider => provider.GetService(typeof(AbpUserManager<TRole, TUser>)));
 
         //SignInManager
-        services.TryAddScoped<AbpSignInManager<TTenant, TRole, TUser>>();
-        services.TryAddScoped(typeof(SignInManager<TUser>), provider => provider.GetService(typeof(AbpSignInManager<TTenant, TRole, TUser>)));
+        services.TryAddScoped<AbpSignInManager<TRole, TUser>>();
+        services.TryAddScoped(typeof(SignInManager<TUser>), provider => provider.GetService(typeof(AbpSignInManager<TRole, TUser>)));
 
         //AbpLogInManager
-        services.TryAddScoped<AbpLogInManager<TTenant, TRole, TUser>>();
+        services.TryAddScoped<AbpLogInManager<TRole, TUser>>();
 
         //AbpUserClaimsPrincipalFactory
         services.TryAddScoped<AbpUserClaimsPrincipalFactory<TUser, TRole>>();
@@ -56,9 +52,9 @@ public static class AbpZeroServiceCollectionExtensions
         services.TryAddScoped(typeof(IUserClaimsPrincipalFactory<TUser>), provider => provider.GetService(typeof(AbpUserClaimsPrincipalFactory<TUser, TRole>)));
 
         //AbpSecurityStampValidator
-        services.TryAddScoped<AbpSecurityStampValidator<TTenant, TRole, TUser>>();
-        services.TryAddScoped(typeof(SecurityStampValidator<TUser>), provider => provider.GetService(typeof(AbpSecurityStampValidator<TTenant, TRole, TUser>)));
-        services.TryAddScoped(typeof(ISecurityStampValidator), provider => provider.GetService(typeof(AbpSecurityStampValidator<TTenant, TRole, TUser>)));
+        services.TryAddScoped<AbpSecurityStampValidator<TRole, TUser>>();
+        services.TryAddScoped(typeof(SecurityStampValidator<TUser>), provider => provider.GetService(typeof(AbpSecurityStampValidator<TRole, TUser>)));
+        services.TryAddScoped(typeof(ISecurityStampValidator), provider => provider.GetService(typeof(AbpSecurityStampValidator<TRole, TUser>)));
 
         //PermissionChecker
         services.TryAddScoped<PermissionChecker<TRole, TUser>>();
@@ -72,7 +68,7 @@ public static class AbpZeroServiceCollectionExtensions
         services.TryAddScoped<AbpRoleStore<TRole, TUser>>();
         services.TryAddScoped(typeof(IRoleStore<TRole>), provider => provider.GetService(typeof(AbpRoleStore<TRole, TUser>)));
 
-      
-        return new AbpIdentityBuilder(services.AddIdentity<TUser, TRole>(setupAction), typeof(TTenant));
+
+        return new AbpIdentityBuilder(services.AddIdentity<TUser, TRole>(setupAction), null);
     }
 }

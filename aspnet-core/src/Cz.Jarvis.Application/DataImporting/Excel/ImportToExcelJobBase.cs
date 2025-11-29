@@ -41,21 +41,18 @@ public abstract class ImportToExcelJobBase<TEntityDto, TDataReader, TInvalidEnti
     protected async Task<List<TEntityDto>> GetDataFromExcelOrNullAsync(ImportFromExcelJobArgs args)
     {
         using var uow = UnitOfWorkManager.Begin();
-        using (CurrentUnitOfWork.SetTenantId(args.TenantId))
+        try
         {
-            try
-            {
-                var file = await binaryObjectManager.GetOrNullAsync(args.BinaryObjectId);
-                return dataReader.GetEntitiesFromExcel(file.Bytes);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-            finally
-            {
-                await uow.CompleteAsync();
-            }
+            var file = await binaryObjectManager.GetOrNullAsync(args.BinaryObjectId);
+            return dataReader.GetEntitiesFromExcel(file.Bytes);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+        finally
+        {
+            await uow.CompleteAsync();
         }
     }
 
@@ -67,30 +64,26 @@ public abstract class ImportToExcelJobBase<TEntityDto, TDataReader, TInvalidEnti
         {
             using var uow = unitOfWorkManager.Begin();
 
-            using (CurrentUnitOfWork.SetTenantId(args.TenantId))
+            if (row.CanBeImported())
             {
-                if (row.CanBeImported())
+                try
                 {
-                    try
-                    {
-                        row.TenantId = args.TenantId;
-                        await CreateEntityAsync(row);
-                    }
-                    catch (UserFriendlyException exception)
-                    {
-                        row.Exception = exception.Message;
-                        invalidEntities.Add(row);
-                    }
-                    catch (Exception exception)
-                    {
-                        row.Exception = exception.ToString();
-                        invalidEntities.Add(row);
-                    }
+                    await CreateEntityAsync(row);
                 }
-                else
+                catch (UserFriendlyException exception)
                 {
+                    row.Exception = exception.Message;
                     invalidEntities.Add(row);
                 }
+                catch (Exception exception)
+                {
+                    row.Exception = exception.ToString();
+                    invalidEntities.Add(row);
+                }
+            }
+            else
+            {
+                invalidEntities.Add(row);
             }
 
             await uow.CompleteAsync();
@@ -98,11 +91,7 @@ public abstract class ImportToExcelJobBase<TEntityDto, TDataReader, TInvalidEnti
 
         using (var uow = unitOfWorkManager.Begin())
         {
-            using (CurrentUnitOfWork.SetTenantId(args.TenantId))
-            {
-                await ProcessImportEntitiesResultAsync(args, invalidEntities);
-            }
-
+            await ProcessImportEntitiesResultAsync(args, invalidEntities);
             await uow.CompleteAsync();
         }
     }
@@ -136,18 +125,15 @@ public abstract class ImportToExcelJobBase<TEntityDto, TDataReader, TInvalidEnti
     {
         using var uow = unitOfWorkManager.Begin();
 
-        using (CurrentUnitOfWork.SetTenantId(args.TenantId))
-        {
-            await appNotifier.SendMessageAsync(
-                args.ExcelImporter,
-                new LocalizableString(
-                    ErrorMessageKey,
-                    JarvisConsts.LocalizationSourceName
-                ),
-                null,
-                Abp.Notifications.NotificationSeverity.Warn
-            );
-        }
+        await appNotifier.SendMessageAsync(
+            args.ExcelImporter,
+            new LocalizableString(
+                ErrorMessageKey,
+                JarvisConsts.LocalizationSourceName
+            ),
+            null,
+            Abp.Notifications.NotificationSeverity.Warn
+        );
 
         await uow.CompleteAsync();
     }

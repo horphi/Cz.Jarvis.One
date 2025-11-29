@@ -35,7 +35,7 @@ public class AbpUserRequestCultureProvider : RequestCultureProvider
 
         var userCulture = await settingManager.GetSettingValueForUserAsync(
             LocalizationSettingNames.DefaultLanguage,
-            abpSession.TenantId,
+            ((int?)null),
             abpSession.UserId.Value,
             fallbackToDefault: false
         );
@@ -108,8 +108,6 @@ public class AbpUserRequestCultureProvider : RequestCultureProvider
 
     private Task<string> GetDefaultCulture(IAbpSession abpSession, ISettingManager settingManager)
     {
-        return abpSession.TenantId.HasValue
-            ? settingManager.GetSettingValueForTenantAsync(LocalizationSettingNames.DefaultLanguage, abpSession.TenantId.Value)
-            : settingManager.GetSettingValueForApplicationAsync(LocalizationSettingNames.DefaultLanguage);
+        return settingManager.GetSettingValueForApplicationAsync(LocalizationSettingNames.DefaultLanguage);
     }
 }

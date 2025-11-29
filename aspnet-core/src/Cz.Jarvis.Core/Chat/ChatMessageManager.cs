@@ -21,7 +21,6 @@ namespace Cz.Jarvis.Chat
         private readonly IChatCommunicator _chatCommunicator;
         private readonly IOnlineClientManager _onlineClientManager;
         private readonly UserManager _userManager;
-        private readonly ITenantCache _tenantCache;
         private readonly IUserFriendsCache _userFriendsCache;
         private readonly IUserEmailer _userEmailer;
         private readonly IRepository<ChatMessage, long> _chatMessageRepository;
@@ -33,7 +32,6 @@ namespace Cz.Jarvis.Chat
             IChatCommunicator chatCommunicator,
             IOnlineClientManager onlineClientManager,
             UserManager userManager,
-            ITenantCache tenantCache,
             IUserFriendsCache userFriendsCache,
             IUserEmailer userEmailer,
             IRepository<ChatMessage, long> chatMessageRepository,
@@ -44,7 +42,6 @@ namespace Cz.Jarvis.Chat
             _chatCommunicator = chatCommunicator;
             _onlineClientManager = onlineClientManager;
             _userManager = userManager;
-            _tenantCache = tenantCache;
             _userFriendsCache = userFriendsCache;
             _userEmailer = userEmailer;
             _chatMessageRepository = chatMessageRepository;
@@ -57,7 +54,7 @@ namespace Cz.Jarvis.Chat
         {
             CheckReceiverExists(receiver);
 
-            _chatFeatureChecker.CheckChatFeatures(sender.TenantId, receiver.TenantId);
+            _chatFeatureChecker.CheckChatFeatures(null, null); // Multi-tenancy removed
 
             var friendshipState = (await _friendshipManager.GetFriendshipOrNullAsync(sender, receiver))?.State;
             if (friendshipState == FriendshipState.Blocked)
@@ -86,10 +83,7 @@ namespace Cz.Jarvis.Chat
         {
             return _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (CurrentUnitOfWork.SetTenantId(message.TenantId))
-                {
-                    return _chatMessageRepository.InsertAndGetId(message);
-                }
+                return _chatMessageRepository.InsertAndGetId(message);
             });
         }
 
@@ -97,13 +91,9 @@ namespace Cz.Jarvis.Chat
         {
             return _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (CurrentUnitOfWork.SetTenantId(receiver.TenantId))
-                {
-                    return _chatMessageRepository.Count(cm => cm.UserId == receiver.UserId &&
-                                                              cm.TargetUserId == sender.UserId &&
-                                                              cm.TargetTenantId == sender.TenantId &&
-                                                              cm.ReadState == ChatMessageReadState.Unread);
-                }
+                return _chatMessageRepository.Count(cm => cm.UserId == receiver.UserId &&
+                                                          cm.TargetUserId == sender.UserId &&
+                                                          cm.ReadState == ChatMessageReadState.Unread);
             });
         }
 
@@ -121,14 +111,11 @@ namespace Cz.Jarvis.Chat
             {
                 friendshipState = FriendshipState.Accepted;
 
-                var receiverTenancyName = await GetTenancyNameOrNull(receiverIdentifier.TenantId);
-
                 var receiverUser = await _userManager.GetUserAsync(receiverIdentifier);
                 await _friendshipManager.CreateFriendshipAsync(
                     new Friendship(
                         senderIdentifier,
                         receiverIdentifier,
-                        receiverTenancyName,
                         receiverUser.UserName,
                         receiverUser.ProfilePictureId,
                         friendshipState.Value)
@@ -168,13 +155,11 @@ namespace Cz.Jarvis.Chat
 
             if (friendshipState == null)
             {
-                var senderTenancyName = await GetTenancyNameOrNull(senderIdentifier.TenantId);
                 var senderUser = await _userManager.GetUserAsync(senderIdentifier);
 
                 friendship = new Friendship(
                     receiverIdentifier,
                     senderIdentifier,
-                    senderTenancyName,
                     senderUser.UserName,
                     senderUser.ProfilePictureId,
                     FriendshipState.Accepted
@@ -213,12 +198,10 @@ namespace Cz.Jarvis.Chat
             }
             else if (GetUnreadMessageCount(senderIdentifier, receiverIdentifier) == 1)
             {
-                var senderTenancyName = await GetTenancyNameOrNull(senderIdentifier.TenantId);
-
                 await _userEmailer.TryToSendChatMessageMail(
                     await _userManager.GetUserAsync(receiverIdentifier),
                     (await _userManager.GetUserAsync(senderIdentifier)).UserName,
-                    senderTenancyName,
+                    null, // Multi-tenancy removed
                     sentMessage
                 );
             }
@@ -230,14 +213,13 @@ namespace Cz.Jarvis.Chat
             var receiverCacheItem = _userFriendsCache.GetCacheItemOrNull(receiver);
 
             var senderAsFriend = receiverCacheItem?.Friends.FirstOrDefault(f =>
-                f.FriendTenantId == sender.TenantId && f.FriendUserId == sender.UserId);
+                f.FriendUserId == sender.UserId);
             if (senderAsFriend == null)
             {
                 return;
             }
 
-            if (senderAsFriend.FriendTenancyName == senderTenancyName &&
-                senderAsFriend.FriendUserName == senderUserName &&
+            if (senderAsFriend.FriendUserName == senderUserName &&
                 senderAsFriend.FriendProfilePictureId == senderProfilePictureId)
             {
                 return;
@@ -249,22 +231,10 @@ namespace Cz.Jarvis.Chat
                 return;
             }
 
-            friendship.FriendTenancyName = senderTenancyName;
             friendship.FriendUserName = senderUserName;
             friendship.FriendProfilePictureId = senderProfilePictureId;
 
             await _friendshipManager.UpdateFriendshipAsync(friendship);
-        }
-
-        private async Task<string> GetTenancyNameOrNull(int? tenantId)
-        {
-            if (tenantId.HasValue)
-            {
-                var tenant = await _tenantCache.GetAsync(tenantId.Value);
-                return tenant.TenancyName;
-            }
-
-            return null;
         }
     }
 }

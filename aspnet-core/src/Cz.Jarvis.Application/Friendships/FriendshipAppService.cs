@@ -19,20 +19,17 @@ namespace Cz.Jarvis.Friendships
         private readonly IFriendshipManager _friendshipManager;
         private readonly IOnlineClientManager _onlineClientManager;
         private readonly IChatCommunicator _chatCommunicator;
-        private readonly ITenantCache _tenantCache;
         private readonly IChatFeatureChecker _chatFeatureChecker;
 
         public FriendshipAppService(
             IFriendshipManager friendshipManager,
             IOnlineClientManager onlineClientManager,
             IChatCommunicator chatCommunicator,
-            ITenantCache tenantCache,
             IChatFeatureChecker chatFeatureChecker)
         {
             _friendshipManager = friendshipManager;
             _onlineClientManager = onlineClientManager;
             _chatCommunicator = chatCommunicator;
-            _tenantCache = tenantCache;
             _chatFeatureChecker = chatFeatureChecker;
         }
 
@@ -50,21 +47,15 @@ namespace Cz.Jarvis.Friendships
 
             var user = await UserManager.FindByIdAsync(AbpSession.GetUserId().ToString());
 
-            User probableFriendUser;
-            using (CurrentUnitOfWork.SetTenantId(input.TenantId))
-            {
-                probableFriendUser = await UserManager.FindByIdAsync(input.UserId.ToString());
-            }
+            var probableFriendUser = await UserManager.FindByIdAsync(input.UserId.ToString());
 
             // Friend requester
-            var friendTenancyName = await GetTenancyNameAsync(probableFriend.TenantId);
-            var sourceFriendship = new Friendship(userIdentifier, probableFriend, friendTenancyName,
+            var sourceFriendship = new Friendship(userIdentifier, probableFriend,
                 probableFriendUser.UserName, probableFriendUser.ProfilePictureId, FriendshipState.Accepted);
             await _friendshipManager.CreateFriendshipAsync(sourceFriendship);
 
             // Target friend
-            var userTenancyName = await GetTenancyNameAsync(user.TenantId);
-            var targetFriendship = new Friendship(probableFriend, userIdentifier, userTenancyName, user.UserName,
+            var targetFriendship = new Friendship(probableFriend, userIdentifier, user.UserName,
                 user.ProfilePictureId, FriendshipState.Accepted);
 
             if (await _friendshipManager.GetFriendshipOrNullAsync(probableFriend, userIdentifier) == null)
@@ -94,17 +85,6 @@ namespace Cz.Jarvis.Friendships
             return sourceFriendshipRequest;
         }
 
-        private async Task<string> GetTenancyNameAsync(int? tenantId)
-        {
-            if (tenantId.HasValue)
-            {
-                var tenant = await _tenantCache.GetAsync(tenantId.Value);
-                return tenant.TenancyName;
-            }
-
-            return null;
-        }
-
         public async Task<FriendDto> CreateFriendshipWithDifferentTenant(CreateFriendshipWithDifferentTenantInput input)
         {
             var probableFriend = await GetUserIdentifier(input.TenancyName, input.UserName);
@@ -117,23 +97,19 @@ namespace Cz.Jarvis.Friendships
 
         public async Task<FriendDto> CreateFriendshipForCurrentTenant(CreateFriendshipForCurrentTenantInput input)
         {
-            using (CurrentUnitOfWork.SetTenantId(AbpSession.TenantId))
+            var user = await UserManager.FindByNameOrEmailAsync(input.UserName);
+            if (user == null)
             {
-                var user = await UserManager.FindByNameOrEmailAsync(input.UserName);
-                if (user == null)
-                {
-                    throw new UserFriendlyException(L("ThereIsNoUserRegisteredWithNameOrEmail{0}", input.UserName));
-                }
-
-                var probableFriend = user.ToUserIdentifier();
-                
-                return await CreateFriendshipRequest(new CreateFriendshipRequestInput
-                {
-                    TenantId = probableFriend.TenantId,
-                    UserId = probableFriend.UserId
-                });
+                throw new UserFriendlyException(L("ThereIsNoUserRegisteredWithNameOrEmail{0}", input.UserName));
             }
-            
+
+            var probableFriend = user.ToUserIdentifier();
+
+            return await CreateFriendshipRequest(new CreateFriendshipRequestInput
+            {
+                TenantId = null, // Multi-tenancy removed
+                UserId = probableFriend.UserId
+            });
         }
 
         public async Task BlockUser(BlockUserInput input)
@@ -180,31 +156,14 @@ namespace Cz.Jarvis.Friendships
 
         private async Task<UserIdentifier> GetUserIdentifier(string tenancyName, string userName)
         {
-            int? tenantId = null;
-            if (!tenancyName.IsNullOrEmpty())
+            // Multi-tenancy removed - tenancyName parameter ignored
+            var user = await UserManager.FindByNameOrEmailAsync(userName);
+            if (user == null)
             {
-                using (CurrentUnitOfWork.SetTenantId(null))
-                {
-                    var tenant = await TenantManager.FindByTenancyNameAsync(tenancyName);
-                    if (tenant == null)
-                    {
-                        throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", tenancyName));
-                    }
-
-                    tenantId = tenant.Id;
-                }
+                throw new UserFriendlyException(L("ThereIsNoUserRegisteredWithNameOrEmail{0}", userName));
             }
-            
-            using (CurrentUnitOfWork.SetTenantId(tenantId))
-            {
-                var user = await UserManager.FindByNameOrEmailAsync(userName);
-                if (user == null)
-                {
-                    throw new UserFriendlyException(L("ThereIsNoUserRegisteredWithNameOrEmail{0}", userName));
-                }
 
-                return user.ToUserIdentifier();
-            }
+            return user.ToUserIdentifier();
         }
         
         public async Task RemoveFriend(RemoveFriendInput input)

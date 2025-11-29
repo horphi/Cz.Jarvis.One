@@ -47,12 +47,9 @@ namespace Cz.Jarvis.Web.Controllers
                     fileBytes = stream.GetAllBytes();
                 }
 
-                var fileObject = new BinaryObject(null, fileBytes, $"File uploaded from chat by {AbpSession.UserId}, File name: {file.FileName} {DateTime.UtcNow}");
-                using (CurrentUnitOfWork.SetTenantId(null))
-                {
-                    await BinaryObjectManager.SaveAsync(fileObject);
-                    await CurrentUnitOfWork.SaveChangesAsync();
-                }
+                var fileObject = new BinaryObject(fileBytes, $"File uploaded from chat by {AbpSession.UserId}, File name: {file.FileName} {DateTime.UtcNow}");
+                await BinaryObjectManager.SaveAsync(fileObject);
+                await CurrentUnitOfWork.SaveChangesAsync();
 
                 return Json(new AjaxResponse(new
                 {

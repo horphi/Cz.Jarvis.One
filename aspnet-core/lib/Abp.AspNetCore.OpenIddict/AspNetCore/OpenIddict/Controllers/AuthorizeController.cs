@@ -21,13 +21,12 @@ namespace Abp.AspNetCore.OpenIddict.Controllers;
 
 [Route("connect/authorize")]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class AuthorizeController<TTenant, TRole, TUser> : AbpOpenIdDictControllerBase<TTenant, TRole, TUser>
-    where TTenant : AbpTenant<TUser>
+public class AuthorizeController<TRole, TUser> : AbpOpenIdDictControllerBase<TRole, TUser>
     where TRole : AbpRole<TUser>, new()
     where TUser : AbpUser<TUser>
 {
     public AuthorizeController(
-        AbpSignInManager<TTenant, TRole, TUser> signInManager,
+        AbpSignInManager<TRole, TUser> signInManager,
         AbpUserManager<TRole, TUser> userManager,
         IOpenIddictApplicationManager applicationManager,
         IOpenIddictAuthorizationManager authorizationManager,

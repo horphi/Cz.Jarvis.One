@@ -87,10 +87,7 @@ namespace Cz.Jarvis.Authorization.Users
         {
             return await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
-                using (_unitOfWorkManager.Current.SetTenantId(userIdentifier.TenantId))
-                {
-                    return await FindByIdAsync(userIdentifier.UserId.ToString());
-                }
+                return await FindByIdAsync(userIdentifier.UserId.ToString());
             });
         }
 
@@ -352,8 +349,7 @@ namespace Cz.Jarvis.Authorization.Users
             var recentPassword = new RecentPassword
             {
                 Password = user.Password,
-                UserId = user.Id,
-                TenantId = user.TenantId
+                UserId = user.Id
             };
 
             await _recentPasswords.InsertAsync(recentPassword);

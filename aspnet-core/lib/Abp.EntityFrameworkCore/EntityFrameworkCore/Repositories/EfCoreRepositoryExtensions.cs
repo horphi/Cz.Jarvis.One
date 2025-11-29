@@ -237,7 +237,7 @@ public static class EfCoreRepositoryExtensions
                 return currentUnitOfWorkProvider.Current.GetTenantId();
             }
 
-            return iocResolver.Resolve<IAbpSession>().TenantId;
+            return ((int?)null);
         }
     }
 }

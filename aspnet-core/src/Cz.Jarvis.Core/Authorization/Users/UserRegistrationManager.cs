@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Identity;
 using Cz.Jarvis.Authorization.Roles;
 using Cz.Jarvis.Configuration;
 using Cz.Jarvis.Debugging;
-using Cz.Jarvis.MultiTenancy;
 using Cz.Jarvis.Notifications;
 
 namespace Cz.Jarvis.Authorization.Users
@@ -23,7 +22,6 @@ namespace Cz.Jarvis.Authorization.Users
         public IAbpSession AbpSession { get; set; }
         public IAsyncQueryableExecuter AsyncQueryableExecuter { get; set; }
 
-        private readonly TenantManager _tenantManager;
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
         private readonly IUserEmailer _userEmailer;
@@ -31,14 +29,12 @@ namespace Cz.Jarvis.Authorization.Users
         private readonly IAppNotifier _appNotifier;
 
         public UserRegistrationManager(
-            TenantManager tenantManager,
             UserManager userManager,
             RoleManager roleManager,
             IUserEmailer userEmailer,
             INotificationSubscriptionManager notificationSubscriptionManager,
             IAppNotifier appNotifier)
         {
-            _tenantManager = tenantManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _userEmailer = userEmailer;
@@ -54,11 +50,9 @@ namespace Cz.Jarvis.Authorization.Users
             CheckSelfRegistrationIsEnabled();
             await CheckForEmailDomainAsync(emailAddress);
 
-            var tenant = await GetActiveTenantAsync();
             var isNewRegisteredUserActiveByDefault = await SettingManager.GetSettingValueAsync<bool>(AppSettings.UserManagement.IsNewRegisteredUserActiveByDefault);
             var user = new User
             {
-                TenantId = tenant.Id,
                 Name = name,
                 Surname = surname,
                 EmailAddress = emailAddress,
@@ -73,10 +67,10 @@ namespace Cz.Jarvis.Authorization.Users
             var defaultRoles = await AsyncQueryableExecuter.ToListAsync(_roleManager.Roles.Where(r => r.IsDefault));
             foreach (var defaultRole in defaultRoles)
             {
-                user.Roles.Add(new UserRole(tenant.Id, user.Id, defaultRole.Id));
+                user.Roles.Add(new UserRole( user.Id, defaultRole.Id));
             }
 
-            await _userManager.InitializeOptionsAsync(AbpSession.TenantId);
+            await _userManager.InitializeOptionsAsync(((int?)null));
             CheckErrors(await _userManager.CreateAsync(user, plainPassword));
             await CurrentUnitOfWork.SaveChangesAsync();
 
@@ -96,7 +90,7 @@ namespace Cz.Jarvis.Authorization.Users
 
         private void CheckForTenant()
         {
-            if (!AbpSession.TenantId.HasValue)
+            if (!((int?)null).HasValue)
             {
                 throw new InvalidOperationException("Can not register host users!");
             }
@@ -115,32 +109,8 @@ namespace Cz.Jarvis.Authorization.Users
             return SettingManager.GetSettingValue<bool>(AppSettings.UserManagement.UseCaptchaOnRegistration);
         }
 
-        private async Task<Tenant> GetActiveTenantAsync()
-        {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                return null;
-            }
-
-            return await GetActiveTenantAsync(AbpSession.TenantId.Value);
-        }
-
-        private async Task<Tenant> GetActiveTenantAsync(int tenantId)
-        {
-            var tenant = await _tenantManager.FindByIdAsync(tenantId);
-            if (tenant == null)
-            {
-                throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId));
-            }
-
-            if (!tenant.IsActive)
-            {
-                throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
-            }
-
-            return tenant;
-        }
-
+      
+       
         protected virtual void CheckErrors(IdentityResult identityResult)
         {
             identityResult.CheckErrors(LocalizationManager);

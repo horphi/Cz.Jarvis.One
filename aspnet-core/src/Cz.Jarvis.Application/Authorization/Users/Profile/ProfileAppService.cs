@@ -98,7 +98,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
 
             var defaultTimeZoneId = await _timeZoneService.GetDefaultTimezoneAsync(
                 SettingScopes.User,
-                AbpSession.TenantId
+                ((int?)null)
             );
 
             if (userProfileEditDto.Timezone == defaultTimeZoneId)
@@ -262,7 +262,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
                 if (input.Timezone.IsNullOrEmpty())
                 {
                     var defaultValue =
-                        await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.User, AbpSession.TenantId);
+                        await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.User, ((int?)null));
                     await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(),
                         TimingSettingNames.TimeZone, defaultValue);
                 }
@@ -276,7 +276,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
 
         public async Task ChangePassword(ChangePasswordInput input)
         {
-            await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+            await UserManager.InitializeOptionsAsync(((int?)null));
 
             var user = await GetCurrentUserAsync();
             if (await UserManager.CheckPasswordAsync(user, input.CurrentPassword))
@@ -349,7 +349,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
 
         private async Task UpdateProfilePictureForUser(long userId, UpdateProfilePictureInput input)
         {
-            var userIdentifier = new UserIdentifier(AbpSession.TenantId, userId);
+            var userIdentifier = new UserIdentifier(((int?)null), userId);
             var allowToUseGravatar = await SettingManager.GetSettingValueForUserAsync<bool>(
                 AppSettings.UserManagement.AllowUsingGravatarProfilePicture,
                 user: userIdentifier
@@ -395,7 +395,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
                 await _binaryObjectManager.DeleteAsync(user.ProfilePictureId.Value);
             }
 
-            var storedFile = new BinaryObject(userIdentifier.TenantId, byteArray,
+            var storedFile = new BinaryObject(byteArray,
                 $"Profile picture of user {userIdentifier.UserId}. {DateTime.UtcNow}");
             await _binaryObjectManager.SaveAsync(storedFile);
 
@@ -453,7 +453,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
                 return new GetProfilePictureOutput(string.Empty);
             }
 
-            var userIdentifier = new UserIdentifier(AbpSession.TenantId, user.Id);
+            var userIdentifier = new UserIdentifier(((int?)null), user.Id);
             using (var profileImageService = await _profileImageServiceFactory.Get(userIdentifier))
             {
                 var profileImage = await profileImageService.Object.GetProfilePictureContentForUser(userIdentifier);
@@ -485,7 +485,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
         [AbpAllowAnonymous]
         public async Task<GetProfilePictureOutput> GetProfilePictureByUser(long userId)
         {
-            var userIdentifier = new UserIdentifier(AbpSession.TenantId, userId);
+            var userIdentifier = new UserIdentifier(((int?)null), userId);
             using (var profileImageService = await _profileImageServiceFactory.Get(userIdentifier))
             {
                 var profileImage = await profileImageService.Object.GetProfilePictureContentForUser(userIdentifier);
@@ -496,7 +496,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
         public async Task ChangeLanguage(ChangeUserLanguageDto input)
         {
             var languageSetting = await _settingStore.GetSettingOrNullAsync(
-                AbpSession.TenantId,
+                ((int?)null),
                 AbpSession.GetUserId(),
                 LocalizationSettingNames.DefaultLanguage
             );
@@ -504,7 +504,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
             if (languageSetting == null)
             {
                 await _settingStore.CreateAsync(new SettingInfo(
-                    AbpSession.TenantId,
+                    ((int?)null),
                     AbpSession.UserId,
                     LocalizationSettingNames.DefaultLanguage,
                     input.LanguageName
@@ -513,7 +513,7 @@ namespace Cz.Jarvis.Authorization.Users.Profile
             else
             {
                 await _settingStore.UpdateAsync(new SettingInfo(
-                    AbpSession.TenantId,
+                    ((int?)null),
                     AbpSession.UserId,
                     LocalizationSettingNames.DefaultLanguage,
                     input.LanguageName

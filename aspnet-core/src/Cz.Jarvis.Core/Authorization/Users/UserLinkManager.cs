@@ -96,7 +96,7 @@ namespace Cz.Jarvis.Authorization.Users
             return await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
                 return await _userAccountRepository.FirstOrDefaultAsync(
-                    ua => ua.TenantId == userIdentifier.TenantId && ua.UserId == userIdentifier.UserId
+                    ua => ua.UserId == userIdentifier.UserId
                 );
             });
         }
@@ -107,7 +107,7 @@ namespace Cz.Jarvis.Authorization.Users
             var cacheItem = new SwitchToLinkedAccountCacheItem(
                 targetTenantId,
                 targetUserId,
-                AbpSession.ImpersonatorTenantId,
+                ((int?)null),
                 AbpSession.ImpersonatorUserId
             );
 
@@ -138,7 +138,7 @@ namespace Cz.Jarvis.Authorization.Users
             //Add claims for audit logging
             if (cacheItem.ImpersonatorTenantId.HasValue)
             {
-                identity.AddClaim(new Claim(AbpClaimTypes.ImpersonatorTenantId, cacheItem.ImpersonatorTenantId.Value.ToString(CultureInfo.InvariantCulture)));
+                identity.AddClaim(new Claim("http://www.aspnetboilerplate.com/identity/claims/impersonatorTenantId", cacheItem.ImpersonatorTenantId.Value.ToString(CultureInfo.InvariantCulture)));
             }
 
             if (cacheItem.ImpersonatorUserId.HasValue)

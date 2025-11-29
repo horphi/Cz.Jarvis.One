@@ -9,15 +9,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class AbpZeroIdentityBuilderExtensions
 {
-    public static AbpIdentityBuilder AddAbpTenantManager<TTenantManager>(this AbpIdentityBuilder builder)
-        where TTenantManager : class
-    {
-        var type = typeof(TTenantManager);
-        var abpManagerType = typeof(AbpTenantManager<,>).MakeGenericType(builder.TenantType, builder.UserType);
-        builder.Services.AddScoped(type, provider => provider.GetRequiredService(abpManagerType));
-        builder.Services.AddScoped(abpManagerType, type);
-        return builder;
-    }
+   
 
     public static AbpIdentityBuilder AddAbpRoleManager<TRoleManager>(this AbpIdentityBuilder builder)
         where TRoleManager : class
@@ -42,7 +34,8 @@ public static class AbpZeroIdentityBuilderExtensions
     public static AbpIdentityBuilder AddAbpSignInManager<TSignInManager>(this AbpIdentityBuilder builder)
         where TSignInManager : class
     {
-        var abpManagerType = typeof(AbpSignInManager<,,>).MakeGenericType(builder.TenantType, builder.RoleType, builder.UserType);
+        // Multi-tenancy removed
+        var abpManagerType = typeof(AbpSignInManager<,>).MakeGenericType(builder.RoleType, builder.UserType);
         var managerType = typeof(SignInManager<>).MakeGenericType(builder.UserType);
         builder.Services.AddScoped(abpManagerType, services => services.GetRequiredService(managerType));
         builder.AddSignInManager<TSignInManager>();
@@ -53,7 +46,8 @@ public static class AbpZeroIdentityBuilderExtensions
         where TLogInManager : class
     {
         var type = typeof(TLogInManager);
-        var abpManagerType = typeof(AbpLogInManager<,,>).MakeGenericType(builder.TenantType, builder.RoleType, builder.UserType);
+        // Multi-tenancy removed
+        var abpManagerType = typeof(AbpLogInManager<,>).MakeGenericType(builder.RoleType, builder.UserType);
         builder.Services.AddScoped(type, provider => provider.GetService(abpManagerType));
         builder.Services.AddScoped(abpManagerType, type);
         return builder;
@@ -75,7 +69,8 @@ public static class AbpZeroIdentityBuilderExtensions
     {
         var type = typeof(TSecurityStampValidator);
         builder.Services.AddScoped(typeof(SecurityStampValidator<>).MakeGenericType(builder.UserType), services => services.GetRequiredService(type));
-        builder.Services.AddScoped(typeof(AbpSecurityStampValidator<,,>).MakeGenericType(builder.TenantType, builder.RoleType, builder.UserType), services => services.GetRequiredService(type));
+        // Multi-tenancy removed
+        builder.Services.AddScoped(typeof(AbpSecurityStampValidator<,>).MakeGenericType(builder.RoleType, builder.UserType), services => services.GetRequiredService(type));
         builder.Services.AddScoped(typeof(ISecurityStampValidator), services => services.GetRequiredService(type));
         builder.Services.AddScoped(type);
         return builder;

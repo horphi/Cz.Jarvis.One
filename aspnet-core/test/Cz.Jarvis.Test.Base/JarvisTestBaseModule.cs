@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Cz.Jarvis.Authorization.Users;
 using Cz.Jarvis.Configuration;
 using Cz.Jarvis.EntityFrameworkCore;
-using Cz.Jarvis.MultiTenancy;
+// using Cz.Jarvis.MultiTenancy; // Multi-tenancy removed
 using Cz.Jarvis.Security.Recaptcha;
 using Cz.Jarvis.Test.Base.DependencyInjection;
 using Cz.Jarvis.Test.Base.Url;
@@ -61,7 +61,7 @@ namespace Cz.Jarvis.Test.Base
             
             //Uncomment below line to write change logs for the entities below:
             Configuration.EntityHistory.IsEnabled = true;
-            Configuration.EntityHistory.Selectors.Add("Cz.JarvisEntities", typeof(User), typeof(Tenant));
+            Configuration.EntityHistory.Selectors.Add("Cz.JarvisEntities", typeof(User));
         }
 
         public override void Initialize()

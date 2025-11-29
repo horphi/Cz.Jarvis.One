@@ -12,16 +12,11 @@ namespace Abp.Zero.EntityFrameworkCore;
 /// Base DbContext for ABP zero.
 /// Derive your DbContext from this class to have base entities.
 /// </summary>
-public abstract class AbpZeroDbContext<TTenant, TRole, TUser, TSelf> : AbpZeroCommonDbContext<TRole, TUser, TSelf>
-    where TTenant : AbpTenant<TUser>
+public abstract class AbpZeroDbContext<TRole, TUser, TSelf> : AbpZeroCommonDbContext<TRole, TUser, TSelf>
     where TRole : AbpRole<TUser>
     where TUser : AbpUser<TUser>
-    where TSelf : AbpZeroDbContext<TTenant, TRole, TUser, TSelf>
+    where TSelf : AbpZeroDbContext<TRole, TUser, TSelf>
 {
-    /// <summary>
-    /// Tenants
-    /// </summary>
-    public virtual DbSet<TTenant> Tenants { get; set; }
 
     /// <summary>
     /// Background jobs.
@@ -61,30 +56,11 @@ public abstract class AbpZeroDbContext<TTenant, TRole, TUser, TSelf> : AbpZeroCo
             b.HasIndex(e => new { e.IsAbandoned, e.NextTryTime });
         });
 
-        modelBuilder.Entity<TTenant>(b =>
-        {
-            b.HasOne(p => p.DeleterUser)
-                .WithMany()
-                .HasForeignKey(p => p.DeleterUserId);
-
-            b.HasOne(p => p.CreatorUser)
-                .WithMany()
-                .HasForeignKey(p => p.CreatorUserId);
-
-            b.HasOne(p => p.LastModifierUser)
-                .WithMany()
-                .HasForeignKey(p => p.LastModifierUserId);
-
-            b.HasIndex(e => e.TenancyName);
-        });
-
         modelBuilder.Entity<UserAccount>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.UserId });
-            b.HasIndex(e => new { e.TenantId, e.UserName });
-            b.HasIndex(e => new { e.TenantId, e.EmailAddress });
-            b.HasIndex(e => new { e.UserName });
-            b.HasIndex(e => new { e.EmailAddress });
+            b.HasIndex(e => e.UserId);
+            b.HasIndex(e => e.UserName);
+            b.HasIndex(e => e.EmailAddress);
         });
 
         #region AuditLog.Set_MaxLengths

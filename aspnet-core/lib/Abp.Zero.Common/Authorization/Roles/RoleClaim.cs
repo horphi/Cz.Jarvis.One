@@ -30,7 +30,7 @@ namespace Abp.Authorization.Roles
 
         public RoleClaim(AbpRoleBase role, Claim claim)
         {
-            TenantId = role.TenantId;
+            TenantId = null; // Multi-tenancy removed
             RoleId = role.Id;
             ClaimType = claim.Type;
             ClaimValue = claim.Value;

@@ -125,7 +125,7 @@ namespace Abp.Authorization
                 return _unitOfWorkManager.Current.GetTenantId();
             }
 
-            return AbpSession.TenantId;
+            return ((int?)null);
         }
     }
 }

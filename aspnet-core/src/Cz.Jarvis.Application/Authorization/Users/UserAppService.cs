@@ -286,7 +286,7 @@ namespace Cz.Jarvis.Authorization.Users
             }
             else if (!input.User.Password.IsNullOrEmpty())
             {
-                await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+                await UserManager.InitializeOptionsAsync(((int?)null));
                 CheckErrors(await UserManager.ChangePasswordAsync(user, input.User.Password));
             }
 
@@ -298,7 +298,7 @@ namespace Cz.Jarvis.Authorization.Users
                 user.SetNewEmailConfirmationCode();
                 await _userEmailer.SendEmailActivationLinkAsync(
                     user,
-                    AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId),
+                    AppUrlService.CreateEmailActivationUrlFormat(((int?)null)),
                     input.User.Password
                 );
             }
@@ -308,7 +308,6 @@ namespace Cz.Jarvis.Authorization.Users
         protected virtual async Task CreateUserAsync(CreateOrUpdateUserInput input)
         {
             var user = ObjectMapper.Map<User>(input.User); //Password is not mapped (see mapping configuration)
-            user.TenantId = AbpSession.TenantId;
 
             //Set password
             if (input.SetRandomPassword)
@@ -319,7 +318,7 @@ namespace Cz.Jarvis.Authorization.Users
             }
             else if (!input.User.Password.IsNullOrEmpty())
             {
-                await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+                await UserManager.InitializeOptionsAsync(((int?)null));
                 foreach (var validator in _passwordValidators)
                 {
                     CheckErrors(await validator.ValidateAsync(UserManager, user, input.User.Password));
@@ -335,7 +334,7 @@ namespace Cz.Jarvis.Authorization.Users
             foreach (var roleName in input.AssignedRoleNames)
             {
                 var role = await _roleManager.GetRoleByNameAsync(roleName);
-                user.Roles.Add(new UserRole(AbpSession.TenantId, user.Id, role.Id));
+                user.Roles.Add(new UserRole(user.Id, role.Id));
             }
 
             CheckErrors(await UserManager.CreateAsync(user));
@@ -351,7 +350,7 @@ namespace Cz.Jarvis.Authorization.Users
                 user.SetNewEmailConfirmationCode();
                 await _userEmailer.SendEmailActivationLinkAsync(
                     user,
-                    AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId),
+                    AppUrlService.CreateEmailActivationUrlFormat(((int?)null)),
                     input.User.Password
                 );
             }

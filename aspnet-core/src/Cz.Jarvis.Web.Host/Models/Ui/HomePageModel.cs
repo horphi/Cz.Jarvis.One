@@ -17,9 +17,7 @@ namespace Cz.Jarvis.Web.Models.Ui
                 return userName;
             }
 
-            return LoginInformation.Tenant == null
-                ? "<span class='tenancy-name'>.\\</span>" + userName
-                : "<span class='tenancy-name'>" + LoginInformation.Tenant.TenancyName + "\\" + "</span>" + userName;
+            return "<span class='tenancy-name'>.\\</span>" + userName;
         }
     }
 }

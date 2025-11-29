@@ -62,7 +62,7 @@ namespace Cz.Jarvis.Authorization.Impersonation
                 //Add claims for audit logging
                 if (cacheItem.ImpersonatorTenantId.HasValue)
                 {
-                    identity.AddClaim(new Claim(AbpClaimTypes.ImpersonatorTenantId,
+                    identity.AddClaim(new Claim("http://www.aspnetboilerplate.com/identity/claims/impersonatorTenantId",
                         cacheItem.ImpersonatorTenantId.Value.ToString(CultureInfo.InvariantCulture)));
                 }
 
@@ -80,14 +80,14 @@ namespace Cz.Jarvis.Authorization.Impersonation
                 throw new UserFriendlyException(L("CascadeImpersonationErrorMessage"));
             }
 
-            if (AbpSession.TenantId.HasValue)
+            if (((int?)null).HasValue)
             {
                 if (!tenantId.HasValue)
                 {
                     throw new UserFriendlyException(L("FromTenantToHostImpersonationErrorMessage"));
                 }
 
-                if (tenantId.Value != AbpSession.TenantId.Value)
+                if (tenantId.Value != ((int?)null).Value)
                 {
                     throw new UserFriendlyException(L("DifferentTenantImpersonationErrorMessage"));
                 }
@@ -103,14 +103,14 @@ namespace Cz.Jarvis.Authorization.Impersonation
                 throw new UserFriendlyException(L("NotImpersonatedLoginErrorMessage"));
             }
 
-            return GenerateImpersonationTokenAsync(AbpSession.ImpersonatorTenantId, AbpSession.ImpersonatorUserId.Value, true);
+            return GenerateImpersonationTokenAsync(((int?)null), AbpSession.ImpersonatorUserId.Value, true);
         }
 
         private void CheckCurrentTenant(int? tenantId)
         {
-            if (AbpSession.TenantId != tenantId)
+            if (((int?)null) != tenantId)
             {
-                throw new Exception($"Current tenant is different than given tenant. AbpSession.TenantId: {AbpSession.TenantId}, given tenantId: {tenantId}");
+                throw new Exception($"Current tenant is different than given tenant. ((int?)null): {((int?)null)}, given tenantId: {tenantId}");
             }
         }
 
@@ -125,7 +125,7 @@ namespace Cz.Jarvis.Authorization.Impersonation
 
             if (!isBackToImpersonator)
             {
-                cacheItem.ImpersonatorTenantId = AbpSession.TenantId;
+                cacheItem.ImpersonatorTenantId = ((int?)null);
                 cacheItem.ImpersonatorUserId = AbpSession.GetUserId();
             }
 

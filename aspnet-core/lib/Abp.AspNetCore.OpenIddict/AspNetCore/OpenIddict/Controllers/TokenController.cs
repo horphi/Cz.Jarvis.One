@@ -21,13 +21,12 @@ namespace Abp.AspNetCore.OpenIddict.Controllers;
 [Route("connect/token")]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(IgnoreApi = true)]
-public partial class TokenController<TTenant, TRole, TUser> : AbpOpenIdDictControllerBase<TTenant, TRole, TUser>
-    where TTenant : AbpTenant<TUser>
+public partial class TokenController<TRole, TUser> : AbpOpenIdDictControllerBase<TRole, TUser>
     where TRole : AbpRole<TUser>, new()
     where TUser : AbpUser<TUser>
 {
     public TokenController(
-        AbpSignInManager<TTenant, TRole, TUser> signInManager,
+        AbpSignInManager<TRole, TUser> signInManager,
         AbpUserManager<TRole, TUser> userManager,
         IOpenIddictApplicationManager applicationManager,
         IOpenIddictAuthorizationManager authorizationManager,
@@ -73,16 +72,6 @@ public partial class TokenController<TTenant, TRole, TUser> : AbpOpenIdDictContr
     {
         Check.NotNull(principal, nameof(principal));
 
-        var tenantIdOrNull = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.TenantId);
-        if (tenantIdOrNull == null || tenantIdOrNull.Value.IsNullOrWhiteSpace())
-        {
-            return null;
-        }
-
-        if (int.TryParse(tenantIdOrNull.Value, out var guid))
-        {
-            return guid;
-        }
 
         return null;
     }

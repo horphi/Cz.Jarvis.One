@@ -8,10 +8,8 @@ using Abp.Domain.Entities.Auditing;
 namespace Cz.Jarvis.Authorization.Users;
 
 [Table("AppRecentPasswords")]
-public class RecentPassword : CreationAuditedEntity<Guid>, IMayHaveTenant
+public class RecentPassword : CreationAuditedEntity<Guid>
 {
-    public virtual int? TenantId { get; set; }
-
     [Required]
     public virtual long UserId { get; set; }
     

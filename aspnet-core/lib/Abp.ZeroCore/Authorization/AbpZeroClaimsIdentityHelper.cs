@@ -8,7 +8,7 @@ internal static class AbpZeroClaimsIdentityHelper
 {
     public static int? GetTenantId(ClaimsPrincipal principal)
     {
-        var tenantIdOrNull = principal?.FindFirstValue(AbpClaimTypes.TenantId);
+        var tenantIdOrNull = principal?.FindFirstValue("http://www.aspnetboilerplate.com/identity/claims/tenantId");
         if (tenantIdOrNull == null)
         {
             return null;

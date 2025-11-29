@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Abp.AspNetCore;
 using Abp.AspNetCore.Configuration;
-using Abp.AspNetCore.MultiTenancy;
 using Abp.AspNetCore.OpenIddict;
 using Abp.AspNetCore.SignalR;
 using Cz.AspNetJarvisCore.Web;
@@ -15,12 +14,10 @@ using Abp.Hangfire;
 using Abp.Hangfire.Configuration;
 using Abp.IO;
 using Abp.Modules;
-using Abp.MultiTenancy;
 using Abp.Reflection.Extensions;
 using Abp.Runtime.Caching.Redis;
 using Abp.Text;
 using Abp.Timing;
-using Abp.Web.MultiTenancy;
 using Abp.Zero.Configuration;
 using Castle.Core.Internal;
 using Microsoft.AspNetCore.Hosting;
@@ -111,7 +108,6 @@ namespace Cz.Jarvis.Web
             // HTML Sanitizer configuration
             Configuration.Modules.AbpHtmlSanitizer()
                 .KeepChildNodes()
-                .AddSelector<IAccountAppService>(x => nameof(x.IsTenantAvailable))
                 .AddSelector<IAccountAppService>(x => nameof(x.Register));
         }
 

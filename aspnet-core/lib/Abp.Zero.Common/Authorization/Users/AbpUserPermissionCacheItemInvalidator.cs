@@ -26,19 +26,20 @@ namespace Abp.Authorization.Users
 
         public void HandleEvent(EntityChangedEventData<UserPermissionSetting> eventData)
         {
-            var cacheKey = eventData.Entity.UserId + "@" + (eventData.Entity.TenantId ?? 0);
+            var cacheKey = eventData.Entity.UserId + "@0";
             _cacheManager.GetUserPermissionCache().Remove(cacheKey);
         }
 
         public void HandleEvent(EntityChangedEventData<UserRole> eventData)
         {
-            var cacheKey = eventData.Entity.UserId + "@" + (eventData.Entity.TenantId ?? 0);
+            var cacheKey = eventData.Entity.UserId + "@0";
             _cacheManager.GetUserPermissionCache().Remove(cacheKey);
         }
         
         public void HandleEvent(EntityDeletedEventData<AbpUserBase> eventData)
         {
-            var cacheKey = eventData.Entity.Id + "@" + (eventData.Entity.TenantId ?? 0);
+            // Multi-tenancy removed - use 0 for tenantId
+            var cacheKey = eventData.Entity.Id + "@0";
             _cacheManager.GetUserPermissionCache().Remove(cacheKey);
         }
         

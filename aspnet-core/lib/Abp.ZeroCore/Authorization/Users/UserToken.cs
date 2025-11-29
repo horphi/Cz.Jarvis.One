@@ -67,7 +67,7 @@ public class UserToken : Entity<long>, IMayHaveTenant
         Check.NotNull(loginProvider, nameof(loginProvider));
         Check.NotNull(name, nameof(name));
 
-        TenantId = user.TenantId;
+        TenantId = null; // Multi-tenancy removed
         UserId = user.Id;
         LoginProvider = loginProvider;
         Name = name;
@@ -80,7 +80,7 @@ public class UserToken : Entity<long>, IMayHaveTenant
         Check.NotNull(loginProvider, nameof(loginProvider));
         Check.NotNull(name, nameof(name));
 
-        TenantId = user.TenantId;
+        TenantId = user.TenantId; // Always null since multi-tenancy removed
         UserId = user.UserId;
         LoginProvider = loginProvider;
         Name = name;

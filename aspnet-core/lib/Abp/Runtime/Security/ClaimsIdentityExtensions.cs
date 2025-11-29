@@ -19,7 +19,8 @@ namespace Abp.Runtime.Security
                 return null;
             }
 
-            return new UserIdentifier(identity.GetTenantId(), userId.Value);
+            // Multi-tenancy removed
+            return new UserIdentifier(null, userId.Value);
         }
 
         public static long? GetUserId([NotNull] this IIdentity identity)
@@ -37,20 +38,7 @@ namespace Abp.Runtime.Security
             return Convert.ToInt64(userIdOrNull.Value);
         }
 
-        public static int? GetTenantId(this IIdentity identity)
-        {
-            Check.NotNull(identity, nameof(identity));
-
-            var claimsIdentity = identity as ClaimsIdentity;
-
-            var tenantIdOrNull = claimsIdentity?.Claims?.FirstOrDefault(c => c.Type == AbpClaimTypes.TenantId);
-            if (tenantIdOrNull == null || tenantIdOrNull.Value.IsNullOrWhiteSpace())
-            {
-                return null;
-            }
-
-            return Convert.ToInt32(tenantIdOrNull.Value);
-        }
+       
 
         public static long? GetImpersonatorUserId(this IIdentity identity)
         {
@@ -67,19 +55,6 @@ namespace Abp.Runtime.Security
             return Convert.ToInt64(userIdOrNull.Value);
         }
 
-        public static int? GetImpersonatorTenantId(this IIdentity identity)
-        {
-            Check.NotNull(identity, nameof(identity));
-
-            var claimsIdentity = identity as ClaimsIdentity;
-
-            var tenantIdOrNull = claimsIdentity?.Claims?.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
-            if (tenantIdOrNull == null || tenantIdOrNull.Value.IsNullOrWhiteSpace())
-            {
-                return null;
-            }
-
-            return Convert.ToInt32(tenantIdOrNull.Value);
-        }
+       
     }
 }

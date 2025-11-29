@@ -219,7 +219,7 @@ namespace Abp.DynamicEntityProperties
                 return _unitOfWorkManager.Current.GetTenantId();
             }
 
-            return AbpSession.TenantId;
+            return ((int?)null);
         }
 
         protected virtual string GetCacheKey(int id, int? tenantId)

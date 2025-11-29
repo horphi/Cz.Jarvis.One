@@ -18,7 +18,7 @@ namespace Cz.Jarvis.WebHooks
 
         public async Task<WebhookEvent> Get(string id)
         {
-            return await _webhookEventStore.GetAsync(AbpSession.TenantId, Guid.Parse(id));
+            return await _webhookEventStore.GetAsync(((int?)null), Guid.Parse(id));
         }
     }
 }

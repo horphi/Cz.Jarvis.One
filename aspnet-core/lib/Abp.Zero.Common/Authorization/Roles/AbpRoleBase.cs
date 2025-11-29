@@ -12,7 +12,7 @@ namespace Abp.Authorization.Roles
     /// Base class for role.
     /// </summary>
     [Table("AbpRoles")]
-    public abstract class AbpRoleBase : FullAuditedEntity<int>, IMayHaveTenant
+    public abstract class AbpRoleBase : FullAuditedEntity<int>
     {
         /// <summary>
         /// Maximum length of the <see cref="DisplayName"/> property.
@@ -23,11 +23,6 @@ namespace Abp.Authorization.Roles
         /// Maximum length of the <see cref="Name"/> property.
         /// </summary>
         public const int MaxNameLength = 32;
-
-        /// <summary>
-        /// Tenant's Id, if this role is a tenant-level role. Null, if not.
-        /// </summary>
-        public virtual int? TenantId { get; set; }
 
         /// <summary>
         /// Unique name of this role.
@@ -66,15 +61,14 @@ namespace Abp.Authorization.Roles
             Name = Guid.NewGuid().ToString("N");
         }
 
-        protected AbpRoleBase(int? tenantId, string displayName)
+        protected AbpRoleBase(string displayName)
             : this()
         {
-            TenantId = tenantId;
             DisplayName = displayName;
         }
 
-        protected AbpRoleBase(int? tenantId, string name, string displayName)
-            : this(tenantId, displayName)
+        protected AbpRoleBase(string name, string displayName)
+            : this(displayName)
         {
             Name = name;
         }

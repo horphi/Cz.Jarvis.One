@@ -20,25 +20,25 @@ namespace Abp.CachedUniqueKeys
 
         public virtual Task<string> GetKeyAsync(string cacheName)
         {
-            return GetKeyAsync(cacheName, AbpSession.TenantId, AbpSession.UserId);
+            return GetKeyAsync(cacheName, AbpSession.UserId);
         }
 
         public virtual Task RemoveKeyAsync(string cacheName)
         {
-            return RemoveKeyAsync(cacheName, AbpSession.TenantId, AbpSession.UserId);
+            return RemoveKeyAsync(cacheName, AbpSession.UserId);
         }
 
         public virtual Task<string> GetKeyAsync(string cacheName, UserIdentifier user)
         {
-            return GetKeyAsync(cacheName, user.TenantId, user.UserId);
+            return GetKeyAsync(cacheName, user.UserId);
         }
 
         public virtual Task RemoveKeyAsync(string cacheName, UserIdentifier user)
         {
-            return RemoveKeyAsync(cacheName, user.TenantId, user.UserId);
+            return RemoveKeyAsync(cacheName, user.UserId);
         }
 
-        public virtual async Task<string> GetKeyAsync(string cacheName, int? tenantId, long? userId)
+        public virtual async Task<string> GetKeyAsync(string cacheName, long? userId)
         {
             if (!AbpSession.UserId.HasValue)
             {
@@ -46,11 +46,11 @@ namespace Abp.CachedUniqueKeys
             }
 
             var cache = GetCache(cacheName);
-            return await cache.GetAsync(GetCacheKeyForUser(tenantId, userId),
+            return await cache.GetAsync(GetCacheKeyForUser(userId),
                 () => Task.FromResult(Guid.NewGuid().ToString("N")));
         }
 
-        public virtual async Task RemoveKeyAsync(string cacheName, int? tenantId, long? userId)
+        public virtual async Task RemoveKeyAsync(string cacheName, long? userId)
         {
             if (!AbpSession.UserId.HasValue)
             {
@@ -58,7 +58,7 @@ namespace Abp.CachedUniqueKeys
             }
 
             var cache = GetCache(cacheName);
-            await cache.RemoveAsync(GetCacheKeyForUser(tenantId, userId));
+            await cache.RemoveAsync(GetCacheKeyForUser(userId));
         }
 
         public virtual async Task ClearCacheAsync(string cacheName)
@@ -69,25 +69,25 @@ namespace Abp.CachedUniqueKeys
 
         public virtual string GetKey(string cacheName)
         {
-            return GetKey(cacheName, AbpSession.TenantId, AbpSession.UserId);
+            return GetKey(cacheName, AbpSession.UserId);
         }
 
         public virtual void RemoveKey(string cacheName)
         {
-            RemoveKey(cacheName, AbpSession.TenantId, AbpSession.UserId);
+            RemoveKey(cacheName, AbpSession.UserId);
         }
 
         public virtual string GetKey(string cacheName, UserIdentifier user)
         {
-            return GetKey(cacheName, user.TenantId, user.UserId);
+            return GetKey(cacheName, user.UserId);
         }
 
         public virtual void RemoveKey(string cacheName, UserIdentifier user)
         {
-            RemoveKey(cacheName, user.TenantId, user.UserId);
+            RemoveKey(cacheName, user.UserId);
         }
 
-        public virtual string GetKey(string cacheName, int? tenantId, long? userId)
+        public virtual string GetKey(string cacheName, long? userId)
         {
             if (!AbpSession.UserId.HasValue)
             {
@@ -95,11 +95,11 @@ namespace Abp.CachedUniqueKeys
             }
 
             var cache = GetCache(cacheName);
-            return cache.Get(GetCacheKeyForUser(tenantId, userId),
+            return cache.Get(GetCacheKeyForUser(userId),
                 () => Guid.NewGuid().ToString("N"));
         }
 
-        public virtual void RemoveKey(string cacheName, int? tenantId, long? userId)
+        public virtual void RemoveKey(string cacheName, long? userId)
         {
             if (!AbpSession.UserId.HasValue)
             {
@@ -107,7 +107,7 @@ namespace Abp.CachedUniqueKeys
             }
 
             var cache = GetCache(cacheName);
-            cache.Remove(GetCacheKeyForUser(tenantId, userId));
+            cache.Remove(GetCacheKeyForUser(userId));
         }
 
         public virtual void ClearCache(string cacheName)
@@ -121,14 +121,9 @@ namespace Abp.CachedUniqueKeys
             return _cacheManager.GetCache<string, string>(cacheName);
         }
 
-        protected virtual string GetCacheKeyForUser(int? tenantId, long? userId)
+        protected virtual string GetCacheKeyForUser(long? userId)
         {
-            if (tenantId == null)
-            {
-                return userId.ToString();
-            }
-
-            return userId + "@" + tenantId;
+            return userId.ToString();
         }
     }
 }

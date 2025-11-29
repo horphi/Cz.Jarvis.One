@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Cz.Jarvis.Authorization.Roles;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.EntityHistory
 {
@@ -11,7 +10,7 @@ namespace Cz.Jarvis.EntityHistory
 
         public static readonly Type[] HostSideTrackedTypes =
         {
-             typeof(Role), typeof(Tenant)
+             typeof(Role)
         };
 
         public static readonly Type[] TenantSideTrackedTypes =

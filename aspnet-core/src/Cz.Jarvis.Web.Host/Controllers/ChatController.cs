@@ -18,16 +18,13 @@ namespace Cz.Jarvis.Web.Controllers
 
         public async Task<ActionResult> GetUploadedObject(Guid fileId, string fileName, string contentType)
         {
-            using (CurrentUnitOfWork.SetTenantId(null))
+            var fileObject = await BinaryObjectManager.GetOrNullAsync(fileId);
+            if (fileObject == null)
             {
-                var fileObject = await BinaryObjectManager.GetOrNullAsync(fileId);
-                if (fileObject == null)
-                {
-                    return StatusCode((int)HttpStatusCode.NotFound);
-                }
-
-                return File(fileObject.Bytes, contentType, fileName);
+                return StatusCode((int)HttpStatusCode.NotFound);
             }
+
+            return File(fileObject.Bytes, contentType, fileName);
         }
     }
 }

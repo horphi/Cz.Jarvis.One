@@ -4,7 +4,6 @@ using Cz.Jarvis.Authentication.TwoFactor.Google;
 using Cz.Jarvis.Authorization;
 using Cz.Jarvis.Authorization.Roles;
 using Cz.Jarvis.Authorization.Users;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Identity
 {
@@ -14,11 +13,10 @@ namespace Cz.Jarvis.Identity
         {
             services.AddLogging();
 
-            return services.AddAbpIdentity<Tenant, User, Role>(options =>
+            return services.AddAbpIdentity< User, Role>(options =>
                 {
                     options.Tokens.ProviderMap[GoogleAuthenticatorProvider.Name] = new TokenProviderDescriptor(typeof(GoogleAuthenticatorProvider));
                 })
-                .AddAbpTenantManager<TenantManager>()
                 .AddAbpUserManager<UserManager>()
                 .AddAbpRoleManager<RoleManager>()
                 .AddAbpUserStore<UserStore>()

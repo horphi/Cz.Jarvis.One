@@ -43,46 +43,42 @@ namespace Cz.Jarvis.Gdpr
         {
             await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
-                using (UnitOfWorkManager.Current.SetTenantId(args.TenantId))
+                var userLanguage = await _settingManager.GetSettingValueForUserAsync(
+                    LocalizationSettingNames.DefaultLanguage,
+                    null, // Multi-tenancy removed
+                    args.UserId
+                );
+
+                var culture = CultureHelper.GetCultureInfoByChecking(userLanguage);
+
+                using (CultureInfoHelper.Use(culture))
                 {
-                    var userLanguage = await _settingManager.GetSettingValueForUserAsync(
-                        LocalizationSettingNames.DefaultLanguage,
-                        args.TenantId,
-                        args.UserId
-                    );
-                
-                    var culture = CultureHelper.GetCultureInfoByChecking(userLanguage);
+                    var files = new List<FileDto>();
 
-                    using (CultureInfoHelper.Use(culture))
+                    using (var scope = IocManager.Instance.CreateScope())
                     {
-                        var files = new List<FileDto>();
-
-                        using (var scope = IocManager.Instance.CreateScope())
+                        var providers = scope.ResolveAll<IUserCollectedDataProvider>();
+                        foreach (var provider in providers)
                         {
-                            var providers = scope.ResolveAll<IUserCollectedDataProvider>();
-                            foreach (var provider in providers)
+                            var providerFiles = await provider.GetFiles(args);
+                            if (providerFiles.Any())
                             {
-                                var providerFiles = await provider.GetFiles(args);
-                                if (providerFiles.Any())
-                                {
-                                    files.AddRange(providerFiles);
-                                }
+                                files.AddRange(providerFiles);
                             }
                         }
-
-                        var zipFile = new BinaryObject
-                        (
-                            args.TenantId,
-                            CompressFiles(files),
-                            $"{args.UserId} {DateTime.UtcNow} UserCollectedDataPrepareJob result"
-                        );
-
-                        // Save zip file to object manager.
-                        await _binaryObjectManager.SaveAsync(zipFile);
-
-                        // Send notification to user.
-                        await _appNotifier.GdprDataPrepared(args, zipFile.Id);
                     }
+
+                    var zipFile = new BinaryObject
+                    (
+                        CompressFiles(files),
+                        $"{args.UserId} {DateTime.UtcNow} UserCollectedDataPrepareJob result"
+                    );
+
+                    // Save zip file to object manager.
+                    await _binaryObjectManager.SaveAsync(zipFile);
+
+                    // Send notification to user.
+                    await _appNotifier.GdprDataPrepared(args, zipFile.Id);
                 }
             });
         }

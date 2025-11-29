@@ -13,12 +13,11 @@ using Cz.Jarvis.Authorization.Users;
 using Cz.Jarvis.Chat;
 using Cz.Jarvis.ExtraProperties;
 using Cz.Jarvis.Friendships;
-using Cz.Jarvis.MultiTenancy;
 using Cz.Jarvis.Storage;
 
 namespace Cz.Jarvis.EntityFrameworkCore
 {
-    public class JarvisDbContext : AbpZeroDbContext<Tenant, Role, User, JarvisDbContext>, IOpenIddictDbContext
+    public class JarvisDbContext : AbpZeroDbContext<Role, User, JarvisDbContext>, IOpenIddictDbContext
     {
         /* Define an IDbSet for each entity of the application */
 
@@ -49,33 +48,22 @@ namespace Cz.Jarvis.EntityFrameworkCore
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<BinaryObject>(b => { b.HasIndex(e => new { e.TenantId }); });
-            
-
             modelBuilder.Entity<ChatMessage>(b =>
             {
-                b.HasIndex(e => new { e.TenantId, e.UserId, e.ReadState });
-                b.HasIndex(e => new { e.TenantId, e.TargetUserId, e.ReadState });
-                b.HasIndex(e => new { e.TargetTenantId, e.TargetUserId, e.ReadState });
-                b.HasIndex(e => new { e.TargetTenantId, e.UserId, e.ReadState });
+                b.HasIndex(e => new { e.UserId, e.ReadState });
+                b.HasIndex(e => new { e.TargetUserId, e.ReadState });
             });
 
             modelBuilder.Entity<Friendship>(b =>
             {
-                b.HasIndex(e => new { e.TenantId, e.UserId });
-                b.HasIndex(e => new { e.TenantId, e.FriendUserId });
-                b.HasIndex(e => new { e.FriendTenantId, e.UserId });
-                b.HasIndex(e => new { e.FriendTenantId, e.FriendUserId });
+                b.HasIndex(e => new { e.UserId });
+                b.HasIndex(e => new { e.FriendUserId });
             });
 
-            modelBuilder.Entity<Tenant>(b =>
+            modelBuilder.Entity<UserDelegation>(b =>
             {
-                b.HasIndex(e => new { e.CreationTime });
-            });
-  modelBuilder.Entity<UserDelegation>(b =>
-            {
-                b.HasIndex(e => new { e.TenantId, e.SourceUserId });
-                b.HasIndex(e => new { e.TenantId, e.TargetUserId });
+                b.HasIndex(e => new { e.SourceUserId });
+                b.HasIndex(e => new { e.TargetUserId });
             });
             
             modelBuilder.ConfigureOpenIddict();

@@ -13,8 +13,6 @@ namespace Cz.Jarvis.Sessions.Dto
 
         public string CurrencySign { get; set; }
 
-        public bool AllowTenantsToChangeEmailSettings { get; set; }
-
         public bool UserDelegationIsEnabled { get; set; }
         
         public double TwoFactorCodeExpireSeconds { get; set; }

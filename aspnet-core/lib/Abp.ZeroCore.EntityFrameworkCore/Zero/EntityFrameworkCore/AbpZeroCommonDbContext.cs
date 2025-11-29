@@ -230,19 +230,19 @@ public abstract class AbpZeroCommonDbContext<TRole, TUser, TSelf> : AbpDbContext
 
         modelBuilder.Entity<AuditLog>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.UserId });
-            b.HasIndex(e => new { e.TenantId, e.ExecutionTime });
-            b.HasIndex(e => new { e.TenantId, e.ExecutionDuration });
+            b.HasIndex(e => e.UserId);
+            b.HasIndex(e => e.ExecutionTime);
+            b.HasIndex(e => e.ExecutionDuration);
         });
 
         modelBuilder.Entity<ApplicationLanguage>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.Name });
+            b.HasIndex(e => e.Name);
         });
 
         modelBuilder.Entity<ApplicationLanguageText>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.Source, e.LanguageName, e.Key });
+            b.HasIndex(e => new { e.Source, e.LanguageName, e.Key });
         });
 
         modelBuilder.Entity<EntityChange>(b =>
@@ -261,9 +261,9 @@ public abstract class AbpZeroCommonDbContext<TRole, TUser, TSelf> : AbpDbContext
                 .WithOne()
                 .HasForeignKey(p => p.EntityChangeSetId);
 
-            b.HasIndex(e => new { e.TenantId, e.UserId });
-            b.HasIndex(e => new { e.TenantId, e.CreationTime });
-            b.HasIndex(e => new { e.TenantId, e.Reason });
+            b.HasIndex(e => e.UserId);
+            b.HasIndex(e => e.CreationTime);
+            b.HasIndex(e => e.Reason);
         });
 
         modelBuilder.Entity<EntityPropertyChange>(b =>
@@ -274,50 +274,49 @@ public abstract class AbpZeroCommonDbContext<TRole, TUser, TSelf> : AbpDbContext
         modelBuilder.Entity<NotificationSubscriptionInfo>(b =>
         {
             b.HasIndex(e => new { e.NotificationName, e.EntityTypeName, e.EntityId, e.UserId });
-            b.HasIndex(e => new { e.TenantId, e.NotificationName, e.EntityTypeName, e.EntityId, e.UserId });
         });
-        
+
         modelBuilder.Entity<PermissionSetting>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.Name });
+            b.HasIndex(e => e.Name);
         });
 
         modelBuilder.Entity<RoleClaim>(b =>
         {
-            b.HasIndex(e => new { e.RoleId });
-            b.HasIndex(e => new { e.TenantId, e.ClaimType });
+            b.HasIndex(e => e.RoleId);
+            b.HasIndex(e => e.ClaimType);
         });
 
         modelBuilder.Entity<TRole>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.NormalizedName });
+            b.HasIndex(e => e.NormalizedName);
         });
 
         modelBuilder.Entity<Setting>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.Name, e.UserId }).IsUnique().HasFilter(null);
+            b.HasIndex(e => new { e.Name, e.UserId }).IsUnique().HasFilter(null);
         });
 
         modelBuilder.Entity<TenantNotificationInfo>(b =>
         {
-            b.HasIndex(e => new { e.TenantId });
+            // TenantId index removed - multi-tenancy removed
         });
 
         modelBuilder.Entity<UserClaim>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.ClaimType });
+            b.HasIndex(e => e.ClaimType);
         });
 
         modelBuilder.Entity<UserLoginAttempt>(b =>
         {
-            b.HasIndex(e => new { e.TenancyName, e.UserNameOrEmailAddress, e.Result });
-            b.HasIndex(ula => new { ula.UserId, ula.TenantId });
+            b.HasIndex(e => new { e.UserNameOrEmailAddress, e.Result });
+            b.HasIndex(ula => ula.UserId);
         });
 
         modelBuilder.Entity<UserLogin>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.LoginProvider, e.ProviderKey });
-            b.HasIndex(e => new { e.TenantId, e.UserId });
+            b.HasIndex(e => new { e.LoginProvider, e.ProviderKey });
+            b.HasIndex(e => e.UserId);
         });
 
         modelBuilder.Entity<UserNotificationInfo>(b =>
@@ -327,36 +326,36 @@ public abstract class AbpZeroCommonDbContext<TRole, TUser, TSelf> : AbpDbContext
 
         modelBuilder.Entity<UserRole>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.UserId });
-            b.HasIndex(e => new { e.TenantId, e.RoleId });
+            b.HasIndex(e => e.UserId);
+            b.HasIndex(e => e.RoleId);
         });
 
         modelBuilder.Entity<TUser>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.NormalizedUserName });
-            b.HasIndex(e => new { e.TenantId, e.NormalizedEmailAddress });
+            b.HasIndex(e => e.NormalizedUserName);
+            b.HasIndex(e => e.NormalizedEmailAddress);
         });
 
         modelBuilder.Entity<UserToken>(b =>
         {
-            b.HasIndex(e => new { e.TenantId, e.UserId });
+            b.HasIndex(e => e.UserId);
         });
 
         modelBuilder.Entity<DynamicProperty>(b =>
         {
-            b.HasIndex(e => new { e.PropertyName, e.TenantId }).IsUnique();
+            b.HasIndex(e => e.PropertyName).IsUnique();
         });
 
         modelBuilder.Entity<DynamicEntityProperty>(b =>
         {
-            b.HasIndex(e => new { e.EntityFullName, e.DynamicPropertyId, e.TenantId }).IsUnique();
+            b.HasIndex(e => new { e.EntityFullName, e.DynamicPropertyId }).IsUnique();
         });
 
-        #region UserLogin.ProviderKey_TenantId
+        #region UserLogin.ProviderKey
 
         modelBuilder.Entity<UserLogin>(b =>
         {
-            b.HasIndex(e => new { e.ProviderKey, e.TenantId }).IsUnique();
+            b.HasIndex(e => e.ProviderKey).IsUnique();
         });
 
         #endregion

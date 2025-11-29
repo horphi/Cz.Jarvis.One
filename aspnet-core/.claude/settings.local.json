@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(Select-String -Pattern \"Error\\(s\\)|Warning\\(s\\)\")",
+      "Bash(Select-Object -Last 3)",
+      "Bash(Select-String -Pattern \"Error\\(s\\)|Warning\\(s\\)|error CS\")",
+      "Bash(Select-Object -Last 30)",
+      "Bash(dotnet ef migrations:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

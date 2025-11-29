@@ -58,10 +58,9 @@ public abstract class AbpRole<TUser> : AbpRoleBase, IFullAudited<TUser>
     /// <summary>
     /// Creates a new <see cref="AbpRole{TUser}"/> object.
     /// </summary>
-    /// <param name="tenantId">TenantId or null (if this is not a tenant-level role)</param>
     /// <param name="displayName">Display name of the role</param>
-    protected AbpRole(int? tenantId, string displayName)
-        : base(tenantId, displayName)
+    protected AbpRole(string displayName)
+        : base(displayName)
     {
         SetNormalizedName();
     }
@@ -69,11 +68,10 @@ public abstract class AbpRole<TUser> : AbpRoleBase, IFullAudited<TUser>
     /// <summary>
     /// Creates a new <see cref="AbpRole{TUser}"/> object.
     /// </summary>
-    /// <param name="tenantId">TenantId or null (if this is not a tenant-level role)</param>
     /// <param name="name">Unique role name</param>
     /// <param name="displayName">Display name of the role</param>
-    protected AbpRole(int? tenantId, string name, string displayName)
-        : base(tenantId, name, displayName)
+    protected AbpRole(string name, string displayName)
+        : base(name, displayName)
     {
         SetNormalizedName();
     }

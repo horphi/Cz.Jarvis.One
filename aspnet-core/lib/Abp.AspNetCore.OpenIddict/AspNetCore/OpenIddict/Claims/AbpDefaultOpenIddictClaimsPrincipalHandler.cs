@@ -24,7 +24,7 @@ public class AbpDefaultOpenIddictClaimsPrincipalHandler : IAbpOpenIddictClaimsPr
 
         foreach (var claim in context.Principal.Claims)
         {
-            if (claim.Type == AbpClaimTypes.TenantId)
+            if (claim.Type == "http://www.aspnetboilerplate.com/identity/claims/tenantId")
             {
                 claim.SetDestinations(
                     OpenIddictConstants.Destinations.AccessToken,

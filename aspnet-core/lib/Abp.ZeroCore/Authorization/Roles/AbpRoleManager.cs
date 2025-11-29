@@ -281,11 +281,7 @@ public class AbpRoleManager<TRole, TUser> : RoleManager<TRole>, IDomainService
             return result;
         }
 
-        var tenantId = GetCurrentTenantId();
-        if (tenantId.HasValue && !role.TenantId.HasValue)
-        {
-            role.TenantId = tenantId.Value;
-        }
+        // Multi-tenancy removed
 
         return await base.CreateAsync(role);
     }
@@ -373,7 +369,8 @@ public class AbpRoleManager<TRole, TUser> : RoleManager<TRole>, IDomainService
 
     public async Task GrantAllPermissionsAsync(TRole role)
     {
-        var permissions = (await _permissionManager.GetAllPermissionsAsync(role.GetMultiTenancySide()));
+        // Multi-tenancy removed - always use Tenant side
+        var permissions = (await _permissionManager.GetAllPermissionsAsync(MultiTenancySides.Tenant));
 
         await SetGrantedPermissionsAsync(role, permissions);
     }
@@ -442,7 +439,7 @@ public class AbpRoleManager<TRole, TUser> : RoleManager<TRole>, IDomainService
             }
 
             var staticRoleDefinition = RoleManagementConfig.StaticRoles.FirstOrDefault(r =>
-                r.RoleName == role.Name && r.Side == role.GetMultiTenancySide()
+                r.RoleName == role.Name && r.Side == MultiTenancySides.Tenant
             );
 
             if (staticRoleDefinition != null)
@@ -486,7 +483,7 @@ public class AbpRoleManager<TRole, TUser> : RoleManager<TRole>, IDomainService
             }
 
             var staticRoleDefinition = RoleManagementConfig.StaticRoles.FirstOrDefault(r =>
-                r.RoleName == role.Name && r.Side == role.GetMultiTenancySide()
+                r.RoleName == role.Name && r.Side == MultiTenancySides.Tenant
             );
 
             if (staticRoleDefinition != null)
@@ -528,9 +525,9 @@ public class AbpRoleManager<TRole, TUser> : RoleManager<TRole>, IDomainService
 
     protected virtual TRole MapStaticRoleDefinitionToRole(int tenantId, StaticRoleDefinition staticRoleDefinition)
     {
+        // Multi-tenancy removed
         return new TRole
         {
-            TenantId = tenantId,
             Name = staticRoleDefinition.RoleName,
             DisplayName = staticRoleDefinition.RoleDisplayName,
             IsStatic = true
@@ -544,6 +541,6 @@ public class AbpRoleManager<TRole, TUser> : RoleManager<TRole>, IDomainService
             return _unitOfWorkManager.Current.GetTenantId();
         }
 
-        return AbpSession.TenantId;
+        return ((int?)null);
     }
 }

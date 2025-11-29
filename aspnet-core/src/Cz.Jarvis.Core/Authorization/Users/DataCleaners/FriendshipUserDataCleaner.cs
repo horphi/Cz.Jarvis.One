@@ -36,37 +36,28 @@ namespace Cz.Jarvis.Authorization.Users.DataCleaners
             await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
                 // Delete all friendships of the user
-                List<Friendship> userFriendList;
-                using (_unitOfWorkManager.Current.SetTenantId(userIdentifier.TenantId))
-                {
-                    var friendshipQuery = await _friendshipRepository.GetAllAsync();
-                    userFriendList = await friendshipQuery
-                        .Where(f => f.UserId == userIdentifier.UserId)
-                        .ToListAsync();
-                    
-                    await DeleteFriendships(userFriendList);
-                }
+                var friendshipQuery = await _friendshipRepository.GetAllAsync();
+                var userFriendList = await friendshipQuery
+                    .Where(f => f.UserId == userIdentifier.UserId)
+                    .ToListAsync();
+
+                await DeleteFriendships(userFriendList);
 
                 // Delete all reverse friendships of a friendship
                 if (userFriendList.Any())
                 {
                     foreach (var userFriend in userFriendList)
                     {
-                        using (_unitOfWorkManager.Current.SetTenantId(userFriend.FriendTenantId))
-                        {
-                            var targetFriendshipQuery = await _friendshipRepository.GetAllAsync();
-                            var targetFriendships = targetFriendshipQuery
-                                .Where(f => f.UserId == userFriend.FriendUserId &&
-                                            f.FriendUserId == userIdentifier.UserId &&
-                                            f.FriendTenantId == userIdentifier.TenantId
-                                )
-                                .ToList();
-                            
-                            await DeleteFriendships(targetFriendships);
-                        }
+                        var targetFriendshipQuery = await _friendshipRepository.GetAllAsync();
+                        var targetFriendships = targetFriendshipQuery
+                            .Where(f => f.UserId == userFriend.FriendUserId &&
+                                        f.FriendUserId == userIdentifier.UserId)
+                            .ToList();
+
+                        await DeleteFriendships(targetFriendships);
                     }
                 }
-                
+
                 // inform the friend user clients about the user deletion
                 await SendUserDeletedMessageToOnlineClients(userIdentifier, userFriendList);
             });
@@ -89,7 +80,7 @@ namespace Cz.Jarvis.Authorization.Users.DataCleaners
             foreach (var friendship in userFriendList)
             {
                 var friendClients = await _onlineClientManager.GetAllByUserIdAsync(
-                    new UserIdentifier(friendship.FriendTenantId, friendship.FriendUserId)
+                    new UserIdentifier(null, friendship.FriendUserId)
                 );
 
                 friendUserClients.AddRange(friendClients);

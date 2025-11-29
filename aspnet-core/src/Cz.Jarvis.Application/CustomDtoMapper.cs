@@ -30,9 +30,6 @@ using Cz.Jarvis.Friendships;
 using Cz.Jarvis.Friendships.Cache;
 using Cz.Jarvis.Friendships.Dto;
 using Cz.Jarvis.Localization.Dto;
-using Cz.Jarvis.MultiTenancy;
-using Cz.Jarvis.MultiTenancy.Dto;
-using Cz.Jarvis.MultiTenancy.HostDashboard.Dto;
 using Cz.Jarvis.Notifications.Dto;
 using Cz.Jarvis.Sessions.Dto;
 using Cz.Jarvis.WebHooks.Dto;
@@ -64,13 +61,7 @@ namespace Cz.Jarvis
             configuration.CreateMap<ApplicationLanguage, ApplicationLanguageEditDto>()
                 .ForMember(ldto => ldto.IsEnabled, options => options.MapFrom(l => !l.IsDisabled));
 
-            //Tenant
-            configuration.CreateMap<Tenant, RecentTenant>();
-            configuration.CreateMap<Tenant, TenantLoginInfoDto>();
-            configuration.CreateMap<Tenant, TenantListDto>();
-            configuration.CreateMap<TenantEditDto, Tenant>().ReverseMap();
-            configuration.CreateMap<CurrentTenantInfoDto, Tenant>().ReverseMap();
-
+         
             //User
             configuration.CreateMap<User, UserEditDto>()
                 .ForMember(dto => dto.Password, options => options.Ignore())

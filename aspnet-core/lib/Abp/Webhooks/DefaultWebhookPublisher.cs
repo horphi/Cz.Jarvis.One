@@ -35,7 +35,8 @@ namespace Abp.Webhooks
         #region Async Publish Methods
         public virtual async Task PublishAsync(string webhookName, object data, bool sendExactSameData = false, WebhookHeader headers = null)
         {
-            var subscriptions = await _webhookSubscriptionManager.GetAllSubscriptionsIfFeaturesGrantedAsync(AbpSession.TenantId, webhookName);
+            // Multi-tenancy removed
+            var subscriptions = await _webhookSubscriptionManager.GetAllSubscriptionsIfFeaturesGrantedAsync(null, webhookName);
             await PublishAsync(webhookName, data, subscriptions, sendExactSameData, headers);
         }
 
@@ -107,8 +108,9 @@ namespace Abp.Webhooks
         #region Sync Publish Methods
         public virtual void Publish(string webhookName, object data, bool sendExactSameData = false, WebhookHeader headers = null)
         {
+            // Multi-tenancy removed
             var subscriptions =
-                _webhookSubscriptionManager.GetAllSubscriptionsIfFeaturesGranted(AbpSession.TenantId, webhookName);
+                _webhookSubscriptionManager.GetAllSubscriptionsIfFeaturesGranted(null, webhookName);
             Publish(webhookName, data, subscriptions, sendExactSameData, headers);
         }
 

@@ -40,7 +40,6 @@ public class ImportUsersToExcelJob(
 
         var user = objectMapper.Map<User>(entity); //Passwords is not mapped (see mapping configuration)
         user.Password = entity.Password;
-        user.TenantId = tenantId;
 
         if (!entity.Password.IsNullOrEmpty())
         {
@@ -60,7 +59,7 @@ public class ImportUsersToExcelJob(
         {
             var correspondingRoleName = GetRoleNameFromDisplayName(roleName, roleList);
             var role = await roleManager.GetRoleByNameAsync(correspondingRoleName);
-            user.Roles.Add(new UserRole(tenantId, user.Id, role.Id));
+            user.Roles.Add(new UserRole(user.Id, role.Id));
         }
 
         (await UserManager.CreateAsync(user)).CheckErrors();

@@ -111,13 +111,8 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
             return result;
         }
 
-        var tenantId = GetCurrentTenantId();
-        if (tenantId.HasValue && !user.TenantId.HasValue)
-        {
-            user.TenantId = tenantId.Value;
-        }
-
-        await InitializeOptionsAsync(user.TenantId);
+        // Multi-tenancy removed
+        await InitializeOptionsAsync(null);
 
         return await base.CreateAsync(user);
     }
@@ -518,9 +513,9 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
         var result = await base.DeleteAsync(user);
         if (result.Succeeded)
         {
+            // Multi-tenancy removed - only check UserId
             await _userLoginRepository.DeleteAsync(userLogin =>
-                userLogin.UserId == user.Id &&
-                userLogin.TenantId == user.TenantId
+                userLogin.UserId == user.Id
             );
         }
 
@@ -746,7 +741,8 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
 
     private async Task<UserPermissionCacheItem> GetUserPermissionCacheItemAsync(long userId)
     {
-        var cacheKey = userId + "@" + (GetCurrentTenantId() ?? 0);
+        // Multi-tenancy removed - use 0 for tenantId
+        var cacheKey = userId + "@0";
         return await _cacheManager.GetUserPermissionCache().GetAsync(cacheKey, async () =>
         {
             var user = await FindByIdAsync(userId.ToString());
@@ -780,7 +776,8 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
 
     private UserPermissionCacheItem GetUserPermissionCacheItem(long userId)
     {
-        var cacheKey = userId + "@" + (GetCurrentTenantId() ?? 0);
+        // Multi-tenancy removed - use 0 for tenantId
+        var cacheKey = userId + "@0";
         return _cacheManager.GetUserPermissionCache().Get(cacheKey, () =>
         {
             var user = AbpUserStore.FindById(userId.ToString());
@@ -820,7 +817,7 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
         {
             var isEmailProviderEnabled = await IsTrueAsync(
                 AbpZeroSettingNames.UserManagement.TwoFactorLogin.IsEmailProviderEnabled,
-                user.TenantId
+                null // Multi-tenancy removed
             );
 
             if (provider == "Email" && !isEmailProviderEnabled)
@@ -830,7 +827,7 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
 
             var isSmsProviderEnabled = await IsTrueAsync(
                 AbpZeroSettingNames.UserManagement.TwoFactorLogin.IsSmsProviderEnabled,
-                user.TenantId
+                null // Multi-tenancy removed
             );
 
             if (provider == "Phone" && !isSmsProviderEnabled)
@@ -880,24 +877,14 @@ public class AbpUserManager<TRole, TUser> : UserManager<TUser>, IDomainService
 
     private int? GetCurrentTenantId()
     {
-        if (_unitOfWorkManager.Current != null)
-        {
-            return _unitOfWorkManager.Current.GetTenantId();
-        }
-
-        return AbpSession.TenantId;
+        // Multi-tenancy removed - always return null
+        return null;
     }
 
     private MultiTenancySides GetCurrentMultiTenancySide()
     {
-        if (_unitOfWorkManager.Current != null)
-        {
-            return MultiTenancy.IsEnabled && !_unitOfWorkManager.Current.GetTenantId().HasValue
-                ? MultiTenancySides.Host
-                : MultiTenancySides.Tenant;
-        }
-
-        return AbpSession.MultiTenancySide;
+        // Multi-tenancy removed - always return Tenant side
+        return MultiTenancySides.Tenant;
     }
 
     public virtual async Task AddTokenValidityKeyAsync(

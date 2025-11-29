@@ -20,13 +20,12 @@ namespace Abp.AspNetCore.OpenIddict.Controllers;
 [IgnoreAntiforgeryToken]
 [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class UserInfoController<TTenant, TRole, TUser> : AbpOpenIdDictControllerBase<TTenant, TRole, TUser>
-    where TTenant : AbpTenant<TUser>
+public class UserInfoController<TRole, TUser> : AbpOpenIdDictControllerBase<TRole, TUser>
     where TRole : AbpRole<TUser>, new()
     where TUser : AbpUser<TUser>
 {
     public UserInfoController(
-        AbpSignInManager<TTenant, TRole, TUser> signInManager,
+        AbpSignInManager<TRole, TUser> signInManager,
         AbpUserManager<TRole, TUser> userManager,
         IOpenIddictApplicationManager applicationManager,
         IOpenIddictAuthorizationManager authorizationManager,
@@ -83,7 +82,6 @@ public class UserInfoController<TTenant, TRole, TUser> : AbpOpenIdDictController
 
         if (User.HasScope(OpenIddictConstants.Scopes.Profile))
         {
-            claims[AbpClaimTypes.TenantId] = user.TenantId;
             claims[OpenIddictConstants.Claims.PreferredUsername] = user.UserName;
             claims[OpenIddictConstants.Claims.FamilyName] = user.Surname;
             claims[OpenIddictConstants.Claims.GivenName] = user.Name;

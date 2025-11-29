@@ -76,19 +76,7 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
     /// </summary>
     public IAbpEfCoreConfiguration AbpEfCoreConfiguration { get; set; }
 
-    /// <summary>
-    /// Can be used to suppress automatically setting TenantId on SaveChanges.
-    /// Default: false.
-    /// </summary>
-    public virtual bool SuppressAutoSetTenantId { get; set; }
-
-    public virtual int? CurrentTenantId => GetCurrentTenantIdOrNull();
-
     public virtual bool IsSoftDeleteFilterEnabled => CurrentUnitOfWorkProvider?.Current?.IsFilterEnabled(AbpDataFilters.SoftDelete) == true;
-
-    public virtual bool IsMayHaveTenantFilterEnabled => CurrentUnitOfWorkProvider?.Current?.IsFilterEnabled(AbpDataFilters.MayHaveTenant) == true;
-
-    public virtual bool IsMustHaveTenantFilterEnabled => CurrentTenantId != null && CurrentUnitOfWorkProvider?.Current?.IsFilterEnabled(AbpDataFilters.MustHaveTenant) == true;
 
     private static MethodInfo ConfigureGlobalFiltersMethodInfo = typeof(AbpDbContext).GetMethod(nameof(ConfigureGlobalFilters), BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -157,16 +145,6 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
             return true;
         }
 
-        if (typeof(IMayHaveTenant).IsAssignableFrom(typeof(TEntity)))
-        {
-            return true;
-        }
-
-        if (typeof(IMustHaveTenant).IsAssignableFrom(typeof(TEntity)))
-        {
-            return true;
-        }
-
         return false;
     }
 
@@ -186,28 +164,6 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
             expression = expression == null ? softDeleteFilter : CombineExpressions(expression, softDeleteFilter);
         }
 
-        if (typeof(IMayHaveTenant).IsAssignableFrom(typeof(TEntity)))
-        {
-            Expression<Func<TEntity, bool>> mayHaveTenantFilter = e => !IsMayHaveTenantFilterEnabled || ((IMayHaveTenant)e).TenantId == CurrentTenantId;
-            if (UseAbpQueryCompiler())
-            {
-                mayHaveTenantFilter = e => MayHaveTenantFilter(((IMayHaveTenant)e).TenantId, CurrentTenantId, true);
-                modelBuilder.ConfigureMayHaveTenantDbFunction(typeof(AbpDbContext).GetMethod(nameof(MayHaveTenantFilter), new[] { typeof(int?), typeof(int?), typeof(bool) })!, this.GetService<AbpEfCoreCurrentDbContext>());
-            }
-            expression = expression == null ? mayHaveTenantFilter : CombineExpressions(expression, mayHaveTenantFilter);
-        }
-
-        if (typeof(IMustHaveTenant).IsAssignableFrom(typeof(TEntity)))
-        {
-            Expression<Func<TEntity, bool>> mustHaveTenantFilter = e => !IsMustHaveTenantFilterEnabled || ((IMustHaveTenant)e).TenantId == CurrentTenantId;
-            if (UseAbpQueryCompiler())
-            {
-                mustHaveTenantFilter = e => MustHaveTenantFilter(((IMustHaveTenant)e).TenantId, CurrentTenantId, true);
-                modelBuilder.ConfigureMustHaveTenantDbFunction(typeof(AbpDbContext).GetMethod(nameof(MustHaveTenantFilter), new[] { typeof(int), typeof(int?), typeof(bool) })!, this.GetService<AbpEfCoreCurrentDbContext>());
-            }
-            expression = expression == null ? mustHaveTenantFilter : CombineExpressions(expression, mustHaveTenantFilter);
-        }
-
         return expression;
     }
 
@@ -218,7 +174,7 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
 
     public virtual string GetCompiledQueryCacheKey()
     {
-        return $"{CurrentTenantId?.ToString() ?? "Null"}:{IsSoftDeleteFilterEnabled}:{IsMayHaveTenantFilterEnabled}:{IsMustHaveTenantFilterEnabled}";
+        return $"{IsSoftDeleteFilterEnabled}";
     }
 
     protected const string DbFunctionNotSupportedExceptionMessage = "Your EF Core database provider does not support 'User-defined function mapping'." +
@@ -226,16 +182,6 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
                                                         "See https://learn.microsoft.com/en-us/ef/core/querying/user-defined-function-mapping for more information.";
 
     public static bool SoftDeleteFilter(bool isDeleted, bool boolParam)
-    {
-        throw new NotSupportedException(DbFunctionNotSupportedExceptionMessage);
-    }
-
-    public static bool MustHaveTenantFilter(int tenantId, int? currentTenantId, bool boolParam)
-    {
-        throw new NotSupportedException(DbFunctionNotSupportedExceptionMessage);
-    }
-
-    public static bool MayHaveTenantFilter(int? tenantId, int? currentTenantId, bool boolParam)
     {
         throw new NotSupportedException(DbFunctionNotSupportedExceptionMessage);
     }
@@ -343,8 +289,6 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
     protected virtual void ApplyAbpConceptsForAddedEntity(EntityEntry entry, long? userId, EntityChangeReport changeReport)
     {
         CheckAndSetId(entry);
-        CheckAndSetMustHaveTenantIdProperty(entry.Entity);
-        CheckAndSetMayHaveTenantIdProperty(entry.Entity);
         SetCreationAuditProperties(entry.Entity, userId);
         changeReport.ChangedEntities.Add(new EntityChangeEntry(entry.Entity, EntityChangeType.Created));
     }
@@ -438,65 +382,12 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
 
     protected virtual void CheckAndSetMustHaveTenantIdProperty(object entityAsObj)
     {
-        if (SuppressAutoSetTenantId)
-        {
-            return;
-        }
-
-        //Only set IMustHaveTenant entities
-        if (!(entityAsObj is IMustHaveTenant))
-        {
-            return;
-        }
-
-        var entity = entityAsObj.As<IMustHaveTenant>();
-
-        //Don't set if it's already set
-        if (entity.TenantId != 0)
-        {
-            return;
-        }
-
-        var currentTenantId = GetCurrentTenantIdOrNull();
-
-        if (currentTenantId != null)
-        {
-            entity.TenantId = currentTenantId.Value;
-        }
-        else
-        {
-            throw new AbpException("Can not set TenantId to 0 for IMustHaveTenant entities!");
-        }
+        // Multi-tenancy removed - method stubbed out
     }
 
     protected virtual void CheckAndSetMayHaveTenantIdProperty(object entityAsObj)
     {
-        if (SuppressAutoSetTenantId)
-        {
-            return;
-        }
-
-        //Only works for single tenant applications
-        if (MultiTenancyConfig?.IsEnabled ?? false)
-        {
-            return;
-        }
-
-        //Only set IMayHaveTenant entities
-        if (!(entityAsObj is IMayHaveTenant))
-        {
-            return;
-        }
-
-        var entity = entityAsObj.As<IMayHaveTenant>();
-
-        //Don't set if it's already set
-        if (entity.TenantId != null)
-        {
-            return;
-        }
-
-        entity.TenantId = GetCurrentTenantIdOrNull();
+        // Multi-tenancy removed - method stubbed out
     }
 
     protected virtual void SetCreationAuditProperties(object entityAsObj, long? userId)
@@ -504,7 +395,7 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
         EntityAuditingHelper.SetCreationAuditProperties(
             MultiTenancyConfig,
             entityAsObj,
-            AbpSession.TenantId,
+            null,
             userId,
             CurrentUnitOfWorkProvider?.Current?.AuditFieldConfiguration
         );
@@ -515,7 +406,7 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
         EntityAuditingHelper.SetModificationAuditProperties(
             MultiTenancyConfig,
             entityAsObj,
-            AbpSession.TenantId,
+            null,
             userId,
             CurrentUnitOfWorkProvider?.Current?.AuditFieldConfiguration
         );
@@ -538,7 +429,7 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
         EntityAuditingHelper.SetDeletionAuditProperties(
             MultiTenancyConfig,
             entityAsObj,
-            AbpSession.TenantId,
+            null,
             userId,
             CurrentUnitOfWorkProvider?.Current?.AuditFieldConfiguration
         );
@@ -548,8 +439,7 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
     {
         if (AbpSession.UserId.HasValue &&
             CurrentUnitOfWorkProvider != null &&
-            CurrentUnitOfWorkProvider.Current != null &&
-            CurrentUnitOfWorkProvider.Current.GetTenantId() == AbpSession.TenantId)
+            CurrentUnitOfWorkProvider.Current != null)
         {
             return AbpSession.UserId;
         }
@@ -559,13 +449,8 @@ public abstract class AbpDbContext : DbContext, ITransientDependency, IShouldIni
 
     protected virtual int? GetCurrentTenantIdOrNull()
     {
-        if (CurrentUnitOfWorkProvider != null &&
-            CurrentUnitOfWorkProvider.Current != null)
-        {
-            return CurrentUnitOfWorkProvider.Current.GetTenantId();
-        }
-
-        return AbpSession.TenantId;
+        // Multi-tenancy removed - always return null
+        return null;
     }
 
     protected virtual Expression<Func<T, bool>> CombineExpressions<T>(Expression<Func<T, bool>> expression1, Expression<Func<T, bool>> expression2)

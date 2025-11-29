@@ -56,8 +56,8 @@ public abstract class ExcelImportControllerBase(
                 fileBytes = await stream.GetAllBytesAsync();
             }
 
-            var tenantId = AbpSession.TenantId;
-            var fileObject = new BinaryObject(tenantId, fileBytes, $"{DateTime.UtcNow} import from excel file.");
+            var tenantId = ((int?)null); // Multi-tenancy removed
+            var fileObject = new BinaryObject(fileBytes, $"{DateTime.UtcNow} import from excel file.");
 
             await BinaryObjectManager.SaveAsync(fileObject);
 

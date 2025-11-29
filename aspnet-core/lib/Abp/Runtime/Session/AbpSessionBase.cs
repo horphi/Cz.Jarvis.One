@@ -12,19 +12,15 @@ namespace Abp.Runtime.Session
 
         public abstract long? UserId { get; }
 
-        public abstract int? TenantId { get; }
 
         public abstract long? ImpersonatorUserId { get; }
 
-        public abstract int? ImpersonatorTenantId { get; }
 
         public virtual MultiTenancySides MultiTenancySide
         {
             get
             {
-                return MultiTenancy.IsEnabled && !TenantId.HasValue
-                    ? MultiTenancySides.Host
-                    : MultiTenancySides.Tenant;
+                return MultiTenancySides.Host;
             }
         }
 
@@ -37,9 +33,9 @@ namespace Abp.Runtime.Session
             SessionOverrideScopeProvider = sessionOverrideScopeProvider;
         }
 
-        public IDisposable Use(int? tenantId, long? userId)
+        public IDisposable Use( long? userId)
         {
-            return SessionOverrideScopeProvider.BeginScope(SessionOverrideContextKey, new SessionOverride(tenantId, userId));
+            return SessionOverrideScopeProvider.BeginScope(SessionOverrideContextKey, new SessionOverride( userId));
         }
     }
 }

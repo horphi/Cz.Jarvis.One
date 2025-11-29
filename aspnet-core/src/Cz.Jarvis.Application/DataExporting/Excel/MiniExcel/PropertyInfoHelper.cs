@@ -43,7 +43,7 @@ public class PropertyInfoHelper : IPropertyInfoHelper
                         return "";
                     }
 
-                    return _timeZoneConverter.Convert((DateTime)value, _abpSession.TenantId, _abpSession.GetUserId());
+                    return _timeZoneConverter.Convert((DateTime)value, ((int?)null), _abpSession.GetUserId());
                 }
 
                 break;

@@ -51,7 +51,7 @@ namespace Cz.Jarvis.Web.Chat.SignalR
 
             try
             {
-                using (ChatAbpSession.Use(Context.GetTenantId(), Context.GetUserId()))
+                using (ChatAbpSession.Use(Context.GetUserId())) // Multi-tenancy removed
                 {
                     await _chatMessageManager.SendMessageAsync(sender, receiver, input.Message, input.TenancyName, input.UserName, input.ProfilePictureId);
                     return string.Empty;

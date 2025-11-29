@@ -31,7 +31,7 @@ using Cz.Jarvis.Authentication.TwoFactor.Google;
 using Cz.Jarvis.Authorization;
 using Cz.Jarvis.Authorization.Accounts.Dto;
 using Cz.Jarvis.Authorization.Users;
-using Cz.Jarvis.MultiTenancy;
+// using Cz.Jarvis.MultiTenancy; // Multi-tenancy removed
 using Cz.Jarvis.Web.Authentication.JwtBearer;
 using Cz.Jarvis.Web.Authentication.TwoFactor;
 using Cz.Jarvis.Web.Models.TokenAuth;
@@ -54,7 +54,6 @@ namespace Cz.Jarvis.Web.Controllers
     public class TokenAuthController : JarvisControllerBase
     {
         private readonly LogInManager _logInManager;
-        private readonly ITenantCache _tenantCache;
         private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
         private readonly TokenAuthConfiguration _configuration;
         private readonly UserManager _userManager;
@@ -81,7 +80,6 @@ namespace Cz.Jarvis.Web.Controllers
         
         public TokenAuthController(
             LogInManager logInManager,
-            ITenantCache tenantCache,
             AbpLoginResultTypeHelper abpLoginResultTypeHelper,
             TokenAuthConfiguration configuration,
             UserManager userManager,
@@ -105,7 +103,6 @@ namespace Cz.Jarvis.Web.Controllers
             IPasswordlessLoginManager passwordlessLoginManager)
         {
             _logInManager = logInManager;
-            _tenantCache = tenantCache;
             _abpLoginResultTypeHelper = abpLoginResultTypeHelper;
             _configuration = configuration;
             _userManager = userManager;
@@ -130,7 +127,7 @@ namespace Cz.Jarvis.Web.Controllers
             _passwordlessLoginManager = passwordlessLoginManager;
         }
 
-        private async Task<string> EncryptQueryParameters(long userId, Tenant tenant, string passwordResetCode)
+        private async Task<string> EncryptQueryParameters(long userId, string passwordResetCode)
         {
             var expirationHours = await _settingManager.GetSettingValueAsync<int>(
                 AppSettings.UserManagement.Password.PasswordResetCodeExpirationHours
@@ -140,12 +137,9 @@ namespace Cz.Jarvis.Web.Controllers
                 .ToString(JarvisConsts.DateTimeOffsetFormat));
 
             var query = $"userId={userId}&resetCode={passwordResetCode}&expireDate={expireDate}";
-            
-            if (tenant != null)
-            {
-                query += $"&tenantId={tenant.Id}";
-            }
-            
+
+            // Multi-tenancy removed - no tenant parameter
+
             return SimpleStringCipher.Instance.Encrypt(query);
         }
 
@@ -171,7 +165,7 @@ namespace Cz.Jarvis.Web.Controllers
             {
                 loginResult.User.SetSignInToken();
                 returnUrl = AddSingleSignInParametersToReturnUrl(model.ReturnUrl, loginResult.User.SignInToken,
-                    loginResult.User.Id, loginResult.User.TenantId);
+                    loginResult.User.Id, null); // Multi-tenancy removed
             }
 
             //Password reset
@@ -182,12 +176,12 @@ namespace Cz.Jarvis.Web.Controllers
                 {
                     ShouldResetPassword = true,
                     ReturnUrl = returnUrl,
-                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.Tenant, loginResult.User.PasswordResetCode)
+                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
                 };
             }
-            
+
             //Two factor auth
-            await _userManager.InitializeOptionsAsync(loginResult.Tenant?.Id);
+            await _userManager.InitializeOptionsAsync(((int?)null));
 
             string twoFactorRememberClientToken = null;
             if (await IsTwoFactorAuthRequiredAsync(loginResult, model))
@@ -263,7 +257,7 @@ namespace Cz.Jarvis.Web.Controllers
             }
 
             await _passwordlessLoginManager.VerifyPasswordlessLoginCode(
-                AbpSession.TenantId,
+                ((int?)null), // Multi-tenancy removed
                 model.ProviderValue,
                 model.VerificationCode
             );
@@ -282,7 +276,7 @@ namespace Cz.Jarvis.Web.Controllers
             {
                 loginResult.User.SetSignInToken();
                 returnUrl = AddSingleSignInParametersToReturnUrl(model.ReturnUrl, loginResult.User.SignInToken,
-                    loginResult.User.Id, loginResult.User.TenantId);
+                    loginResult.User.Id, null); // Multi-tenancy removed
             }
 
             var refreshToken = CreateRefreshToken(
@@ -302,7 +296,7 @@ namespace Cz.Jarvis.Web.Controllers
             );
 
             await _passwordlessLoginManager.RemovePasswordlessLoginCode(
-                AbpSession.TenantId,
+                ((int?)null), // Multi-tenancy removed
                 model.ProviderValue
             );
             
@@ -343,7 +337,7 @@ namespace Cz.Jarvis.Web.Controllers
                 if (AllowOneConcurrentLoginPerUser())
                 {
                     await _userManager.UpdateSecurityStampAsync(user);
-                    await _securityStampHandler.SetSecurityStampCacheItem(user.TenantId, user.Id, user.SecurityStamp);
+                    await _securityStampHandler.SetSecurityStampCacheItem(null, user.Id, user.SecurityStamp); // Multi-tenancy removed
                 }
 
                 principal = await _claimsPrincipalFactory.CreateAsync(user);
@@ -392,7 +386,7 @@ namespace Cz.Jarvis.Web.Controllers
                 if (AllowOneConcurrentLoginPerUser())
                 {
                     await _securityStampHandler.RemoveSecurityStampCacheItem(
-                        AbpSession.TenantId,
+                        ((int?)null), // Multi-tenancy removed
                         AbpSession.GetUserId()
                     );
                 }
@@ -411,7 +405,7 @@ namespace Cz.Jarvis.Web.Controllers
         [HttpPost]
         public async Task SendTwoFactorAuthCode([FromBody] SendTwoFactorAuthCodeModel model)
         {
-            var cacheKey = new UserIdentifier(AbpSession.TenantId, model.UserId).ToString();
+            var cacheKey = new UserIdentifier(((int?)null), model.UserId).ToString(); // Multi-tenancy removed
 
             var cacheItem = await _cacheManager
                 .GetTwoFactorCodeCache()
@@ -516,33 +510,8 @@ namespace Cz.Jarvis.Web.Controllers
 
         private bool IsSchemeEnabledOnTenant(ExternalLoginProviderInfo scheme)
         {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                return true;
-            }
-
-            switch (scheme.Name)
-            {
-                case "OpenIdConnect":
-                    return !_settingManager.GetSettingValueForTenant<bool>(
-                        AppSettings.ExternalLoginProvider.Tenant.OpenIdConnect_IsDeactivated, AbpSession.GetTenantId());
-                case "Microsoft":
-                    return !_settingManager.GetSettingValueForTenant<bool>(
-                        AppSettings.ExternalLoginProvider.Tenant.Microsoft_IsDeactivated, AbpSession.GetTenantId());
-                case "Google":
-                    return !_settingManager.GetSettingValueForTenant<bool>(
-                        AppSettings.ExternalLoginProvider.Tenant.Google_IsDeactivated, AbpSession.GetTenantId());
-                case "Twitter":
-                    return !_settingManager.GetSettingValueForTenant<bool>(
-                        AppSettings.ExternalLoginProvider.Tenant.Twitter_IsDeactivated, AbpSession.GetTenantId());
-                case "Facebook":
-                    return !_settingManager.GetSettingValueForTenant<bool>(
-                        AppSettings.ExternalLoginProvider.Tenant.Facebook_IsDeactivated, AbpSession.GetTenantId());
-                case "WsFederation":
-                    return !_settingManager.GetSettingValueForTenant<bool>(
-                        AppSettings.ExternalLoginProvider.Tenant.WsFederation_IsDeactivated, AbpSession.GetTenantId());
-                default: return true;
-            }
+            // Multi-tenancy removed - all schemes are enabled
+            return true;
         }
 
         [HttpPost]
@@ -592,7 +561,7 @@ namespace Cz.Jarvis.Web.Controllers
                             model.ReturnUrl,
                             loginResult.User.SignInToken,
                             loginResult.User.Id,
-                            loginResult.User.TenantId
+                            null // Multi-tenancy removed
                         );
                     }
 
@@ -659,10 +628,10 @@ namespace Cz.Jarvis.Web.Controllers
             }
         }
 
-        private async Task ResetSecurityStampForLoginResult(AbpLoginResult<Tenant, User> loginResult)
+        private async Task ResetSecurityStampForLoginResult(AbpLoginResult<User> loginResult)
         {
             await _userManager.UpdateSecurityStampAsync(loginResult.User);
-            await _securityStampHandler.SetSecurityStampCacheItem(loginResult.User.TenantId, loginResult.User.Id,
+            await _securityStampHandler.SetSecurityStampCacheItem(null, loginResult.User.Id,
                 loginResult.User.SecurityStamp);
             loginResult.Identity.ReplaceClaim(new Claim(AppConsts.SecurityStampKey, loginResult.User.SecurityStamp));
         }
@@ -715,7 +684,7 @@ namespace Cz.Jarvis.Web.Controllers
                 {
                     LoginProvider = externalLoginInfo.Provider,
                     ProviderKey = externalLoginInfo.ProviderKey,
-                    TenantId = user.TenantId
+                    TenantId = null // Multi-tenancy removed
                 }
             };
 
@@ -747,7 +716,7 @@ namespace Cz.Jarvis.Web.Controllers
             return userInfo.ProviderKey == model.ProviderKey.Replace("-", "").TrimStart('0');
         }
 
-        private async Task<bool> IsTwoFactorAuthRequiredAsync(AbpLoginResult<Tenant, User> loginResult,
+        private async Task<bool> IsTwoFactorAuthRequiredAsync(AbpLoginResult<User> loginResult,
             AuthenticateModel authenticateModel)
         {
             if (!await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement.TwoFactorLogin
@@ -833,7 +802,7 @@ namespace Cz.Jarvis.Web.Controllers
         }
 
         /* Checkes two factor code and returns a token to remember the client (browser) if needed */
-        private async Task<string> TwoFactorAuthenticateAsync(AbpLoginResult<Tenant, User> loginResult,
+        private async Task<string> TwoFactorAuthenticateAsync(AbpLoginResult<User> loginResult,
             AuthenticateModel authenticateModel)
         {
             var twoFactorCodeCache = _cacheManager.GetTwoFactorCodeCache();
@@ -846,13 +815,13 @@ namespace Cz.Jarvis.Web.Controllers
                 if (!await _googleAuthenticatorProvider.ValidateAsync("TwoFactor",
                         authenticateModel.TwoFactorVerificationCode, _userManager, loginResult.User))
                 {
-                    await SaveTwoFactorFailedLoginAttempt(loginResult.Tenant, loginResult.User);
+                    await SaveTwoFactorFailedLoginAttempt(loginResult.User);
                     throw new UserFriendlyException(L("InvalidSecurityCode"));
                 }
             }
             else if (cachedCode?.Code == null || cachedCode.Code != authenticateModel.TwoFactorVerificationCode)
             {
-                await SaveTwoFactorFailedLoginAttempt(loginResult.Tenant, loginResult.User);
+                await SaveTwoFactorFailedLoginAttempt(loginResult.User);
                 throw new UserFriendlyException(L("InvalidSecurityCode"));
             }
 
@@ -882,11 +851,11 @@ namespace Cz.Jarvis.Web.Controllers
             return null;
         }
 
-        private async Task SaveTwoFactorFailedLoginAttempt(Tenant tenant, User user)
+        private async Task SaveTwoFactorFailedLoginAttempt(User user)
         {
-            var loginResult = new AbpLoginResult<Tenant, User>(AbpLoginResultType.FailedForOtherReason, tenant, user);
+            var loginResult = new AbpLoginResult<User>(AbpLoginResultType.FailedForOtherReason, user);
             loginResult.SetFailReason(GetLocalizableString("TwoFactorCodeVerificationFailed"));
-            
+
             await _logInManager.SaveLoginAttemptAsync(
                 loginResult,
                 GetTenancyNameOrNull(),
@@ -901,15 +870,11 @@ namespace Cz.Jarvis.Web.Controllers
         
         private string GetTenancyNameOrNull()
         {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                return null;
-            }
-
-            return _tenantCache.GetOrNull(AbpSession.TenantId.Value)?.TenancyName;
+            // Multi-tenancy removed - always return null
+            return null;
         }
 
-        private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress,
+        private async Task<AbpLoginResult<User>> GetLoginResultAsync(string usernameOrEmailAddress,
             string password, string tenancyName)
         {
             var shouldLockout = await SettingManager.GetSettingValueAsync<bool>(
@@ -930,7 +895,7 @@ namespace Cz.Jarvis.Web.Controllers
             }
         }
 
-        private async Task<AbpLoginResult<Tenant, User>> GetPasswordlessLoginResultAsync(User user)
+        private async Task<AbpLoginResult<User>> GetPasswordlessLoginResultAsync(User user)
         {
             var loginResult = await _logInManager.CreateLoginResultAsync(user);
 

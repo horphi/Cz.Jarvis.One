@@ -40,8 +40,8 @@ namespace Cz.Jarvis.Localization
         public async Task<GetLanguagesOutput> GetLanguages()
         {
             var languages =
-                (await _applicationLanguageManager.GetLanguagesAsync(AbpSession.TenantId)).OrderBy(l => l.DisplayName);
-            var defaultLanguage = await _applicationLanguageManager.GetDefaultLanguageOrNullAsync(AbpSession.TenantId);
+                (await _applicationLanguageManager.GetLanguagesAsync(((int?)null))).OrderBy(l => l.DisplayName);
+            var defaultLanguage = await _applicationLanguageManager.GetDefaultLanguageOrNullAsync(((int?)null));
 
             return new GetLanguagesOutput(
                 ObjectMapper.Map<List<ApplicationLanguageListDto>>(languages),
@@ -99,14 +99,14 @@ namespace Cz.Jarvis.Localization
         public async Task DeleteLanguage(EntityDto input)
         {
             var language = await _languageRepository.GetAsync(input.Id);
-            await _applicationLanguageManager.RemoveAsync(AbpSession.TenantId, language.Name);
+            await _applicationLanguageManager.RemoveAsync(((int?)null), language.Name);
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Languages_ChangeDefaultLanguage)]
         public async Task SetDefaultLanguage(SetDefaultLanguageInput input)
         {
             await _applicationLanguageManager.SetDefaultLanguageAsync(
-                AbpSession.TenantId,
+                ((int?)null),
                 CultureHelper.GetCultureInfoByChecking(input.Name).Name
             );
         }
@@ -121,10 +121,10 @@ namespace Cz.Jarvis.Localization
             if (input.BaseLanguageName.IsNullOrEmpty())
             {
                 var defaultLanguage =
-                    await _applicationLanguageManager.GetDefaultLanguageOrNullAsync(AbpSession.TenantId);
+                    await _applicationLanguageManager.GetDefaultLanguageOrNullAsync(((int?)null));
                 if (defaultLanguage == null)
                 {
-                    defaultLanguage = (await _applicationLanguageManager.GetLanguagesAsync(AbpSession.TenantId))
+                    defaultLanguage = (await _applicationLanguageManager.GetLanguagesAsync(((int?)null)))
                         .FirstOrDefault();
                     if (defaultLanguage == null)
                     {
@@ -141,14 +141,14 @@ namespace Cz.Jarvis.Localization
 
             var allStrings = source.GetAllStrings();
             var baseValues = _applicationLanguageTextManager.GetStringsOrNull(
-                AbpSession.TenantId,
+                ((int?)null),
                 source.Name,
                 baseCulture,
                 allStrings.Select(x => x.Name).ToList()
             );
 
             var targetValues = _applicationLanguageTextManager.GetStringsOrNull(
-                AbpSession.TenantId,
+                ((int?)null),
                 source.Name,
                 targetCulture,
                 allStrings.Select(x => x.Name).ToList()
@@ -210,7 +210,7 @@ namespace Cz.Jarvis.Localization
             var culture = CultureHelper.GetCultureInfoByChecking(input.LanguageName);
             var source = LocalizationManager.GetSource(input.SourceName);
             await _applicationLanguageTextManager.UpdateStringAsync(
-                AbpSession.TenantId,
+                ((int?)null),
                 source.Name,
                 culture,
                 input.Key,
@@ -232,7 +232,7 @@ namespace Cz.Jarvis.Localization
 
             await _applicationLanguageManager.AddAsync(
                 new ApplicationLanguage(
-                    AbpSession.TenantId,
+                    ((int?)null),
                     culture.Name,
                     culture.DisplayName,
                     input.Language.Icon
@@ -259,12 +259,12 @@ namespace Cz.Jarvis.Localization
             language.Icon = input.Language.Icon;
             language.IsDisabled = !input.Language.IsEnabled;
 
-            await _applicationLanguageManager.UpdateAsync(AbpSession.TenantId, language);
+            await _applicationLanguageManager.UpdateAsync(((int?)null), language);
         }
 
         private async Task CheckLanguageIfAlreadyExists(string languageName, int? expectedId = null)
         {
-            var existingLanguage = (await _applicationLanguageManager.GetLanguagesAsync(AbpSession.TenantId))
+            var existingLanguage = (await _applicationLanguageManager.GetLanguagesAsync(((int?)null)))
                 .FirstOrDefault(l => l.Name == languageName);
 
             if (existingLanguage == null)

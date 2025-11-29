@@ -27,10 +27,7 @@ namespace Abp.Notifications
         {
             _unitOfWorkManager.WithUnitOfWork(() =>
             {
-                using (_unitOfWorkManager.Current.SetTenantId(eventData.Entity.TenantId))
-                {
-                    _notificationSubscriptionRepository.Delete(x => x.UserId == eventData.Entity.Id);
-                }
+                _notificationSubscriptionRepository.Delete(x => x.UserId == eventData.Entity.Id);
             });
         }
     }

@@ -17,8 +17,8 @@ namespace Abp.Runtime.Session
                 throw new ArgumentNullException(nameof(user));
             }
 
-            return session.TenantId == user.TenantId && 
-                session.UserId.HasValue && 
+            // Multi-tenancy removed - only check UserId
+            return session.UserId.HasValue &&
                 session.UserId.Value == user.Id;
         }
     }

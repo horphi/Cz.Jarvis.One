@@ -12,17 +12,17 @@ namespace Cz.Jarvis.Authorization.Roles
 
         public Role()
         {
-            
+
         }
 
-        public Role(int? tenantId, string displayName)
-            : base(tenantId, displayName)
+        public Role(string displayName)
+            : base(null, displayName)
         {
 
         }
 
-        public Role(int? tenantId, string name, string displayName)
-            : base(tenantId, name, displayName)
+        public Role(string name, string displayName)
+            : base(name, displayName)
         {
 
         }

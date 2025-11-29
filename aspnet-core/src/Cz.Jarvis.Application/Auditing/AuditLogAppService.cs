@@ -125,7 +125,7 @@ namespace Cz.Jarvis.Auditing
                 .FirstOrDefault(x => x.Key == EntityHistoryHelper.EntityHistoryConfigurationName)
                 .Value as EntityHistoryUiSetting)?.EnabledEntities ?? new List<string>();
 
-            if (AbpSession.TenantId == null)
+            if (((int?)null) == null)
             {
                 enabledEntities = EntityHistoryHelper.HostSideTrackedTypes.Select(t => t.FullName).Intersect(enabledEntities).ToList();
             }

@@ -12,7 +12,6 @@ using Abp.Runtime.Session;
 using Abp.UI;
 using Microsoft.EntityFrameworkCore;
 using Cz.Jarvis.Authorization.Users.Dto;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Authorization.Users
 {
@@ -21,20 +20,17 @@ namespace Cz.Jarvis.Authorization.Users
     {
         private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
         private readonly IUserLinkManager _userLinkManager;
-        private readonly IRepository<Tenant> _tenantRepository;
         private readonly IRepository<UserAccount, long> _userAccountRepository;
         private readonly LogInManager _logInManager;
 
         public UserLinkAppService(
             AbpLoginResultTypeHelper abpLoginResultTypeHelper,
             IUserLinkManager userLinkManager,
-            IRepository<Tenant> tenantRepository,
             IRepository<UserAccount, long> userAccountRepository,
             LogInManager logInManager)
         {
             _abpLoginResultTypeHelper = abpLoginResultTypeHelper;
             _userLinkManager = userLinkManager;
-            _tenantRepository = tenantRepository;
             _userAccountRepository = userAccountRepository;
             _logInManager = logInManager;
         }
@@ -122,18 +118,15 @@ namespace Cz.Jarvis.Authorization.Users
             var currentUserIdentifier = AbpSession.ToUserIdentifier();
 
             return (from userAccount in _userAccountRepository.GetAll()
-                    join tenant in _tenantRepository.GetAll() on userAccount.TenantId equals tenant.Id into tenantJoined
-                    from tenant in tenantJoined.DefaultIfEmpty()
                     where
-                        (userAccount.TenantId != currentUserIdentifier.TenantId ||
-                        userAccount.UserId != currentUserIdentifier.UserId) &&
+                        userAccount.UserId != currentUserIdentifier.UserId &&
                         userAccount.UserLinkId.HasValue &&
                         userAccount.UserLinkId == currentUserAccount.UserLinkId
                     select new LinkedUserDto
                     {
                         Id = userAccount.UserId,
-                        TenantId = userAccount.TenantId,
-                        TenancyName = tenant == null ? "." : tenant.TenancyName,
+                        TenantId = null, // Multi-tenancy removed
+                        TenancyName = null, // Multi-tenancy removed
                         Username = userAccount.UserName
                     }).OrderBy(sorting);
         }

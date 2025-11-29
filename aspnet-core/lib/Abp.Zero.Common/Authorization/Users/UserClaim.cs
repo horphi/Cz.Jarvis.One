@@ -30,7 +30,7 @@ namespace Abp.Authorization.Users
 
         public UserClaim(AbpUserBase user, Claim claim)
         {
-            TenantId = user.TenantId;
+            TenantId = null; // Multi-tenancy removed
             UserId = user.Id;
             ClaimType = claim.Type;
             ClaimValue = claim.Value;

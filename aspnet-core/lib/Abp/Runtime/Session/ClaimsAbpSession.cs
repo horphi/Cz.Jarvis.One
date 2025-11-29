@@ -37,35 +37,7 @@ namespace Abp.Runtime.Session
             }
         }
 
-        public override int? TenantId
-        {
-            get
-            {
-                if (!MultiTenancy.IsEnabled)
-                {
-                    return MultiTenancyConsts.DefaultTenantId;
-                }
-
-                if (OverridedValue != null)
-                {
-                    return OverridedValue.TenantId;
-                }
-
-                var tenantIdClaim = PrincipalAccessor.Principal?.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.TenantId);
-                if (!string.IsNullOrEmpty(tenantIdClaim?.Value))
-                {
-                    return Convert.ToInt32(tenantIdClaim.Value);
-                }
-
-                if (UserId == null)
-                {
-                    //Resolve tenant id from request only if user has not logged in!
-                    return TenantResolver.ResolveTenantId();
-                }
-                
-                return null;
-            }
-        }
+        
 
         public override long? ImpersonatorUserId
         {
@@ -81,24 +53,7 @@ namespace Abp.Runtime.Session
             }
         }
 
-        public override int? ImpersonatorTenantId
-        {
-            get
-            {
-                if (!MultiTenancy.IsEnabled)
-                {
-                    return MultiTenancyConsts.DefaultTenantId;
-                }
-
-                var impersonatorTenantIdClaim = PrincipalAccessor.Principal?.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
-                if (string.IsNullOrEmpty(impersonatorTenantIdClaim?.Value))
-                {
-                    return null;
-                }
-
-                return Convert.ToInt32(impersonatorTenantIdClaim.Value);
-            }
-        }
+        
 
         protected IPrincipalAccessor PrincipalAccessor { get; }
         protected ITenantResolver TenantResolver { get; }

@@ -32,10 +32,7 @@ public class AbpUserClaimsPrincipalFactory<TUser, TRole> : UserClaimsPrincipalFa
         {
             var principal = await base.CreateAsync(user);
 
-            if (user.TenantId.HasValue)
-            {
-                principal.Identities.First().AddClaim(new Claim(AbpClaimTypes.TenantId, user.TenantId.ToString()));
-            }
+            // Multi-tenancy removed - no TenantId claim needed
 
             return principal;
         });

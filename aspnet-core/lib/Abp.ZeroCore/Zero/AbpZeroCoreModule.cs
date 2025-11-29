@@ -36,8 +36,9 @@ public class AbpZeroCoreModule : AbpModule
         {
             using (var entityTypes = IocManager.ResolveAsDisposable<IAbpZeroEntityTypes>())
             {
-                var implType = typeof(UserTokenExpirationWorker<,>)
-                    .MakeGenericType(entityTypes.Object.Tenant, entityTypes.Object.User);
+                // Multi-tenancy removed - UserTokenExpirationWorker only needs TUser
+                var implType = typeof(UserTokenExpirationWorker<>)
+                    .MakeGenericType(entityTypes.Object.User);
                 var workerManager = IocManager.Resolve<IBackgroundWorkerManager>();
                 workerManager.Add(IocManager.Resolve(implType) as IBackgroundWorker);
             }
@@ -48,8 +49,9 @@ public class AbpZeroCoreModule : AbpModule
     {
         using (var entityTypes = IocManager.ResolveAsDisposable<IAbpZeroEntityTypes>())
         {
-            var implType = typeof(UserTokenExpirationWorker<,>)
-                .MakeGenericType(entityTypes.Object.Tenant, entityTypes.Object.User);
+            // Multi-tenancy removed - UserTokenExpirationWorker only needs TUser
+            var implType = typeof(UserTokenExpirationWorker<>)
+                .MakeGenericType(entityTypes.Object.User);
             IocManager.Register(implType);
         }
     }

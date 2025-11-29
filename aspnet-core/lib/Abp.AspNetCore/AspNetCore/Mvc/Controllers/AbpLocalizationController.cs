@@ -82,7 +82,7 @@ public class AbpLocalizationController : AbpController
     protected virtual void ChangeCultureForUser(string cultureName)
     {
         var languageSetting = _settingStore.GetSettingOrNull(
-            AbpSession.TenantId,
+            ((int?)null),
             AbpSession.GetUserId(),
             LocalizationSettingNames.DefaultLanguage
         );
@@ -90,7 +90,7 @@ public class AbpLocalizationController : AbpController
         if (languageSetting == null)
         {
             _settingStore.Create(new SettingInfo(
-                AbpSession.TenantId,
+                ((int?)null),
                 AbpSession.UserId,
                 LocalizationSettingNames.DefaultLanguage,
                 cultureName
@@ -99,7 +99,7 @@ public class AbpLocalizationController : AbpController
         else
         {
             _settingStore.Update(new SettingInfo(
-                AbpSession.TenantId,
+                ((int?)null),
                 AbpSession.UserId,
                 LocalizationSettingNames.DefaultLanguage,
                 cultureName

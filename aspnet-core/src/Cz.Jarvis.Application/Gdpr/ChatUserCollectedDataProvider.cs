@@ -13,7 +13,6 @@ using Cz.Jarvis.Chat.Dto;
 using Cz.Jarvis.Chat.Exporting;
 using Cz.Jarvis.Dto;
 using Cz.Jarvis.EntityFrameworkCore;
-using Cz.Jarvis.MultiTenancy;
 
 namespace Cz.Jarvis.Gdpr
 {
@@ -23,7 +22,6 @@ namespace Cz.Jarvis.Gdpr
         private readonly IChatMessageListExcelExporter _chatMessageListExcelExporter;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IRepository<UserAccount, long> _userAccountRepository;
-        private readonly IRepository<Tenant> _tenantRepository;
         private readonly IObjectMapper _objectMapper;
 
         public ChatUserCollectedDataProvider(
@@ -31,30 +29,22 @@ namespace Cz.Jarvis.Gdpr
             IChatMessageListExcelExporter chatMessageListExcelExporter,
             IUnitOfWorkManager unitOfWorkManager,
             IRepository<UserAccount, long> userAccountRepository,
-            IRepository<Tenant> tenantRepository,
             IObjectMapper objectMapper)
         {
             _chatMessageRepository = chatMessageRepository;
             _chatMessageListExcelExporter = chatMessageListExcelExporter;
             _unitOfWorkManager = unitOfWorkManager;
             _userAccountRepository = userAccountRepository;
-            _tenantRepository = tenantRepository;
             _objectMapper = objectMapper;
         }
 
         public async Task<List<FileDto>> GetFiles(UserIdentifier user)
         {
-            var conversations = await GetUserChatMessages(user.TenantId, user.UserId);
+            var conversations = await GetUserChatMessages(user.UserId);
 
             Dictionary<UserIdentifier, string> relatedUsernames;
-            Dictionary<int, string> relatedTenancyNames;
 
-            using (_unitOfWorkManager.Current.SetTenantId(null))
-            {
-                var tenantIds = conversations.Select(c => c.Key.TenantId);
-                relatedTenancyNames = _tenantRepository.GetAll().Where(t => tenantIds.Contains(t.Id)).ToDictionary(t => t.Id, t => t.TenancyName);
-                relatedUsernames = GetFriendUsernames(conversations.Select(c => c.Key).ToList());
-            }
+            relatedUsernames = GetFriendUsernames(conversations.Select(c => c.Key).ToList());
 
             var chatMessageFiles = new List<FileDto>();
 
@@ -62,11 +52,7 @@ namespace Cz.Jarvis.Gdpr
             {
                 foreach (var message in conversation.Value)
                 {
-                    message.TargetTenantName = message.TargetTenantId.HasValue
-                        ? relatedTenancyNames[message.TargetTenantId.Value]
-                        : ".";
-
-                    message.TargetUserName = relatedUsernames[new UserIdentifier(message.TargetTenantId, message.TargetUserId)];
+                    message.TargetUserName = relatedUsernames[new UserIdentifier(null, message.TargetUserId)];
                 }
 
                 var messages = conversation.Value.OrderBy(m => m.CreationTime).ToList();
@@ -82,37 +68,35 @@ namespace Cz.Jarvis.Gdpr
 
             foreach (var user in users)
             {
-                predicate = predicate.Or(ua => ua.TenantId == user.TenantId && ua.UserId == user.UserId);
+                predicate = predicate.Or(ua => ua.UserId == user.UserId);
             }
 
             using (_unitOfWorkManager.Current.DisableFilter(AbpDataFilters.SoftDelete))
             {
                 var userList = _userAccountRepository.GetAllList(predicate).Select(ua => new
                 {
-                    ua.TenantId,
                     ua.UserId,
                     ua.UserName
                 }).Distinct();
 
-                return userList.ToDictionary(ua => new UserIdentifier(ua.TenantId, ua.UserId), ua => ua.UserName);
+                return userList.ToDictionary(ua => new UserIdentifier(null, ua.UserId), ua => ua.UserName);
             }
         }
 
-        private async Task<Dictionary<UserIdentifier, List<ChatMessageExportDto>>> GetUserChatMessages(int? tenantId, long userId)
+        private async Task<Dictionary<UserIdentifier, List<ChatMessageExportDto>>> GetUserChatMessages(long userId)
         {
             var conversations = (await _chatMessageRepository.GetAll()
-                    .Where(message => message.UserId == userId && message.TenantId == tenantId)
+                    .Where(message => message.UserId == userId)
                     .ToListAsync()
                 )
-                .GroupBy(message => new {message.TargetTenantId, message.TargetUserId})
+                .GroupBy(message => new {message.TargetUserId})
                 .Select(messageGrouped => new
                 {
-                    TargetTenantId = messageGrouped.Key.TargetTenantId,
                     TargetUserId = messageGrouped.Key.TargetUserId,
                     Messages = messageGrouped
                 }).ToList();
 
-            return conversations.ToDictionary(c => new UserIdentifier(c.TargetTenantId, c.TargetUserId), c => _objectMapper.Map<List<ChatMessageExportDto>>(c.Messages));
+            return conversations.ToDictionary(c => new UserIdentifier(null, c.TargetUserId), c => _objectMapper.Map<List<ChatMessageExportDto>>(c.Messages));
         }
     }
 }

@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Cz.Jarvis.Authorization.Delegation
 {
     [Table("AppUserDelegations")]
-    public class UserDelegation : FullAuditedEntity<long>, IMayHaveTenant
+    public class UserDelegation : FullAuditedEntity<long>
     {
         /// <summary>
         /// Id of user who delegates the account
@@ -18,11 +18,6 @@ namespace Cz.Jarvis.Authorization.Delegation
         /// Id of user who is delegated for the <see cref="SourceUserId"/> account
         /// </summary>
         public long TargetUserId { get; set; }
-
-        /// <summary>
-        /// TenantId of delegation. Both users must be on same tenant.
-        /// </summary>
-        public int? TenantId { get; set; }
 
         /// <summary>
         /// Start time of delegation

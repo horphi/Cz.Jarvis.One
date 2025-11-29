@@ -55,8 +55,8 @@ namespace Cz.Jarvis.Friendships.Cache
             if (message.ReadState == ChatMessageReadState.Unread)
             {
                 _userFriendsCache.IncreaseUnreadMessageCount(
-                    new UserIdentifier(message.TenantId, message.UserId),
-                    new UserIdentifier(message.TargetTenantId, message.TargetUserId),
+                    new UserIdentifier(null, message.UserId),
+                    new UserIdentifier(null, message.TargetUserId),
                     1
                 );
             }

@@ -29,28 +29,23 @@ namespace Cz.Jarvis.HealthChecks
             {
                 using (var uow = _unitOfWorkManager.Begin())
                 {
-                    // Switching to host is necessary for single tenant mode.
-                    using (_unitOfWorkManager.Current.SetTenantId(null))
+                    var dbContext = await _dbContextProvider.GetDbContextAsync();
+                    if (!await dbContext.Database.CanConnectAsync(cancellationToken))
                     {
-                        var dbContext = await _dbContextProvider.GetDbContextAsync();
-                        if (!await dbContext.Database.CanConnectAsync(cancellationToken))
-                        {
-                            return HealthCheckResult.Unhealthy(
-                                "JarvisDbContext could not connect to database"
-                            );
-                        }
-
-                        var user = await dbContext.Users.AnyAsync(cancellationToken);
-                        await uow.CompleteAsync();
-
-                        if (user)
-                        {
-                            return HealthCheckResult.Healthy("JarvisDbContext connected to database and checked whether user added");
-                        }
-
-                        return HealthCheckResult.Unhealthy("JarvisDbContext connected to database but there is no user.");
-
+                        return HealthCheckResult.Unhealthy(
+                            "JarvisDbContext could not connect to database"
+                        );
                     }
+
+                    var user = await dbContext.Users.AnyAsync(cancellationToken);
+                    await uow.CompleteAsync();
+
+                    if (user)
+                    {
+                        return HealthCheckResult.Healthy("JarvisDbContext connected to database and checked whether user added");
+                    }
+
+                    return HealthCheckResult.Unhealthy("JarvisDbContext connected to database but there is no user.");
                 }
             }
             catch (Exception e)
