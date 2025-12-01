@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { hasAnyRole, hasRole, isAdmin } from "@/lib/auth/role-utils";
 
 interface UserSession {
@@ -30,10 +30,12 @@ interface UseAuthReturn {
   refetch: () => Promise<void>;
 }
 
+const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
+
 /**
- * Custom hook for authentication and role checking
+ * AuthProvider component that manages authentication state globally
  */
-export function useAuth(): UseAuthReturn {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -88,7 +90,7 @@ export function useAuth(): UseAuthReturn {
     return !!session.grantedPermissions[permission];
   }, [session]);
 
-  return {
+  const contextValue: UseAuthReturn = {
     session,
     isLoading,
     isLoggedIn: session?.isLoggedIn ?? false,
@@ -100,4 +102,21 @@ export function useAuth(): UseAuthReturn {
     isImpersonating: session?.isImpersonating ?? false,
     refetch,
   };
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+/**
+ * Custom hook for authentication and role checking
+ */
+export function useAuth(): UseAuthReturn {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

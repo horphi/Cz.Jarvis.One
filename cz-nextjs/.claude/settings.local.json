@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv:*)",
+      "Bash(ren \"hooks\\use-auth.ts\" \"use-auth.tsx\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

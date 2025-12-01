@@ -33,7 +33,7 @@ import { NavCollapsible, NavItem, NavLink, type NavGroup } from './types'
 
 import { useAuth } from '@/hooks/use-auth'
 
-export function NavGroup({ title, items, requiredRoles, requiredPermissions }: NavGroup) {
+export function NavGroup({ title, items, requiredRoles, requiredPermissions, hideWhenNoAccess = false }: NavGroup) {
     const { state } = useSidebar()
     const pathname = usePathname()
     const { hasAnyRole, hasPermission, isLoading, isLoggedIn } = useAuth()
@@ -42,21 +42,25 @@ export function NavGroup({ title, items, requiredRoles, requiredPermissions }: N
     // If we have a session but are refetching (isLoading=true), we keep showing the old data to prevent flickering
     if (isLoading && !isLoggedIn) return null
 
-    // Check group level access
-    if (requiredRoles && requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {
-        return null
+    // Check group level access ONLY if hideWhenNoAccess is true
+    if (hideWhenNoAccess) {
+        if (requiredRoles && requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {
+            return null
+        }
+
+        if (requiredPermissions && requiredPermissions.length > 0) {
+            const hasAccess = requiredPermissions.some(permission => hasPermission(permission))
+            if (!hasAccess) return null
+        }
     }
 
-    if (requiredPermissions && requiredPermissions.length > 0) {
-        const hasAccess = requiredPermissions.some(permission => hasPermission(permission))
-        if (!hasAccess) return null
-    }
-
-    // Filter items based on permissions
+    // Filter items based on permissions ONLY if item has hideWhenNoAccess = true
     const visibleItems = items.filter(item => {
-        if (item.requiredPermissions && item.requiredPermissions.length > 0) {
+        // If item explicitly wants to be hidden when no access
+        if (item.hideWhenNoAccess && item.requiredPermissions && item.requiredPermissions.length > 0) {
             return item.requiredPermissions.some(permission => hasPermission(permission))
         }
+        // Otherwise, show the item by default
         return true
     })
 

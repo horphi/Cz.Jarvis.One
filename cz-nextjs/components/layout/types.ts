@@ -14,6 +14,7 @@ interface BaseNavItem {
   title: string;
   badge?: string;
   icon?: React.ElementType;
+  hideWhenNoAccess?: boolean; // If true, hide the item when user doesn't have access
 }
 
 type NavLink = BaseNavItem & {
@@ -23,7 +24,7 @@ type NavLink = BaseNavItem & {
 };
 
 type NavCollapsible = BaseNavItem & {
-  items: (BaseNavItem & { url: string; requiredPermissions?: string[] })[];
+  items: (BaseNavItem & { url: string; requiredPermissions?: string[]; hideWhenNoAccess?: boolean })[];
   url?: never;
   requiredPermissions?: string[];
 };
@@ -35,6 +36,7 @@ interface NavGroup {
   items: NavItem[];
   requiredRoles?: string[]; // Optional array of roles required to see this group
   requiredPermissions?: string[]; // Optional array of permissions required to see this group
+  hideWhenNoAccess?: boolean; // If true, hide entire group when user doesn't have access
 }
 
 export type { NavItem, NavGroup, NavLink, NavCollapsible };

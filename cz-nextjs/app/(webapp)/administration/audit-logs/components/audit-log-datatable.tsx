@@ -375,7 +375,8 @@ export default function AuditLogsDataTable() {
                                         <TableCell className="font-mono text-sm">
                                             {myObject.clientIpAddress}
                                         </TableCell>
-                                        <TableCell>{myObject.clientName}</TableCell>                                        <TableCell className="max-w-xs">
+                                        <TableCell>{myObject.clientName}</TableCell>
+                                        <TableCell className="max-w-xs">
                                             <div className="truncate text-sm" title={myObject.browserInfo || undefined}>
                                                 {myObject.browserInfo}
                                             </div>

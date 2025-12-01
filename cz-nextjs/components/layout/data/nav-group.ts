@@ -27,7 +27,8 @@ import { NavGroup } from "../types";
 export const navGroupData: NavGroup[] = [
   {
     title: "Administration",
-    requiredRoles: ["admin", "administrator"], // Only admins can see this section
+    requiredPermissions: ["Pages.Administration"],
+    //requiredRoles: ["admin", "administrator"], // Only admins can see this section
     items: [
       {
         title: "Dashboard",

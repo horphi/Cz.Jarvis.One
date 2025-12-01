@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth/session";
-import { hasAnyRole } from "@/lib/auth/role-utils";
 
 /**
- * Routes that require admin access
+ * Routes that require authentication (user must be logged in)
+ * These routes will redirect to /login if the user is not authenticated
  */
-const ADMIN_ROUTES = ["/administration", "/admin"];
+const PROTECTED_ROUTES = ["/administration", "/dashboard"];
 
 /**
- * Check if a path requires admin access
+ * Check if a path requires authentication
  */
-function requiresAdminAccess(pathname: string): boolean {
-  return ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+function requiresAuthentication(pathname: string): boolean {
+  return PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if the route requires admin access
-  if (requiresAdminAccess(pathname)) {
+  // Check if the route requires authentication
+  if (requiresAuthentication(pathname)) {
     try {
       const session = await getAuthSession();
 
@@ -28,11 +28,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/login", request.url));
       }
 
-      // Check if user has admin role
-      if (!hasAnyRole(session.userRole, ["admin", "administrator"])) {
-        // Redirect to unauthorized page or dashboard
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+      // Authorization (permission checks) will be handled at the page level
     } catch (error) {
       console.error("Middleware auth check failed:", error);
       return NextResponse.redirect(new URL("/login", request.url));
