@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
@@ -61,7 +61,7 @@ export function PermissionGuard({
   const router = useRouter();
 
   // Check if user has access
-  const hasAccess = () => {
+  const hasAccess = useCallback(() => {
     // If no permissions specified, allow access
     if (!requiredPermission && !requiredPermissions && !requireAllPermissions) {
       return true;
@@ -83,7 +83,7 @@ export function PermissionGuard({
     }
 
     return false;
-  };
+  }, [requiredPermission, requiredPermissions, requireAllPermissions, hasPermission]);
 
   useEffect(() => {
     // Wait for auth to finish loading
@@ -96,7 +96,7 @@ export function PermissionGuard({
       );
       router.push(redirectTo);
     }
-  }, [isLoading, session, requiredPermission, requiredPermissions, requireAllPermissions, redirectTo, router, accessDeniedFallback]);
+  }, [isLoading, session, requiredPermission, requiredPermissions, requireAllPermissions, redirectTo, router, accessDeniedFallback, hasAccess]);
 
   // Show loading state
   if (isLoading) {

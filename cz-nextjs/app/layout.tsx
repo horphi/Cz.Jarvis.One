@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { getLocale } from "@/lib/i18n";
 import { ToasterProvider } from "@/components/ui/toaster-provider";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider } from "@/context/auth-context";
 
 // Only disable TLS certificate validation in development environment
 if (process.env.NODE_ENV === 'development') {

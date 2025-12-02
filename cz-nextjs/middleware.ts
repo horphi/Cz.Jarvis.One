@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/login", request.url));
       }
 
-      // Authorization (permission checks) will be handled at the page level
+      // Permission checks are handled at page level using PermissionGuard
     } catch (error) {
       console.error("Middleware auth check failed:", error);
       return NextResponse.redirect(new URL("/login", request.url));

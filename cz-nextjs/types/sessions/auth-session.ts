@@ -7,9 +7,11 @@ export interface AuthSessionData {
   accessToken: string;
   refreshToken: string;
   userRole: string[];
+  grantedPermissions?: Record<string, string>; // ABP permissions
   firstName: string;
   lastName: string;
-  email: string; // Impersonation fields
+  email: string;
+  // Impersonation fields
   isImpersonating?: boolean;
   impersonationToken?: string;
   originalUserId?: string;

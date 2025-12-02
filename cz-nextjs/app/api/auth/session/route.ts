@@ -5,25 +5,15 @@ import { ApiResult } from "@/types/http/api-result";
 import { TUserSession } from "@/types/users/user-type";
 
 /**
- * GET: Returns session data extracted from JWT token (includes role NAMES)
+ * GET: Returns session data including permissions
  * This is used by useAuth hook and should be the primary source for role-based access control
  */
 export async function GET() {
   try {
     const session = await getAuthSession();
-    console.log("🔍 GET /api/auth/session - Raw session:", {
-      isLoggedIn: session?.isLoggedIn,
-      userId: session?.userId,
-      userName: session?.userName,
-      userRole: session?.userRole,
-      isImpersonating: session?.isImpersonating,
-      originalUserId: session?.originalUserId,
-      originalUserName: session?.originalUserName,
-    });
 
     // Check if session exists and user is logged in
     if (!session || !session.isLoggedIn) {
-      console.log("❌ GET /api/auth/session - No session or not logged in");
       return NextResponse.json({ isLoggedIn: false }, { status: 401 });
     }
 
@@ -32,6 +22,7 @@ export async function GET() {
       userId: session.userId,
       userName: session.userName,
       userRole: session.userRole,
+      grantedPermissions: session.grantedPermissions,
       firstName: session.firstName,
       lastName: session.lastName,
       email: session.email,
@@ -40,10 +31,9 @@ export async function GET() {
       originalUserName: session.originalUserName,
     };
 
-    console.log("✅ GET /api/auth/session - Returning:", responseData);
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("❌ Get session error:", error);
+    console.error("Get session error:", error);
     return NextResponse.json({ isLoggedIn: false }, { status: 500 });
   }
 }

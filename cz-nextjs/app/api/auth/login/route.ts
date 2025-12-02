@@ -1,8 +1,9 @@
-import { TOKEN_AUTH } from "@/config/endpoint";
+import { TOKEN_AUTH, GET_USER_CONFIGURATION } from "@/config/endpoint";
 import {
   extractSessionDataFromToken,
   getAuthSession,
 } from "@/lib/auth/session";
+import { AbpUserConfigurationResponse } from "@/types/auth/user-configuration";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Login successful, process the tokens
-    console.log("Login successful");
+    console.log("Login successful for user:", username);
 
     // Get the current auth session
     const authSession = await getAuthSession();
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       data.result.accessToken,
       data.result.refreshToken
     );
-    console.log("Session data extracted:", sessionData.accessToken);
+
     // Update all session fields
     authSession.userId = sessionData.userId;
     authSession.userName = sessionData.userName;
@@ -75,6 +76,36 @@ export async function POST(req: NextRequest) {
     authSession.firstName = sessionData.firstName;
     authSession.lastName = sessionData.lastName;
     authSession.email = sessionData.email;
+
+    // Fetch user permissions from ABP and store in session
+    try {
+      const configResponse = await fetch(GET_USER_CONFIGURATION, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.result.accessToken}`,
+        },
+      });
+
+      if (configResponse.ok) {
+        const configData: AbpUserConfigurationResponse =
+          await configResponse.json();
+        if (configData.result?.auth?.grantedPermissions) {
+          authSession.grantedPermissions =
+            configData.result.auth.grantedPermissions;
+          console.log(
+            "✅ Permissions loaded:",
+            Object.keys(configData.result.auth.grantedPermissions).length,
+            "permissions"
+          );
+        }
+      } else {
+        console.warn("⚠️ Failed to fetch user permissions");
+      }
+    } catch (permissionError) {
+      console.error("❌ Error fetching user permissions:", permissionError);
+      // Continue login even if permissions fail - they can be fetched client-side
+    }
 
     await authSession.save();
 

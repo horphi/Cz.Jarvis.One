@@ -57,20 +57,15 @@ export function extractSessionDataFromToken(
 ): AuthSessionData {
   const decoded = decodeJwtToken(token);
 
-  console.log("Decoded JWT:", decoded);
-
   if (!decoded) {
     throw new Error("Invalid token format");
-  } // Get the role claim and normalize it
+  }
+
+  // Get the role claim and normalize it
   const roleClaim = decoded[
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
   ] as string | string[] | undefined;
-  console.log("🔍 extractSessionDataFromToken - Raw role claim:", roleClaim);
   const normalizedRoles = normalizeRoleClaim(roleClaim);
-  console.log(
-    "🔍 extractSessionDataFromToken - Normalized roles:",
-    normalizedRoles
-  );
 
   // Extract user info from token claims
   return {
@@ -111,8 +106,8 @@ export const authSessionOptions: SessionOptions = {
   cookieOptions: {
     secure: process.env.NODE_ENV === "production", // Set to true in production
     maxAge: 60 * 60 * 24 * 7, // 1 week
-    //sameSite: 'lax', // CSRF protection
-    //httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+    sameSite: "lax", // CSRF protection
+    httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
   },
 };
 
